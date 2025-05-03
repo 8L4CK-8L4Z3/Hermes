@@ -1,0 +1,591 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import { rest } from 'msw';
+import { server } from './setup';
+import { mockToken, BASE_URL } from './setup';
+import { createAuthenticatedApi } from './utils';
+
+describe('Content Management API', () => {
+  let api;
+  
+  beforeEach(() => {
+    localStorage.setItem('token', mockToken);
+    // Create a fresh authenticated API instance before each test
+    api = createAuthenticatedApi();
+  });
+
+  describe('Destinations API', () => {
+    const mockDestination = {
+      name: 'Paris',
+      country: 'France',
+      description: 'The City of Light',
+      coordinates: { lat: 48.8566, lng: 2.3522 },
+      images: ['paris1.jpg', 'paris2.jpg'],
+      category: 'city',
+      popularActivities: ['Eiffel Tower', 'Louvre Museum']
+    };
+
+    it('GET /destinations - should fetch destinations with filters', async () => {
+      const mockDestinations = {
+        destinations: [
+          {
+            id: 'dest1',
+            name: 'Paris',
+            country: 'France',
+            description: 'City of Lights',
+            imageUrl: 'https://example.com/paris.jpg',
+            rating: 4.8
+          },
+          {
+            id: 'dest2',
+            name: 'London',
+            country: 'United Kingdom',
+            description: 'Historic city on the Thames',
+            imageUrl: 'https://example.com/london.jpg',
+            rating: 4.7
+          }
+        ],
+        total: 2
+      };
+
+      server.use(
+        rest.get(`${BASE_URL}/api/destinations`, (req, res, ctx) => {
+          return res(ctx.status(200), ctx.json(mockDestinations));
+        })
+      );
+
+      const response = await api.get('/destinations');
+      expect(response.status).toBe(200);
+      expect(response.data.destinations).toHaveLength(2);
+    });
+
+    it('GET /destinations/:id - should fetch destination details', async () => {
+      const destId = 'dest1';
+      const mockDestination = {
+        id: destId,
+        name: 'Paris',
+        country: 'France',
+        description: 'City of Lights',
+        imageUrl: 'https://example.com/paris.jpg',
+        rating: 4.8,
+        activities: [
+          {
+            id: 'act1',
+            name: 'Eiffel Tower Visit',
+            type: 'Sightseeing'
+          }
+        ],
+        weather: {
+          current: 'Sunny',
+          temperature: 22,
+          forecast: [
+            { day: 'Monday', temperature: 22, condition: 'Sunny' },
+            { day: 'Tuesday', temperature: 20, condition: 'Partly Cloudy' }
+          ]
+        }
+      };
+
+      server.use(
+        rest.get(`${BASE_URL}/api/destinations/${destId}`, (req, res, ctx) => {
+          return res(ctx.status(200), ctx.json(mockDestination));
+        })
+      );
+
+      const response = await api.get(`/destinations/${destId}`);
+      expect(response.status).toBe(200);
+      expect(response.data.id).toBe(destId);
+    });
+
+    it('POST /destinations - should create destination (requires admin approval)', async () => {
+      const newDestination = {
+        name: 'Tokyo',
+        country: 'Japan',
+        description: 'Vibrant metropolis blending traditional culture with futuristic technology',
+        imageUrl: 'https://example.com/tokyo.jpg'
+      };
+
+      server.use(
+        rest.post(`${BASE_URL}/api/destinations`, async (req, res, ctx) => {
+          const body = await req.json();
+          expect(body).toEqual(newDestination);
+          return res(ctx.status(201), ctx.json({
+            message: 'Destination submitted for approval',
+            destination: { 
+              ...newDestination, 
+              id: 'dest3',
+              status: 'pending_approval' 
+            }
+          }));
+        })
+      );
+
+      const response = await api.post('/destinations', newDestination);
+      expect(response.status).toBe(201);
+      expect(response.data.destination.status).toBe('pending_approval');
+    });
+
+    it('PUT /destinations/:id - should update destination (admin only)', async () => {
+      const destId = 'dest1';
+      const updates = {
+        description: 'Updated description for Paris',
+        rating: 4.9
+      };
+
+      server.use(
+        rest.put(`${BASE_URL}/api/destinations/${destId}`, async (req, res, ctx) => {
+          const body = await req.json();
+          expect(body).toEqual(updates);
+          return res(ctx.status(200), ctx.json({
+            message: 'Destination updated successfully',
+            destination: {
+              id: destId,
+              name: 'Paris',
+              country: 'France',
+              description: updates.description,
+              imageUrl: 'https://example.com/paris.jpg',
+              rating: updates.rating
+            }
+          }));
+        })
+      );
+
+      const response = await api.put(`/destinations/${destId}`, updates);
+      expect(response.status).toBe(200);
+      expect(response.data.destination.description).toBe(updates.description);
+    });
+
+    it('DELETE /destinations/:id - should delete destination (admin only)', async () => {
+      const destId = 'dest1';
+
+      server.use(
+        rest.delete(`${BASE_URL}/api/destinations/${destId}`, (req, res, ctx) => {
+          return res(ctx.status(200), ctx.json({
+            message: 'Destination deleted successfully',
+            id: destId
+          }));
+        })
+      );
+
+      const response = await api.delete(`/destinations/${destId}`);
+      expect(response.status).toBe(200);
+      expect(response.data.id).toBe(destId);
+    });
+
+    it('PUT /destinations/:id/approve - should approve destination (admin only)', async () => {
+      const destId = 'dest3';
+      const approval = { approved: true, notes: 'Looks good' };
+
+      server.use(
+        rest.put(`${BASE_URL}/api/destinations/${destId}/approve`, async (req, res, ctx) => {
+          const body = await req.json();
+          expect(body).toEqual(approval);
+          return res(ctx.status(200), ctx.json({
+            message: 'Destination approved',
+            destination: {
+              id: destId,
+              name: 'Tokyo',
+              country: 'Japan',
+              status: 'active'
+            }
+          }));
+        })
+      );
+
+      const response = await api.put(`/destinations/${destId}/approve`, approval);
+      expect(response.status).toBe(200);
+      expect(response.data.destination.status).toBe('active');
+    });
+  });
+
+  describe('Activities API', () => {
+    const mockActivity = {
+      name: 'Eiffel Tower Visit',
+      description: 'Visit the iconic Eiffel Tower',
+      location: 'Paris, France',
+      duration: 180,
+      price: 25.99,
+      category: 'sightseeing',
+      images: ['activity1.jpg'],
+      requirements: ['Comfortable shoes', 'Camera']
+    };
+
+    it('GET /activities - should fetch activities with filters', async () => {
+      const mockActivities = {
+        activities: [
+          {
+            id: 'act1',
+            name: 'Eiffel Tower Visit',
+            destination: 'Paris',
+            type: 'Sightseeing',
+            duration: 2,
+            price: 25
+          },
+          {
+            id: 'act2',
+            name: 'Seine River Cruise',
+            destination: 'Paris',
+            type: 'Tour',
+            duration: 1.5,
+            price: 30
+          }
+        ],
+        total: 2
+      };
+
+      server.use(
+        rest.get(`${BASE_URL}/api/activities`, (req, res, ctx) => {
+          return res(ctx.status(200), ctx.json(mockActivities));
+        })
+      );
+
+      const response = await api.get('/activities');
+      expect(response.status).toBe(200);
+      expect(response.data.activities).toHaveLength(2);
+    });
+
+    it('GET /activities/:id - should fetch activity details', async () => {
+      const activityId = 'act1';
+      const mockActivity = {
+        id: activityId,
+        name: 'Eiffel Tower Visit',
+        destination: 'Paris',
+        destinationId: 'dest1',
+        type: 'Sightseeing',
+        description: 'Visit the iconic Eiffel Tower and enjoy panoramic views of Paris',
+        duration: 2,
+        price: 25,
+        imageUrl: 'https://example.com/eiffel.jpg',
+        rating: 4.7,
+        reviews: [
+          {
+            id: 'rev1',
+            user: 'User123',
+            rating: 5,
+            comment: 'Amazing experience!'
+          }
+        ]
+      };
+
+      server.use(
+        rest.get(`${BASE_URL}/api/activities/${activityId}`, (req, res, ctx) => {
+          return res(ctx.status(200), ctx.json(mockActivity));
+        })
+      );
+
+      const response = await api.get(`/activities/${activityId}`);
+      expect(response.status).toBe(200);
+      expect(response.data.id).toBe(activityId);
+    });
+
+    it('POST /activities - should create activity (requires admin approval)', async () => {
+      const newActivity = {
+        name: 'Louvre Museum Visit',
+        destination: 'Paris',
+        destinationId: 'dest1',
+        type: 'Museum',
+        description: 'Explore the world-famous Louvre Museum',
+        duration: 3,
+        price: 15,
+        imageUrl: 'https://example.com/louvre.jpg'
+      };
+
+      server.use(
+        rest.post(`${BASE_URL}/api/activities`, async (req, res, ctx) => {
+          const body = await req.json();
+          expect(body).toEqual(newActivity);
+          return res(ctx.status(201), ctx.json({
+            message: 'Activity submitted for approval',
+            activity: { 
+              ...newActivity, 
+              id: 'act3',
+              status: 'pending_approval' 
+            }
+          }));
+        })
+      );
+
+      const response = await api.post('/activities', newActivity);
+      expect(response.status).toBe(201);
+      expect(response.data.activity.status).toBe('pending_approval');
+    });
+
+    it('PUT /activities/:id - should update activity (admin only)', async () => {
+      const activityId = 'act1';
+      const updates = {
+        description: 'Updated description for Eiffel Tower visit',
+        price: 27,
+        duration: 2.5
+      };
+
+      server.use(
+        rest.put(`${BASE_URL}/api/activities/${activityId}`, async (req, res, ctx) => {
+          const body = await req.json();
+          expect(body).toEqual(updates);
+          return res(ctx.status(200), ctx.json({
+            message: 'Activity updated successfully',
+            activity: {
+              id: activityId,
+              name: 'Eiffel Tower Visit',
+              destination: 'Paris',
+              type: 'Sightseeing',
+              description: updates.description,
+              duration: updates.duration,
+              price: updates.price,
+              imageUrl: 'https://example.com/eiffel.jpg'
+            }
+          }));
+        })
+      );
+
+      const response = await api.put(`/activities/${activityId}`, updates);
+      expect(response.status).toBe(200);
+      expect(response.data.activity.description).toBe(updates.description);
+    });
+
+    it('DELETE /activities/:id - should delete activity (admin only)', async () => {
+      const activityId = 'act1';
+
+      server.use(
+        rest.delete(`${BASE_URL}/api/activities/${activityId}`, (req, res, ctx) => {
+          return res(ctx.status(200), ctx.json({
+            message: 'Activity deleted successfully',
+            id: activityId
+          }));
+        })
+      );
+
+      const response = await api.delete(`/activities/${activityId}`);
+      expect(response.status).toBe(200);
+      expect(response.data.id).toBe(activityId);
+    });
+
+    it('PUT /activities/:id/approve - should approve activity (admin only)', async () => {
+      const activityId = 'act3';
+      const approval = { approved: true, notes: 'Looks good' };
+
+      server.use(
+        rest.put(`${BASE_URL}/api/activities/${activityId}/approve`, async (req, res, ctx) => {
+          const body = await req.json();
+          expect(body).toEqual(approval);
+          return res(ctx.status(200), ctx.json({
+            message: 'Activity approved',
+            activity: {
+              id: activityId,
+              name: 'Louvre Museum Visit',
+              destination: 'Paris',
+              status: 'active'
+            }
+          }));
+        })
+      );
+
+      const response = await api.put(`/activities/${activityId}/approve`, approval);
+      expect(response.status).toBe(200);
+      expect(response.data.activity.status).toBe('active');
+    });
+  });
+
+  describe('Comments API', () => {
+    const mockComment = {
+      content: 'Great experience!',
+      experienceId: '789',
+      userId: '123'
+    };
+
+    it('GET /comments - should fetch comments with filters', async () => {
+      const mockComments = {
+        comments: [
+          {
+            id: 'comment1',
+            content: 'Great experience!',
+            user: {
+              id: 'user1',
+              name: 'John Doe'
+            },
+            experienceId: 'exp1',
+            createdAt: '2023-01-01T00:00:00Z'
+          },
+          {
+            id: 'comment2',
+            content: 'Highly recommended!',
+            user: {
+              id: 'user2',
+              name: 'Jane Smith'
+            },
+            experienceId: 'exp1',
+            createdAt: '2023-01-02T00:00:00Z'
+          }
+        ],
+        total: 2
+      };
+
+      server.use(
+        rest.get(`${BASE_URL}/api/comments`, (req, res, ctx) => {
+          return res(ctx.status(200), ctx.json(mockComments));
+        })
+      );
+
+      const response = await api.get('/comments');
+      expect(response.status).toBe(200);
+      expect(response.data.comments).toHaveLength(2);
+    });
+
+    it('POST /comments - should create comment', async () => {
+      const newComment = {
+        content: 'This was an amazing trip!',
+        experienceId: 'exp1'
+      };
+
+      server.use(
+        rest.post(`${BASE_URL}/api/comments`, async (req, res, ctx) => {
+          const body = await req.json();
+          expect(body).toEqual(newComment);
+          return res(ctx.status(201), ctx.json({
+            message: 'Comment created successfully',
+            comment: { 
+              ...newComment, 
+              id: 'comment3',
+              user: {
+                id: 'current-user',
+                name: 'Current User'
+              },
+              createdAt: new Date().toISOString() 
+            }
+          }));
+        })
+      );
+
+      const response = await api.post('/comments', newComment);
+      expect(response.status).toBe(201);
+      expect(response.data.comment.content).toBe(newComment.content);
+    });
+
+    it('PUT /comments/:id - should update comment', async () => {
+      const commentId = 'comment1';
+      const update = {
+        content: 'Updated comment content'
+      };
+
+      server.use(
+        rest.put(`${BASE_URL}/api/comments/${commentId}`, async (req, res, ctx) => {
+          const body = await req.json();
+          expect(body).toEqual(update);
+          return res(ctx.status(200), ctx.json({
+            message: 'Comment updated successfully',
+            comment: {
+              id: commentId,
+              content: update.content,
+              user: {
+                id: 'user1',
+                name: 'John Doe'
+              },
+              experienceId: 'exp1',
+              createdAt: '2023-01-01T00:00:00Z',
+              updatedAt: new Date().toISOString()
+            }
+          }));
+        })
+      );
+
+      const response = await api.put(`/comments/${commentId}`, update);
+      expect(response.status).toBe(200);
+      expect(response.data.comment.content).toBe(update.content);
+    });
+
+    it('DELETE /comments/:id - should delete comment', async () => {
+      const commentId = 'comment1';
+
+      server.use(
+        rest.delete(`${BASE_URL}/api/comments/${commentId}`, (req, res, ctx) => {
+          return res(ctx.status(200), ctx.json({
+            message: 'Comment deleted successfully',
+            id: commentId
+          }));
+        })
+      );
+
+      const response = await api.delete(`/comments/${commentId}`);
+      expect(response.status).toBe(200);
+      expect(response.data.id).toBe(commentId);
+    });
+
+    it('GET /comments/user/:userId - should fetch comments by user', async () => {
+      const userId = 'user1';
+      const mockUserComments = {
+        comments: [
+          {
+            id: 'comment1',
+            content: 'Great experience!',
+            user: {
+              id: userId,
+              name: 'John Doe'
+            },
+            experienceId: 'exp1',
+            createdAt: '2023-01-01T00:00:00Z'
+          },
+          {
+            id: 'comment3',
+            content: 'Loved this place!',
+            user: {
+              id: userId,
+              name: 'John Doe'
+            },
+            experienceId: 'exp2',
+            createdAt: '2023-01-03T00:00:00Z'
+          }
+        ],
+        total: 2
+      };
+
+      server.use(
+        rest.get(`${BASE_URL}/api/comments/user/${userId}`, (req, res, ctx) => {
+          return res(ctx.status(200), ctx.json(mockUserComments));
+        })
+      );
+
+      const response = await api.get(`/comments/user/${userId}`);
+      expect(response.status).toBe(200);
+      expect(response.data.comments).toHaveLength(2);
+      expect(response.data.comments[0].user.id).toBe(userId);
+    });
+
+    it('GET /comments/experience/:experienceId - should fetch comments by experience', async () => {
+      const experienceId = 'exp1';
+      const mockExperienceComments = {
+        comments: [
+          {
+            id: 'comment1',
+            content: 'Great experience!',
+            user: {
+              id: 'user1',
+              name: 'John Doe'
+            },
+            experienceId: experienceId,
+            createdAt: '2023-01-01T00:00:00Z'
+          },
+          {
+            id: 'comment2',
+            content: 'Highly recommended!',
+            user: {
+              id: 'user2',
+              name: 'Jane Smith'
+            },
+            experienceId: experienceId,
+            createdAt: '2023-01-02T00:00:00Z'
+          }
+        ],
+        total: 2
+      };
+
+      server.use(
+        rest.get(`${BASE_URL}/api/comments/experience/${experienceId}`, (req, res, ctx) => {
+          return res(ctx.status(200), ctx.json(mockExperienceComments));
+        })
+      );
+
+      const response = await api.get(`/comments/experience/${experienceId}`);
+      expect(response.status).toBe(200);
+      expect(response.data.comments).toHaveLength(2);
+      expect(response.data.comments[0].experienceId).toBe(experienceId);
+    });
+  });
+}); 

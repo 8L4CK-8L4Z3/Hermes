@@ -1,0 +1,432 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import { rest } from 'msw';
+import { server } from './setup';
+import { mockToken, BASE_URL } from './setup';
+import { createAuthenticatedApi } from './utils';
+
+describe('Admin API', () => {
+  let api;
+
+  beforeEach(() => {
+    localStorage.setItem('token', mockToken);
+    // Create a fresh authenticated API instance before each test
+    api = createAuthenticatedApi();
+  });
+
+  const mockStats = {
+    totalUsers: 1000,
+    activeTrips: 150,
+    pendingApprovals: 25,
+    systemHealth: 'good'
+  };
+
+  describe('Dashboard APIs', () => {
+    it('GET /admin/dashboard/stats - should fetch dashboard statistics', async () => {
+      const mockStats = {
+        users: {
+          total: 1000,
+          active: 750,
+          new: 50
+        },
+        trips: {
+          total: 500,
+          public: 300,
+          private: 200
+        },
+        experiences: {
+          total: 1200,
+          popular: ['Paris', 'London', 'Rome']
+        },
+        engagement: {
+          comments: 3000,
+          likes: 5000,
+          shares: 1500
+        }
+      };
+
+      server.use(
+        rest.get(`${BASE_URL}/api/admin/dashboard/stats`, (req, res, ctx) => {
+          return res(ctx.status(200), ctx.json(mockStats));
+        })
+      );
+
+      const response = await api.get('/admin/dashboard/stats');
+      expect(response.status).toBe(200);
+      expect(response.data.users).toBeDefined();
+      expect(response.data.trips).toBeDefined();
+    });
+
+    it('GET /admin/dashboard/health - should fetch system health status', async () => {
+      const mockHealth = {
+        status: 'healthy',
+        services: {
+          api: 'online',
+          database: 'online',
+          cache: 'online',
+          storage: 'online'
+        },
+        performance: {
+          responseTimes: {
+            p50: 120,
+            p90: 300,
+            p99: 600
+          },
+          errorRate: 0.02
+        },
+        uptime: '99.9%'
+      };
+
+      server.use(
+        rest.get(`${BASE_URL}/api/admin/dashboard/health`, (req, res, ctx) => {
+          return res(ctx.status(200), ctx.json(mockHealth));
+        })
+      );
+
+      const response = await api.get('/admin/dashboard/health');
+      expect(response.status).toBe(200);
+      expect(response.data.status).toBe('healthy');
+    });
+
+    it('GET /admin/dashboard/errors - should fetch error logs', async () => {
+      const mockErrors = {
+        errors: [
+          {
+            id: 'err123',
+            timestamp: new Date().toISOString(),
+            type: 'API',
+            message: 'Failed to process request',
+            route: '/api/trips',
+            status: 500
+          }
+        ],
+        total: 1
+      };
+
+      server.use(
+        rest.get(`${BASE_URL}/api/admin/dashboard/errors`, (req, res, ctx) => {
+          return res(ctx.status(200), ctx.json(mockErrors));
+        })
+      );
+
+      const response = await api.get('/admin/dashboard/errors');
+      expect(response.status).toBe(200);
+      expect(response.data.errors).toHaveLength(1);
+    });
+  });
+
+  describe('User Management APIs', () => {
+    const mockUsers = [
+      { id: '1', email: 'user1@test.com', status: 'active' },
+      { id: '2', email: 'user2@test.com', status: 'suspended' }
+    ];
+
+    it('GET /admin/users - should fetch all users with filters', async () => {
+      const mockUsers = {
+        users: [
+          {
+            id: 'user123',
+            email: 'user@example.com',
+            name: 'Test User',
+            status: 'active',
+            role: 'user'
+          }
+        ],
+        total: 1
+      };
+
+      server.use(
+        rest.get(`${BASE_URL}/api/admin/users`, (req, res, ctx) => {
+          return res(ctx.status(200), ctx.json(mockUsers));
+        })
+      );
+
+      const response = await api.get('/admin/users');
+      expect(response.status).toBe(200);
+      expect(response.data.users).toHaveLength(1);
+    });
+
+    it('GET /admin/users/:id - should fetch user details', async () => {
+      const userId = 'user123';
+      const mockUser = {
+        id: userId,
+        email: 'user@example.com',
+        name: 'Test User',
+        status: 'active',
+        role: 'user',
+        createdAt: '2023-01-01T00:00:00Z',
+        trips: 10,
+        experiences: 5
+      };
+
+      server.use(
+        rest.get(`${BASE_URL}/api/admin/users/${userId}`, (req, res, ctx) => {
+          return res(ctx.status(200), ctx.json(mockUser));
+        })
+      );
+
+      const response = await api.get(`/admin/users/${userId}`);
+      expect(response.status).toBe(200);
+      expect(response.data.id).toBe(userId);
+    });
+
+    it('PUT /admin/users/:id - should update user details', async () => {
+      const userId = 'user123';
+      const updates = {
+        name: 'Updated Name',
+        role: 'admin'
+      };
+
+      server.use(
+        rest.put(`${BASE_URL}/api/admin/users/${userId}`, async (req, res, ctx) => {
+          const body = await req.json();
+          expect(body).toEqual(updates);
+          return res(ctx.status(200), ctx.json({
+            message: 'User updated successfully',
+            user: {
+              id: userId,
+              ...updates,
+              email: 'user@example.com'
+            }
+          }));
+        })
+      );
+
+      const response = await api.put(`/admin/users/${userId}`, updates);
+      expect(response.status).toBe(200);
+      expect(response.data.user.name).toBe(updates.name);
+    });
+
+    it('PUT /admin/users/:id/status - should update user status', async () => {
+      const userId = 'user123';
+      const update = { status: 'suspended', reason: 'Policy violation' };
+
+      server.use(
+        rest.put(`${BASE_URL}/api/admin/users/${userId}/status`, async (req, res, ctx) => {
+          const body = await req.json();
+          expect(body).toEqual(update);
+          return res(ctx.status(200), ctx.json({
+            message: 'User status updated',
+            user: {
+              id: userId,
+              status: update.status
+            }
+          }));
+        })
+      );
+
+      const response = await api.put(`/admin/users/${userId}/status`, update);
+      expect(response.status).toBe(200);
+      expect(response.data.user.status).toBe(update.status);
+    });
+
+    it('GET /admin/users/:id/actions - should fetch user action history', async () => {
+      const userId = 'user123';
+      const mockActions = {
+        actions: [
+          {
+            id: 'action1',
+            type: 'login',
+            timestamp: '2023-01-01T00:00:00Z',
+            ip: '192.168.1.1'
+          }
+        ],
+        total: 1
+      };
+
+      server.use(
+        rest.get(`${BASE_URL}/api/admin/users/${userId}/actions`, (req, res, ctx) => {
+          return res(ctx.status(200), ctx.json(mockActions));
+        })
+      );
+
+      const response = await api.get(`/admin/users/${userId}/actions`);
+      expect(response.status).toBe(200);
+      expect(response.data.actions).toHaveLength(1);
+    });
+  });
+
+  describe('Content Approval APIs', () => {
+    const mockApprovals = [
+      { id: '1', type: 'destination', status: 'pending' },
+      { id: '2', type: 'activity', status: 'pending' }
+    ];
+
+    it('GET /admin/approvals - should fetch pending approvals', async () => {
+      const mockApprovals = {
+        approvals: [
+          {
+            id: 'approval1',
+            type: 'destination',
+            status: 'pending',
+            item: {
+              name: 'New Destination',
+              description: 'Description'
+            },
+            submittedBy: 'user123',
+            submittedAt: '2023-01-01T00:00:00Z'
+          }
+        ],
+        total: 1
+      };
+
+      server.use(
+        rest.get(`${BASE_URL}/api/admin/approvals`, (req, res, ctx) => {
+          return res(ctx.status(200), ctx.json(mockApprovals));
+        })
+      );
+
+      const response = await api.get('/admin/approvals');
+      expect(response.status).toBe(200);
+      expect(response.data.approvals).toHaveLength(1);
+    });
+
+    it('PUT /admin/approvals/:id - should process approval', async () => {
+      const approvalId = 'approval1';
+      const action = { status: 'approved', notes: 'Looks good' };
+
+      server.use(
+        rest.put(`${BASE_URL}/api/admin/approvals/${approvalId}`, async (req, res, ctx) => {
+          const body = await req.json();
+          expect(body).toEqual(action);
+          return res(ctx.status(200), ctx.json({
+            message: 'Approval processed',
+            approval: {
+              id: approvalId,
+              status: action.status
+            }
+          }));
+        })
+      );
+
+      const response = await api.put(`/admin/approvals/${approvalId}`, action);
+      expect(response.status).toBe(200);
+      expect(response.data.approval.status).toBe(action.status);
+    });
+
+    it('POST /admin/approvals/bulk - should process bulk approvals', async () => {
+      const bulkAction = {
+        ids: ['approval1', 'approval2', 'approval3'],
+        action: 'approve',
+        notes: 'All good'
+      };
+
+      server.use(
+        rest.post(`${BASE_URL}/api/admin/approvals/bulk`, async (req, res, ctx) => {
+          const body = await req.json();
+          expect(body).toEqual(bulkAction);
+          return res(ctx.status(200), ctx.json({
+            message: 'Bulk approvals processed',
+            processed: bulkAction.ids.length,
+            failed: 0
+          }));
+        })
+      );
+
+      const response = await api.post('/admin/approvals/bulk', bulkAction);
+      expect(response.status).toBe(200);
+      expect(response.data.processed).toBe(bulkAction.ids.length);
+    });
+  });
+
+  describe('System Management APIs', () => {
+    it('GET /admin/system/logs - should fetch system logs', async () => {
+      const mockLogs = {
+        logs: [
+          {
+            id: 'log1',
+            level: 'info',
+            message: 'System startup',
+            timestamp: '2023-01-01T00:00:00Z'
+          }
+        ],
+        total: 1
+      };
+
+      server.use(
+        rest.get(`${BASE_URL}/api/admin/system/logs`, (req, res, ctx) => {
+          return res(ctx.status(200), ctx.json(mockLogs));
+        })
+      );
+
+      const response = await api.get('/admin/system/logs');
+      expect(response.status).toBe(200);
+      expect(response.data.logs).toHaveLength(1);
+    });
+
+    it('GET /admin/system/metrics - should fetch system metrics', async () => {
+      const mockMetrics = {
+        cpu: {
+          usage: 0.4,
+          cores: 8
+        },
+        memory: {
+          used: '4GB',
+          total: '16GB',
+          percentage: 0.25
+        },
+        disk: {
+          used: '100GB',
+          total: '500GB',
+          percentage: 0.2
+        }
+      };
+
+      server.use(
+        rest.get(`${BASE_URL}/api/admin/system/metrics`, (req, res, ctx) => {
+          return res(ctx.status(200), ctx.json(mockMetrics));
+        })
+      );
+
+      const response = await api.get('/admin/system/metrics');
+      expect(response.status).toBe(200);
+      expect(response.data.cpu).toBeDefined();
+      expect(response.data.memory).toBeDefined();
+    });
+
+    it('GET /admin/system/api-usage - should fetch API usage statistics', async () => {
+      const mockApiUsage = {
+        endpoints: {
+          '/api/trips': 5000,
+          '/api/experiences': 3000,
+          '/api/auth': 2000
+        },
+        totalRequests: 10000,
+        avgResponseTime: 150
+      };
+
+      server.use(
+        rest.get(`${BASE_URL}/api/admin/system/api-usage`, (req, res, ctx) => {
+          return res(ctx.status(200), ctx.json(mockApiUsage));
+        })
+      );
+
+      const response = await api.get('/admin/system/api-usage');
+      expect(response.status).toBe(200);
+      expect(response.data.endpoints).toBeDefined();
+      expect(response.data.totalRequests).toBe(10000);
+    });
+
+    it('GET /admin/system/db-health - should fetch database health status', async () => {
+      const mockDbHealth = {
+        status: 'healthy',
+        connections: {
+          active: 10,
+          idle: 5,
+          max: 100
+        },
+        queriesPerSecond: 50,
+        avgQueryTime: 20
+      };
+
+      server.use(
+        rest.get(`${BASE_URL}/api/admin/system/db-health`, (req, res, ctx) => {
+          return res(ctx.status(200), ctx.json(mockDbHealth));
+        })
+      );
+
+      const response = await api.get('/admin/system/db-health');
+      expect(response.status).toBe(200);
+      expect(response.data.status).toBe('healthy');
+    });
+  });
+});

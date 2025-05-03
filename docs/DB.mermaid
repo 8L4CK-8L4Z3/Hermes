@@ -1,0 +1,179 @@
+erDiagram
+    USER {
+        ObjectId _id PK
+        string email UK "indexed"
+        string password_hash
+        string username UK "indexed"
+        string profile_picture
+        string bio
+        boolean is_admin
+        string[] roles "array of role strings"
+        date last_login "indexed"
+        date created_at "indexed"
+        date updated_at
+        boolean is_active
+    }
+
+    TRIP {
+        ObjectId _id PK
+        ObjectId user_id FK "indexed"
+        string title
+        string description
+        date start_date "indexed"
+        date end_date "indexed"
+        number budget
+        boolean is_public "indexed"
+        string status "enum: planning, active, completed"
+        string[] tags "indexed"
+        date created_at
+        date updated_at
+    }
+
+    DESTINATION {
+        ObjectId _id PK
+        string name "indexed"
+        string country "indexed"
+        string city "indexed"
+        number latitude
+        number longitude
+        string description
+        string image_url
+        boolean is_approved "indexed"
+        ObjectId created_by FK "indexed"
+        number rating_avg
+        number rating_count
+        date created_at
+        date updated_at
+    }
+
+    ACTIVITY {
+        ObjectId _id PK
+        ObjectId destination_id FK "indexed"
+        string name "indexed"
+        string description
+        string category "indexed"
+        number price
+        string duration
+        string image_url
+        boolean is_approved "indexed"
+        ObjectId created_by FK "indexed"
+        date created_at
+        date updated_at
+    }
+
+    ITINERARY_ITEM {
+        ObjectId _id PK
+        ObjectId trip_id FK "indexed"
+        ObjectId activity_id FK "indexed"
+        date day "indexed"
+        time start_time
+        time end_time
+        string notes
+        number actual_cost
+        string status "enum: planned, completed"
+        date created_at
+        date updated_at
+    }
+
+    EXPERIENCE {
+        ObjectId _id PK
+        ObjectId user_id FK "indexed"
+        ObjectId trip_id FK "indexed"
+        string title
+        string content
+        string[] tags "indexed"
+        boolean is_public
+        number like_count
+        number comment_count
+        date created_at "indexed"
+        date updated_at
+    }
+
+    MEDIA {
+        ObjectId _id PK
+        ObjectId experience_id FK "indexed"
+        string media_type "indexed"
+        string url
+        string caption
+        string mime_type
+        date created_at
+    }
+
+    COMMENT {
+        ObjectId _id PK
+        ObjectId user_id FK "indexed"
+        ObjectId experience_id FK "indexed"
+        string content
+        ObjectId parent_id FK "for nested comments"
+        date created_at "indexed"
+        date updated_at
+    }
+
+    LIKE {
+        ObjectId _id PK
+        ObjectId user_id FK "indexed"
+        ObjectId experience_id FK "indexed"
+        date created_at
+    }
+
+    FRIENDSHIP {
+        ObjectId _id PK
+        ObjectId user_id_1 FK "indexed"
+        ObjectId user_id_2 FK "indexed"
+        string status "enum: pending, accepted"
+        date created_at
+    }
+
+    NOTIFICATION {
+        ObjectId _id PK
+        ObjectId user_id FK "indexed"
+        string type "indexed"
+        string content
+        boolean is_read
+        string action_url
+        date created_at "indexed"
+    }
+
+    REPORT {
+        ObjectId _id PK
+        ObjectId reporter_id FK "indexed"
+        string report_type "indexed"
+        ObjectId target_id "indexed"
+        string target_type "indexed"
+        string reason
+        string status "enum: pending, resolved"
+        date created_at "indexed"
+        date updated_at
+    }
+
+    USER_PREFERENCE {
+        ObjectId user_id FK "indexed"
+        string category "indexed"
+        string preference_value
+        date updated_at
+    }
+
+    %% Relationships
+    USER ||--o{ TRIP : "creates"
+    USER ||--o{ EXPERIENCE : "shares"
+    USER ||--o{ COMMENT : "writes"
+    USER ||--o{ LIKE : "gives"
+    USER ||--o{ NOTIFICATION : "receives"
+    USER ||--o{ USER_PREFERENCE : "has"
+    USER ||--o{ DESTINATION : "creates"
+    USER ||--o{ ACTIVITY : "creates"
+    USER ||--o{ REPORT : "submits"
+
+    TRIP ||--o{ ITINERARY_ITEM : "contains"
+    TRIP ||--o{ EXPERIENCE : "results in"
+
+    DESTINATION ||--o{ ACTIVITY : "offers"
+
+    ACTIVITY ||--o{ ITINERARY_ITEM : "included in"
+
+    EXPERIENCE ||--o{ MEDIA : "includes"
+    EXPERIENCE ||--o{ COMMENT : "receives"
+    EXPERIENCE ||--o{ LIKE : "receives"
+
+    USER }|--|| FRIENDSHIP : "user_id_1"
+    USER }|--|| FRIENDSHIP : "user_id_2"
