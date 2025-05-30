@@ -124,6 +124,10 @@ erDiagram
     string bio
     boolean isAdmin
     boolean isMod
+    date lastLogin
+    boolean isVerified
+    object preferences
+    object stats
   }
   TRIPS {
     string id PK
@@ -132,6 +136,10 @@ erDiagram
     date start_date
     date end_date
     string[] destinations
+    string status
+    boolean isPublic
+    object budget
+    array activities
   }
   DESTINATIONS {
     string id PK
@@ -148,6 +156,12 @@ erDiagram
     string description
     string photo
     float average_rating
+    string price_range
+    object opening_hours
+    object contact
+    object location
+    string[] tags
+    string[] amenities
   }
   REVIEWS {
     string id PK
@@ -155,7 +169,10 @@ erDiagram
     string place_id FK
     int rating
     string comment
-    string[] photos
+    array photos
+    object helpful_votes
+    date visit_date
+    object categories
   }
   FOLLOWS {
     string user_id FK
@@ -166,6 +183,10 @@ erDiagram
     string user_id FK
     string content
     string media
+    string type
+    string visibility
+    string[] tags
+    object location
     date created_at
     date updated_at
   }
@@ -201,6 +222,15 @@ erDiagram
     string reason
     date created_at
   }
+  ANALYTICS {
+    string id PK
+    date date
+    object metrics
+    array popularDestinations
+    array popularPlaces
+    date created_at
+    date updated_at
+  }
 
   USERS ||--o{ TRIPS : "creates"
   USERS ||--o{ REVIEWS : "writes"
@@ -218,7 +248,8 @@ erDiagram
   COMMENTS ||--o{ LIKES : "receives"
   REVIEWS ||--o{ LIKES : "receives"
   COMMENTS ||--o{ COMMENTS : "replies to"
-
+  ANALYTICS ||--o{ DESTINATIONS : "tracks"
+  ANALYTICS ||--o{ PLACES : "tracks"
 
 ```
 
