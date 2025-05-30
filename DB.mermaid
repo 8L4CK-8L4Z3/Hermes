@@ -1,0 +1,104 @@
+erDiagram
+  USERS {
+    string id PK
+    string username
+    string email
+    string password_hash
+    string photo
+    string bio
+    boolean isAdmin
+    boolean isMod
+  }
+  TRIPS {
+    string id PK
+    string user_id FK
+    string title
+    date start_date
+    date end_date
+    string[] destinations
+  }
+  DESTINATIONS {
+    string id PK
+    string name
+    string description
+    string location
+    string photo
+  }
+  PLACES {
+    string id PK
+    string destination_id FK
+    string type
+    string name
+    string description
+    string photo
+    float average_rating
+  }
+  REVIEWS {
+    string id PK
+    string user_id FK
+    string place_id FK
+    int rating
+    string comment
+    string[] photos
+  }
+  FOLLOWS {
+    string user_id FK
+    string follower_id FK
+  }
+  POSTS {
+    string id PK
+    string user_id FK
+    string content
+    string media
+    date created_at
+    date updated_at
+  }
+  COMMENTS {
+    string id PK
+    string post_id FK
+    string user_id FK
+    string content
+    date created_at
+    string parent_comment_id
+  }
+  LIKES {
+    string id PK
+    string user_id FK
+    string target_type
+    string target_id
+    date created_at
+  }
+  NOTIFICATIONS {
+    string id PK
+    string user_id FK
+    string type
+    string data
+    boolean is_read
+    date created_at
+  }
+  MODERATIONLOGS {
+    string id PK
+    string moderator_id FK
+    string action
+    string target_type
+    string target_id
+    string reason
+    date created_at
+  }
+
+  USERS ||--o{ TRIPS : "creates"
+  USERS ||--o{ REVIEWS : "writes"
+  USERS ||--o{ POSTS : "creates"
+  USERS ||--o{ COMMENTS : "writes"
+  USERS ||--o{ FOLLOWS : "follows"
+  USERS ||--o{ LIKES : "likes"
+  USERS ||--o{ NOTIFICATIONS : "receives"
+  USERS ||--o{ MODERATIONLOGS : "moderates"
+  TRIPS ||--o{ DESTINATIONS : "includes"
+  DESTINATIONS ||--o{ PLACES : "has"
+  PLACES ||--o{ REVIEWS : "receives"
+  POSTS ||--o{ COMMENTS : "has"
+  POSTS ||--o{ LIKES : "receives"
+  COMMENTS ||--o{ LIKES : "receives"
+  REVIEWS ||--o{ LIKES : "receives"
+  COMMENTS ||--o{ COMMENTS : "replies to"
