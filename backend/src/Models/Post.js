@@ -37,6 +37,7 @@ const postSchema = new mongoose.Schema(
       },
     },
   },
+  
   {
     timestamps: true,
   }

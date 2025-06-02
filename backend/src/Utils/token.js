@@ -1,64 +1,42 @@
 import jwt from "jsonwebtoken";
-import User from "../models/User.js";
+import User from "../Models/User.js";
 import { JWT_SECRET, JWT_EXPIRE } from "../Configs/config.js";
-import { errorHandler, successHandler } from "./reponseHandlers.js";
+import { errorResponse, successResponse, HTTP_STATUS } from "./responses.js";
 
-const generateToken = (userId) => {
-  const token = jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRE });
-  return token;
+export const generateToken = (id) => {
+  return jwt.sign({ id }, JWT_SECRET, {
+    expiresIn: JWT_EXPIRE,
+  });
 };
 
-const verifyToken = async (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
+export const verifyToken = (token) => {
+  return jwt.verify(token, JWT_SECRET);
+};
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return errorHandler(res, 401, "Unauthorized - No token provided");
+export const refreshToken = async (req, res) => {
+  try {
+    const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      throw new Error("No token provided");
     }
 
-    const token = authHeader.split(" ")[1];
+    const decoded = verifyToken(token);
+    const user = await User.findById(decoded.id).select("-password");
 
-    const decoded = jwt.verify(token, JWT_SECRET);
-
-    // Check if user exists
-    const user = await User.findById(decoded.userId);
     if (!user) {
-      return errorHandler(res, 401, "Unauthorized - User not found");
+      throw new Error("User not found");
     }
 
-    // Check if token matches stored refresh token
-    if (token !== user.refreshToken) {
-      return errorHandler(res, 401, "Unauthorized - Invalid token");
-    }
+    const newToken = generateToken(user._id);
 
-    // Add user ID to request
-    req.userId = decoded.userId;
-    next();
-  } catch (error) {
-    if (error.name === "TokenExpiredError") {
-      return errorHandler(res, 401, "Token expired");
-    }
-    return errorHandler(res, 401, "Invalid token");
-  }
-};
-
-const refreshToken = async (req, res) => {
-  try {
-    const userId = req.userId;
-
-    // Generate new token
-    const newToken = generateToken(userId);
-
-    // Update user's refresh token
-    await User.findByIdAndUpdate(userId, { refreshToken: newToken });
-
-    successHandler(res, 200, "Token refreshed successfully", {
-      token: newToken,
+    res.cookie("token", newToken, {
+      httpOnly: true,
+      expires: new Date(Date.now() + JWT_EXPIRE * 24 * 60 * 60 * 1000),
     });
+
+    return newToken;
   } catch (error) {
-    console.error("Error refreshing token:", error);
-    errorHandler(res, 500, "Server error");
+    throw new Error("Invalid token");
   }
 };
-
-export { generateToken, verifyToken, refreshToken };
