@@ -1,5 +1,5 @@
 import User from "../Models/User.js";
-import { generateToken, verifyToken, refreshToken } from "../Utils/token.js";
+import { generateToken, refreshToken } from "../Utils/token.js";
 import {
   successResponse,
   errorResponse,
@@ -18,10 +18,10 @@ import {
 // @access  Public
 export const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { username, email, password } = req.body;
 
     // Check if user exists
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ $or: [{ email }, { username }] });
     if (userExists) {
       return errorResponse(res, {
         code: HTTP_STATUS.CONFLICT,
@@ -29,11 +29,14 @@ export const register = async (req, res) => {
       });
     }
 
+    // Hash password
+    const password_hash = await bcrypt.hash(password, 10);
+
     // Create user
     const user = await User.create({
-      name,
+      username,
       email,
-      password,
+      password_hash,
       verificationToken: crypto.randomBytes(32).toString("hex"),
     });
 
@@ -44,9 +47,12 @@ export const register = async (req, res) => {
     await sendVerificationEmail(user.email, user.verificationToken);
 
     // Set cookie
+    const cookieExpire = parseInt(JWT_COOKIE_EXPIRE) || 8; // Default to 8 days if not set
     res.cookie("token", token, {
       httpOnly: true,
-      expires: new Date(Date.now() + JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000),
+      expires: new Date(Date.now() + cookieExpire * 24 * 60 * 60 * 1000),
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
     });
 
     return successResponse(res, {
@@ -55,7 +61,7 @@ export const register = async (req, res) => {
       data: {
         user: {
           id: user._id,
-          name: user.name,
+          username: user.username,
           email: user.email,
         },
         token,
@@ -103,9 +109,10 @@ export const login = async (req, res) => {
     await user.save();
 
     // Set cookie
+    const cookieExpire = parseInt(JWT_COOKIE_EXPIRE) || 8; // Default to 8 days if not set
     res.cookie("token", token, {
       httpOnly: true,
-      expires: new Date(Date.now() + JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000),
+      expires: new Date(Date.now() + cookieExpire * 24 * 60 * 60 * 1000),
     });
 
     return successResponse(res, {

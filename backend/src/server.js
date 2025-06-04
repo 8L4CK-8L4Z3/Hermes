@@ -1,5 +1,4 @@
-import express from "express";
-import dotenv from "dotenv";
+  // import express from "express";
 import logger from "./Utils/logger.js";
 import cors from "cors";
 import helmet from "helmet";
@@ -8,8 +7,6 @@ import cookieParser from "cookie-parser";
 import dbConnect from "./Configs/db.js";
 import { NODE_ENV } from "./Configs/config.js";
 import authRoutes from "./Routes/authRoutes.js";
-
-dotenv.config();
 
 const app = express();
 

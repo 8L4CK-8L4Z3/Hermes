@@ -15,81 +15,38 @@ const colors = {
 };
 
 const logInfo = (namespace, message, object) => {
-  const coloredMessage = `${colors.green}[INFO]${colors.reset}`;
-  if (object) {
-    console.info(
-      `[${getTimeStamp()}] ${coloredMessage} [${colors.cyan}${namespace}${
-        colors.reset
-      }] ${message}`,
-      object
-    );
-  } else {
-    console.info(
-      `[${getTimeStamp()}] ${coloredMessage} [${colors.cyan}${namespace}${
-        colors.reset
-      }] ${message}`
-    );
-  }
+  logger.info(message, { namespace, object });
 };
 
 const logWarn = (namespace, message, object) => {
-  const coloredMessage = `${colors.yellow}[WARN]${colors.reset}`;
-  if (object) {
-    console.warn(
-      `[${getTimeStamp()}] ${coloredMessage} [${colors.cyan}${namespace}${
-        colors.reset
-      }] ${message}`,
-      object
-    );
-  } else {
-    console.warn(
-      `[${getTimeStamp()}] ${coloredMessage} [${colors.cyan}${namespace}${
-        colors.reset
-      }] ${message}`
-    );
-  }
+  logger.warn(message, { namespace, object });
 };
 
-const logError = (namespace, message, object) => {
-  const coloredMessage = `${colors.red}[ERROR]${colors.reset}`;
-  if (object) {
-    let msg = JSON.stringify(
-      `[${getTimeStamp()}] ${coloredMessage} [${colors.cyan}${namespace}${
-        colors.reset
-      }] ${message} [ERROR DETAILS] ${JSON.stringify(object)}`
-    );
-    logger.error(msg);
-    console.error(
-      `[${getTimeStamp()}] ${coloredMessage} [${colors.cyan}${namespace}${
-        colors.reset
-      }] ${message}`,
-      object
-    );
-  } else {
-    console.error(
-      `[${getTimeStamp()}] ${coloredMessage} [${colors.cyan}${namespace}${
-        colors.reset
-      }] ${message}`
-    );
+const logError = (namespace, message, error) => {
+  try {
+    if (error) {
+      const errorDetails = {
+        message: error.message || String(error),
+        stack: error.stack,
+        ...(error.code && { code: error.code }),
+        ...(error.name && { name: error.name }),
+      };
+
+      logger.error(message, {
+        namespace,
+        error: errorDetails,
+      });
+    } else {
+      logger.error(message, { namespace });
+    }
+  } catch (loggingError) {
+    console.error("Failed to log error:", loggingError);
+    console.error("Original error:", error);
   }
 };
 
 const logDebug = (namespace, message, object) => {
-  const coloredMessage = `${colors.magenta}[DEBUG]${colors.reset}`;
-  if (object) {
-    console.debug(
-      `[${getTimeStamp()}] ${coloredMessage} [${colors.cyan}${namespace}${
-        colors.reset
-      }] ${message}`,
-      object
-    );
-  } else {
-    console.debug(
-      `[${getTimeStamp()}] ${coloredMessage} [${colors.cyan}${namespace}${
-        colors.reset
-      }] ${message}`
-    );
-  }
+  logger.debug(message, { namespace, object });
 };
 
 const getTimeStamp = () => new Date().toISOString();
