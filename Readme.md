@@ -10,7 +10,7 @@ This document provides a comprehensive roadmap and strategy for your end-of-stud
 
 ## Tech Stack
 
-### Backend : Example Express + Mongoose
+### Backend : Express + Mongoose + Redis
 
 ### Frontend : React JSX + TailwindCSS + Shadcn-ui + Zod + Zustand + Tanstack-Query
 

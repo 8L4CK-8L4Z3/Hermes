@@ -22,6 +22,16 @@ export const EMAIL_FROM_NAME = process.env.EMAIL_FROM_NAME;
 export const EMAIL_FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS;
 
 // Rate Limiter Configuration
-export const RATE_LIMIT_WINDOW = process.env.RATE_LIMIT_WINDOW;
-export const RATE_LIMIT_MAX = process.env.RATE_LIMIT_MAX;
-export const RATE_LIMIT_MESSAGE = process.env.RATE_LIMIT_MESSAGE;
+export const API_RATE_LIMIT_WINDOW = process.env.API_RATE_LIMIT_WINDOW;
+export const API_RATE_LIMIT_MAX = process.env.API_RATE_LIMIT_MAX;
+export const API_RATE_LIMIT_MESSAGE = process.env.API_RATE_LIMIT_MESSAGE;
+export const AUTH_RATE_LIMIT_WINDOW = process.env.AUTH_RATE_LIMIT_WINDOW;
+export const AUTH_RATE_LIMIT_MAX = process.env.AUTH_RATE_LIMIT_MAX;
+export const AUTH_RATE_LIMIT_MESSAGE = process.env.AUTH_RATE_LIMIT_MESSAGE;
+export const UPLOAD_RATE_LIMIT_WINDOW = process.env.UPLOAD_RATE_LIMIT_WINDOW;
+export const UPLOAD_RATE_LIMIT_MAX = process.env.UPLOAD_RATE_LIMIT_MAX;
+export const UPLOAD_RATE_LIMIT_MESSAGE = process.env.UPLOAD_RATE_LIMIT_MESSAGE;
+
+// Redis Configuration
+export const REDIS_HOST = process.env.REDIS_HOST;
+export const REDIS_PORT = process.env.REDIS_PORT;

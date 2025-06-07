@@ -54,3 +54,21 @@ export const protect = async (req, res, next) => {
     });
   }
 };
+
+export const isModerator = async (req, res, next) => {
+  try {
+    if (!req.user.roles || !req.user.roles.includes("moderator")) {
+      return errorResponse(res, {
+        code: HTTP_STATUS.FORBIDDEN,
+        message: "Access denied. Moderator role required.",
+      });
+    }
+    next();
+  } catch (error) {
+    return errorResponse(res, {
+      code: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      message: "Error checking moderator role",
+      error: error.message,
+    });
+  }
+};

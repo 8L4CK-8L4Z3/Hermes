@@ -135,46 +135,6 @@ export const deletePlace = asyncHandler(async (req, res) => {
 });
 
 /**
- * @desc    Search places
- * @route   GET /api/places/search
- * @access  Public
- */
-export const searchPlaces = asyncHandler(async (req, res) => {
-  const { query, type, price_range, page = 1, limit = 10 } = req.query;
-
-  const searchQuery = {};
-  if (query) {
-    searchQuery.$or = [
-      { name: { $regex: query, $options: "i" } },
-      { description: { $regex: query, $options: "i" } },
-    ];
-  }
-  if (type) searchQuery.type = type;
-  if (price_range) searchQuery.price_range = price_range;
-
-  logger.logInfo(
-    NAMESPACE,
-    `Searching places with query: ${JSON.stringify(searchQuery)}`
-  );
-
-  const total = await Place.countDocuments(searchQuery);
-  const places = await Place.find(searchQuery)
-    .populate("destination_id")
-    .skip((page - 1) * limit)
-    .limit(limit);
-
-  return successPatterns.retrieved(res, {
-    data: places,
-    meta: {
-      page: parseInt(page),
-      limit: parseInt(limit),
-      total,
-      pages: Math.ceil(total / limit),
-    },
-  });
-});
-
-/**
  * @desc    Get places by type
  * @route   GET /api/places/type/:type
  * @access  Public
@@ -241,7 +201,7 @@ export const getPlacesByDestination = asyncHandler(async (req, res) => {
  * @access  Public
  */
 export const getPopularPlaces = asyncHandler(async (req, res) => {
-  const { limit = 10 } = req.query;
+  const { limit = 12 } = req.query;
 
   logger.logInfo(NAMESPACE, "Fetching popular places");
 

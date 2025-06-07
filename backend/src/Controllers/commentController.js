@@ -1,336 +1,314 @@
-import { Comment } from "../Models/Comment.js";
-import { Post } from "../Models/Post.js";
-import { logger } from "../Utils/logger.js";
-import { validateComment } from "../Utils/validators.js";
+import Comment from "../Models/Comment.js";
+import Post from "../Models/Post.js";
+import logger from "../Utils/logger.js";
+import { commentValidator } from "../Middleware/validators.js";
 import {
-  successResponse,
-  errorResponse,
-  notFoundResponse,
-  validationErrorResponse,
+  successPatterns,
+  errorPatterns,
+  HTTP_STATUS,
+  asyncHandler,
 } from "../Utils/responses.js";
 
-class CommentController {
-  /**
-   * Create a new comment
-   * @route POST /api/comments
-   */
-  async createComment(req, res) {
-    try {
-      const { content, postId, parentCommentId } = req.body;
-      const userId = req.user.id; // From auth middleware
+const NAMESPACE = "CommentController";
 
-      // Validate input
-      const validation = validateComment({ content, postId, parentCommentId });
-      if (!validation.success) {
-        return validationErrorResponse(res, validation.errors);
-      }
+/**
+ * @desc    Create a new comment
+ * @route   POST /api/comments
+ * @access  Private
+ */
+export const createComment = asyncHandler(async (req, res) => {
+  const { content, postId, parentCommentId } = req.body;
+  const userId = req.user.id;
 
-      // Check if post exists
-      const post = await Post.findById(postId);
-      if (!post) {
-        return notFoundResponse(res, "Post not found");
-      }
+  // Validate input
+  const validation = commentValidator({ content, postId, parentCommentId });
+  if (!validation.success) {
+    return errorPatterns.validationError(res, validation.errors);
+  }
 
-      // If it's a reply, check if parent comment exists
-      if (parentCommentId) {
-        const parentComment = await Comment.findById(parentCommentId);
-        if (!parentComment) {
-          return notFoundResponse(res, "Parent comment not found");
-        }
-      }
+  // Check if post exists
+  const post = await Post.findById(postId);
+  if (!post) {
+    return errorPatterns.notFound(res, { message: "Post not found" });
+  }
 
-      const comment = new Comment({
-        content,
-        post: postId,
-        user: userId,
-        parentComment: parentCommentId || null,
+  // If it's a reply, check if parent comment exists
+  if (parentCommentId) {
+    const parentComment = await Comment.findById(parentCommentId);
+    if (!parentComment) {
+      return errorPatterns.notFound(res, {
+        message: "Parent comment not found",
       });
-
-      await comment.save();
-
-      logger.info(`Comment created by user ${userId} on post ${postId}`);
-      return successResponse(res, comment);
-    } catch (error) {
-      logger.error("Error creating comment:", error);
-      return errorResponse(res, "Failed to create comment");
     }
   }
 
-  /**
-   * Get a specific comment
-   * @route GET /api/comments/:id
-   */
-  async getComment(req, res) {
-    try {
-      const { id } = req.params;
+  const comment = new Comment({
+    content,
+    post: postId,
+    user: userId,
+    parentComment: parentCommentId || null,
+  });
 
-      const comment = await Comment.findById(id)
-        .populate("user", "username photo")
-        .populate("parentComment");
+  await comment.save();
 
-      if (!comment) {
-        return notFoundResponse(res, "Comment not found");
-      }
+  logger.logInfo(
+    NAMESPACE,
+    `Comment created by user ${userId} on post ${postId}`
+  );
+  return successPatterns.created(res, { data: comment });
+});
 
-      return successResponse(res, comment);
-    } catch (error) {
-      logger.error("Error fetching comment:", error);
-      return errorResponse(res, "Failed to fetch comment");
-    }
+/**
+ * @desc    Get a specific comment
+ * @route   GET /api/comments/:id
+ * @access  Public
+ */
+export const getComment = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const comment = await Comment.findById(id)
+    .populate("user", "username photo")
+    .populate("parentComment");
+
+  if (!comment) {
+    return errorPatterns.notFound(res, { message: "Comment not found" });
   }
 
-  /**
-   * Update a comment
-   * @route PUT /api/comments/:id
-   */
-  async updateComment(req, res) {
-    try {
-      const { id } = req.params;
-      const { content } = req.body;
-      const userId = req.user.id;
+  return successPatterns.ok(res, { data: comment });
+});
 
-      // Validate input
-      const validation = validateComment({ content });
-      if (!validation.success) {
-        return validationErrorResponse(res, validation.errors);
-      }
+/**
+ * @desc    Update a comment
+ * @route   PUT /api/comments/:id
+ * @access  Private
+ */
+export const updateComment = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { content } = req.body;
+  const userId = req.user.id;
 
-      const comment = await Comment.findById(id);
-      if (!comment) {
-        return notFoundResponse(res, "Comment not found");
-      }
-
-      // Check if user owns the comment
-      if (comment.user.toString() !== userId) {
-        return errorResponse(res, "Unauthorized to update this comment", 403);
-      }
-
-      comment.content = content;
-      comment.updatedAt = Date.now();
-      await comment.save();
-
-      logger.info(`Comment ${id} updated by user ${userId}`);
-      return successResponse(res, comment);
-    } catch (error) {
-      logger.error("Error updating comment:", error);
-      return errorResponse(res, "Failed to update comment");
-    }
+  // Validate input
+  const validation = validateComment({ content });
+  if (!validation.success) {
+    return errorPatterns.validationError(res, validation.errors);
   }
 
-  /**
-   * Delete a comment
-   * @route DELETE /api/comments/:id
-   */
-  async deleteComment(req, res) {
-    try {
-      const { id } = req.params;
-      const userId = req.user.id;
-
-      const comment = await Comment.findById(id);
-      if (!comment) {
-        return notFoundResponse(res, "Comment not found");
-      }
-
-      // Check if user owns the comment or is admin
-      if (comment.user.toString() !== userId && !req.user.isAdmin) {
-        return errorResponse(res, "Unauthorized to delete this comment", 403);
-      }
-
-      await comment.remove();
-
-      logger.info(`Comment ${id} deleted by user ${userId}`);
-      return successResponse(res, { message: "Comment deleted successfully" });
-    } catch (error) {
-      logger.error("Error deleting comment:", error);
-      return errorResponse(res, "Failed to delete comment");
-    }
+  const comment = await Comment.findById(id);
+  if (!comment) {
+    return errorPatterns.notFound(res, { message: "Comment not found" });
   }
 
-  /**
-   * Get comments for a post
-   * @route GET /api/posts/:postId/comments
-   */
-  async getPostComments(req, res) {
-    try {
-      const { postId } = req.params;
-      const { page = 1, limit = 10 } = req.query;
-
-      const comments = await Comment.find({ post: postId, parentComment: null })
-        .populate("user", "username photo")
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(parseInt(limit));
-
-      const total = await Comment.countDocuments({
-        post: postId,
-        parentComment: null,
-      });
-
-      return successResponse(res, comments, {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-      });
-    } catch (error) {
-      logger.error("Error fetching post comments:", error);
-      return errorResponse(res, "Failed to fetch comments");
-    }
+  // Check if user owns the comment
+  if (comment.user.toString() !== userId) {
+    return errorPatterns.unauthorized(
+      res,
+      { message: "Unauthorized to update this comment" },
+      HTTP_STATUS.FORBIDDEN
+    );
   }
 
-  /**
-   * Like a comment
-   * @route POST /api/comments/:id/like
-   */
-  async likeComment(req, res) {
-    try {
-      const { id } = req.params;
-      const userId = req.user.id;
+  comment.content = content;
+  comment.updatedAt = Date.now();
+  await comment.save();
 
-      const comment = await Comment.findById(id);
-      if (!comment) {
-        return notFoundResponse(res, "Comment not found");
-      }
+  logger.logInfo(NAMESPACE, `Comment ${id} updated by user ${userId}`);
+  return successPatterns.ok(res, { data: comment });
+});
 
-      // Check if already liked
-      if (comment.likes.includes(userId)) {
-        return errorResponse(res, "Comment already liked", 400);
-      }
+/**
+ * @desc    Delete a comment
+ * @route   DELETE /api/comments/:id
+ * @access  Private
+ */
+export const deleteComment = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
 
-      comment.likes.push(userId);
-      await comment.save();
-
-      logger.info(`Comment ${id} liked by user ${userId}`);
-      return successResponse(res, { message: "Comment liked successfully" });
-    } catch (error) {
-      logger.error("Error liking comment:", error);
-      return errorResponse(res, "Failed to like comment");
-    }
+  const comment = await Comment.findById(id);
+  if (!comment) {
+    return errorPatterns.notFound(res, { message: "Comment not found" });
   }
 
-  /**
-   * Unlike a comment
-   * @route POST /api/comments/:id/unlike
-   */
-  async unlikeComment(req, res) {
-    try {
-      const { id } = req.params;
-      const userId = req.user.id;
-
-      const comment = await Comment.findById(id);
-      if (!comment) {
-        return notFoundResponse(res, "Comment not found");
-      }
-
-      // Remove user from likes array
-      comment.likes = comment.likes.filter(
-        (like) => like.toString() !== userId
-      );
-      await comment.save();
-
-      logger.info(`Comment ${id} unliked by user ${userId}`);
-      return successResponse(res, { message: "Comment unliked successfully" });
-    } catch (error) {
-      logger.error("Error unliking comment:", error);
-      return errorResponse(res, "Failed to unlike comment");
-    }
+  // Check if user owns the comment or is admin
+  if (comment.user.toString() !== userId && !req.user.isAdmin) {
+    return errorPatterns.unauthorized(
+      res,
+      { message: "Unauthorized to delete this comment" },
+      HTTP_STATUS.FORBIDDEN
+    );
   }
 
-  /**
-   * Get replies to a comment
-   * @route GET /api/comments/:id/replies
-   */
-  async getCommentReplies(req, res) {
-    try {
-      const { id } = req.params;
-      const { page = 1, limit = 10 } = req.query;
+  await comment.remove();
 
-      const replies = await Comment.find({ parentComment: id })
-        .populate("user", "username photo")
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(parseInt(limit));
+  logger.logInfo(NAMESPACE, `Comment ${id} deleted by user ${userId}`);
+  return successPatterns.ok(res, { message: "Comment deleted successfully" });
+});
 
-      const total = await Comment.countDocuments({ parentComment: id });
+/**
+ * @desc    Get comments for a post
+ * @route   GET /api/posts/:postId/comments
+ * @access  Public
+ */
+export const getPostComments = asyncHandler(async (req, res) => {
+  const { postId } = req.params;
+  const { page = 1, limit = 10 } = req.query;
 
-      return successResponse(res, replies, {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-      });
-    } catch (error) {
-      logger.error("Error fetching comment replies:", error);
-      return errorResponse(res, "Failed to fetch replies");
-    }
+  const comments = await Comment.find({ post: postId, parentComment: null })
+    .populate("user", "username photo")
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+
+  const total = await Comment.countDocuments({
+    post: postId,
+    parentComment: null,
+  });
+
+  return successPatterns.ok(res, {
+    data: comments,
+    meta: {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      total,
+    },
+  });
+});
+
+/**
+ * @desc    Like a comment
+ * @route   POST /api/comments/:id/like
+ * @access  Private
+ */
+export const likeComment = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  const comment = await Comment.findById(id);
+  if (!comment) {
+    return errorPatterns.notFound(res, { message: "Comment not found" });
   }
 
-  /**
-   * Get full comment thread
-   * @route GET /api/comments/:id/thread
-   */
-  async getCommentThread(req, res) {
-    try {
-      const { id } = req.params;
-
-      // Get the main comment and all its nested replies
-      const thread = await Comment.findById(id)
-        .populate("user", "username photo")
-        .populate({
-          path: "replies",
-          populate: {
-            path: "user",
-            select: "username photo",
-          },
-        });
-
-      if (!thread) {
-        return notFoundResponse(res, "Comment thread not found");
-      }
-
-      return successResponse(res, thread);
-    } catch (error) {
-      logger.error("Error fetching comment thread:", error);
-      return errorResponse(res, "Failed to fetch comment thread");
-    }
+  // Check if already liked
+  if (comment.likes.includes(userId)) {
+    return errorPatterns.badRequest(res, { message: "Comment already liked" });
   }
 
-  /**
-   * Update comment content
-   * @route PATCH /api/comments/:id/content
-   */
-  async updateCommentContent(req, res) {
-    try {
-      const { id } = req.params;
-      const { content } = req.body;
-      const userId = req.user.id;
+  comment.likes.push(userId);
+  await comment.save();
 
-      // Validate input
-      const validation = validateComment({ content });
-      if (!validation.success) {
-        return validationErrorResponse(res, validation.errors);
-      }
+  logger.logInfo(NAMESPACE, `Comment ${id} liked by user ${userId}`);
+  return successPatterns.ok(res, { message: "Comment liked successfully" });
+});
 
-      const comment = await Comment.findById(id);
-      if (!comment) {
-        return notFoundResponse(res, "Comment not found");
-      }
+/**
+ * @desc    Unlike a comment
+ * @route   DELETE /api/comments/:id/like
+ * @access  Private
+ */
+export const unlikeComment = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
 
-      // Check if user owns the comment
-      if (comment.user.toString() !== userId) {
-        return errorResponse(res, "Unauthorized to update this comment", 403);
-      }
-
-      comment.content = content;
-      comment.isEdited = true;
-      comment.updatedAt = Date.now();
-      await comment.save();
-
-      logger.info(`Comment ${id} content updated by user ${userId}`);
-      return successResponse(res, comment);
-    } catch (error) {
-      logger.error("Error updating comment content:", error);
-      return errorResponse(res, "Failed to update comment content");
-    }
+  const comment = await Comment.findById(id);
+  if (!comment) {
+    return errorPatterns.notFound(res, { message: "Comment not found" });
   }
-}
 
-export default new CommentController();
+  const likeIndex = comment.likes.indexOf(userId);
+  if (likeIndex === -1) {
+    return errorPatterns.badRequest(res, { message: "Comment not liked yet" });
+  }
+
+  comment.likes.splice(likeIndex, 1);
+  await comment.save();
+
+  logger.logInfo(NAMESPACE, `Comment ${id} unliked by user ${userId}`);
+  return successPatterns.ok(res, { message: "Comment unliked successfully" });
+});
+
+/**
+ * @desc    Get comment replies
+ * @route   GET /api/comments/:id/replies
+ * @access  Public
+ */
+export const getCommentReplies = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { page = 1, limit = 10 } = req.query;
+
+  const replies = await Comment.find({ parentComment: id })
+    .populate("user", "username photo")
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+
+  const total = await Comment.countDocuments({ parentComment: id });
+
+  return successPatterns.ok(res, {
+    data: replies,
+    meta: {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      total,
+    },
+  });
+});
+
+/**
+ * @desc    Get comment thread
+ * @route   GET /api/comments/:id/thread
+ * @access  Public
+ */
+export const getCommentThread = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const thread = await Comment.findById(id)
+    .populate("user", "username photo")
+    .populate({
+      path: "parentComment",
+      populate: { path: "user", select: "username photo" },
+    });
+
+  if (!thread) {
+    return errorPatterns.notFound(res, { message: "Comment thread not found" });
+  }
+
+  return successPatterns.ok(res, { data: thread });
+});
+
+/**
+ * @desc    Update comment content
+ * @route   PATCH /api/comments/:id/content
+ * @access  Private
+ */
+export const updateCommentContent = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { content } = req.body;
+  const userId = req.user.id;
+
+  // Validate input
+  const validation = validateComment({ content });
+  if (!validation.success) {
+    return errorPatterns.validationError(res, validation.errors);
+  }
+
+  const comment = await Comment.findById(id);
+  if (!comment) {
+    return errorPatterns.notFound(res, { message: "Comment not found" });
+  }
+
+  // Check if user owns the comment
+  if (comment.user.toString() !== userId) {
+    return errorPatterns.unauthorized(
+      res,
+      { message: "Unauthorized to update this comment" },
+      HTTP_STATUS.FORBIDDEN
+    );
+  }
+
+  comment.content = content;
+  comment.updatedAt = Date.now();
+  await comment.save();
+
+  logger.logInfo(NAMESPACE, `Comment ${id} content updated by user ${userId}`);
+  return successPatterns.ok(res, { data: comment });
+});
