@@ -114,6 +114,7 @@ This enhanced schema is more robust for a social platform, supporting richer int
 
 ```mermaid
 
+
 erDiagram
   USERS {
     string id PK
@@ -128,6 +129,30 @@ erDiagram
     boolean isVerified
     object preferences
     object stats
+    function register()
+    function login()
+    function logout()
+    function refreshToken()
+    function forgotPassword()
+    function resetPassword()
+    function verifyEmail()
+    function updatePassword()
+    function getProfile()
+    function updateProfile()
+    function deleteAccount()
+    function getFollowers()
+    function getFollowing()
+    function followUser()
+    function unfollowUser()
+    function getUserStats()
+    function updatePreferences()
+    function updateLastLogin()
+    function getUserActivity()
+    function updateUserPhoto()
+    function updateUserStats()
+    function updateUserPreferences()
+    function getUserPreferences()
+    function verifyUser()
   }
   TRIPS {
     string id PK
@@ -140,6 +165,26 @@ erDiagram
     boolean isPublic
     object budget
     array activities
+    function createTrip()
+    function getTrip()
+    function updateTrip()
+    function deleteTrip()
+    function getUserTrips()
+    function addDestination()
+    function removeDestination()
+    function updateTripStatus()
+    function shareTrip()
+    function getPublicTrips()
+    function updateBudget()
+    function addActivity()
+    function removeActivity()
+    function updateActivity()
+    function getTripActivities()
+    function getTripTimeline()
+    function updateTripBudget()
+    function updateTripVisibility()
+    function updateTripActivity()
+    function removeTripActivity()
   }
   DESTINATIONS {
     string id PK
@@ -147,6 +192,16 @@ erDiagram
     string description
     string location
     string photo
+    function createDestination()
+    function getDestination()
+    function updateDestination()
+    function deleteDestination()
+    function searchDestinations()
+    function getPopularDestinations()
+    function getNearbyDestinations()
+    function updateDestinationPhoto()
+    function getDestinationStats()
+    function getDestinationPlaces()
   }
   PLACES {
     string id PK
@@ -162,6 +217,21 @@ erDiagram
     object location
     string[] tags
     string[] amenities
+    function createPlace()
+    function getPlace()
+    function updatePlace()
+    function deletePlace()
+    function searchPlaces()
+    function getPlacesByType()
+    function getPlacesByDestination()
+    function getPopularPlaces()
+    function updatePlaceRating()
+    function updatePlacePriceRange()
+    function updatePlaceOpeningHours()
+    function updatePlaceAddress()
+    function getPlaceStats()
+    function getPlacesByPriceRange()
+    function getPlacesByOpeningHours()
   }
   REVIEWS {
     string id PK
@@ -173,10 +243,31 @@ erDiagram
     object helpful_votes
     date visit_date
     object categories
+    function createReview()
+    function getReview()
+    function updateReview()
+    function deleteReview()
+    function getPlaceReviews()
+    function getUserReviews()
+    function likeReview()
+    function unlikeReview()
+    function updateReviewPhotos()
+    function updateHelpfulVotes()
+    function getReviewCategories()
+    function updateReviewCategories()
+    function getReviewsByVisitDate()
+    function getHelpfulReviews()
   }
   FOLLOWS {
     string user_id FK
     string follower_id FK
+    function followUser()
+    function unfollowUser()
+    function getFollowers()
+    function getFollowing()
+    function getFollowSuggestions()
+    function getFollowStats()
+    function getMutualFollowers()
   }
   POSTS {
     string id PK
@@ -189,6 +280,21 @@ erDiagram
     object location
     date created_at
     date updated_at
+    function createPost()
+    function getPost()
+    function updatePost()
+    function deletePost()
+    function getFeed()
+    function getUserPosts()
+    function likePost()
+    function unlikePost()
+    function updatePostVisibility()
+    function updatePostType()
+    function updatePostLocation()
+    function getPostsByType()
+    function getPostsByVisibility()
+    function getPostsByLocation()
+    function getPostsByTags()
   }
   COMMENTS {
     string id PK
@@ -197,6 +303,16 @@ erDiagram
     string content
     date created_at
     string parent_comment_id
+    function createComment()
+    function getComment()
+    function updateComment()
+    function deleteComment()
+    function getPostComments()
+    function likeComment()
+    function unlikeComment()
+    function getCommentReplies()
+    function getCommentThread()
+    function updateCommentContent()
   }
   LIKES {
     string id PK
@@ -204,6 +320,12 @@ erDiagram
     string target_type
     string target_id
     date created_at
+    function likeContent()
+    function unlikeContent()
+    function getLikes()
+    function getUserLikes()
+    function getLikesByType()
+    function getLikedContent()
   }
   NOTIFICATIONS {
     string id PK
@@ -212,6 +334,15 @@ erDiagram
     string data
     boolean is_read
     date created_at
+    function getNotifications()
+    function markAsRead()
+    function markAllAsRead()
+    function deleteNotification()
+    function getUnreadCount()
+    function createNotification()
+    function updateNotificationReadStatus()
+    function getNotificationsByType()
+    function deleteOldNotifications()
   }
   MODERATIONLOGS {
     string id PK
@@ -221,6 +352,13 @@ erDiagram
     string target_id
     string reason
     date created_at
+    function reportContent()
+    function getReports()
+    function handleReport()
+    function getModerationQueue()
+    function logModerationAction()
+    function getModerationHistory()
+    function getModeratorStats()
   }
   ANALYTICS {
     string id PK
@@ -230,6 +368,17 @@ erDiagram
     array popularPlaces
     date created_at
     date updated_at
+    function getUserAnalytics()
+    function getContentAnalytics()
+    function getDestinationAnalytics()
+    function getPlaceAnalytics()
+    function getSearchAnalytics()
+    function updateDailyMetrics()
+    function updatePopularDestinations()
+    function updatePopularPlaces()
+    function getAnalyticsByDate()
+    function getAnalyticsByMetric()
+    function getPopularContent()
   }
 
   USERS ||--o{ TRIPS : "creates"
