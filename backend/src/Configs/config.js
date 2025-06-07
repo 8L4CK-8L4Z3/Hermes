@@ -20,3 +20,8 @@ export const SMTP_USER = process.env.SMTP_USER;
 export const SMTP_PASS = process.env.SMTP_PASS;
 export const EMAIL_FROM_NAME = process.env.EMAIL_FROM_NAME;
 export const EMAIL_FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS;
+
+// Rate Limiter Configuration
+export const RATE_LIMIT_WINDOW = process.env.RATE_LIMIT_WINDOW;
+export const RATE_LIMIT_MAX = process.env.RATE_LIMIT_MAX;
+export const RATE_LIMIT_MESSAGE = process.env.RATE_LIMIT_MESSAGE;

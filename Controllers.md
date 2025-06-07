@@ -211,7 +211,7 @@
 
 Each controller should implement:
 
-1. Input validation using the validators in the utils folder validators.js file
+1. Input validation using the validators in the middleware folder validators.js file
 2. Error handling using the response in the utils folder
 3. Authentication/Authorization checks
 4. Rate limiting
