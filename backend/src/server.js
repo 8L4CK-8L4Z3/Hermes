@@ -70,8 +70,6 @@ app.use("/api/comments", commentRoutes);
 app.use("/api/follow", followRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/reviews", reviewRoutes);
-app.use("/api/places/:placeId/reviews", reviewRoutes);
-app.use("/api/users/:userId/reviews", reviewRoutes);
 app.use("/api/places", placeRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/moderation", moderationRoutes);

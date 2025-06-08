@@ -35,7 +35,12 @@ const postValidator = [
 ];
 
 // Comment Validators
-const commentValidator = [body("content").trim()];
+const commentValidator = [
+  body("content")
+    .trim()
+    .isLength({ min: 1, max: 1000 })
+    .withMessage("Comment content must be between 1 and 1000 characters"),
+];
 
 // Review Validators
 const reviewValidator = [

@@ -5,7 +5,7 @@
 - `register`: Create new user account
 - `login`: Authenticate user and return JWT
 - `logout`: Invalidate user session
-- `refreshToken`: Generate new access token
+- `refreshTokenHandler`: Generate new access token
 - `forgotPassword`: Send password reset email
 - `resetPassword`: Reset user password
 - `verifyEmail`: Verify user email address
@@ -91,16 +91,11 @@
 - `getReview`: Get review details
 - `updateReview`: Update review
 - `deleteReview`: Delete review
-- `getPlaceReviews`: Get reviews for a place
-- `getUserReviews`: Get reviews by a user
+- `getReviews`: Get reviews for a place or user
 - `likeReview`: Like a review
 - `unlikeReview`: Unlike a review
-- `updateReviewPhotos`: Update review photos
-- `updateHelpfulVotes`: Update review helpful votes
-- `getReviewCategories`: Get review category ratings
-- `updateReviewCategories`: Update review category ratings
-- `getReviewsByVisitDate`: Get reviews by visit date
 - `getHelpfulReviews`: Get most helpful reviews
+- `getReviewsByVisitDate`: Get reviews by visit date
 
 ## Post Controller (`postController.js`)
 

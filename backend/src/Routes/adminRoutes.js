@@ -10,8 +10,7 @@ import {
   getReportedContent,
   moderateContent,
 } from "../Controllers/adminController.js";
-import { protect } from "../Middleware/auth.js";
-import { isAdmin } from "../Middleware/ownership.js";
+import { protect, isAdmin } from "../Middleware/auth.js";
 import { cache } from "../Middleware/cache.js";
 
 const router = express.Router();

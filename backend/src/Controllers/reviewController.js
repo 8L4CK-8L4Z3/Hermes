@@ -6,7 +6,6 @@ import logger from "../Utils/logger.js";
 import {
   successPatterns,
   errorPatterns,
-  HTTP_STATUS,
   asyncHandler,
 } from "../Utils/responses.js";
 
@@ -174,49 +173,40 @@ export const deleteReview = asyncHandler(async (req, res) => {
 });
 
 /**
- * @desc    Get reviews for a place
- * @route   GET /api/places/:placeId/reviews
+ * @desc    Get reviews for a place or user
+ * @route   GET /api/places/:placeId/reviews or GET /api/users/:userId/reviews
  * @access  Public
  */
-export const getPlaceReviews = asyncHandler(async (req, res) => {
+export const getReviews = asyncHandler(async (req, res) => {
+  const { placeId, userId } = req.params;
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
   const startIndex = (page - 1) * limit;
 
-  const reviews = await Review.find({ place_id: req.params.placeId })
+  let query = {};
+  if (placeId) {
+    query = { place_id: placeId };
+  } else if (userId) {
+    query = { user_id: userId };
+  } else {
+    return errorPatterns.validationError(res, {
+      message: "Missing placeId or userId",
+    });
+  }
+
+  const reviews = await Review.find(query)
     .populate("user_id", "username photo")
+    .populate("place_id", "name")
     .sort({ createdAt: -1 })
     .skip(startIndex)
     .limit(limit);
 
-  const total = await Review.countDocuments({ place_id: req.params.placeId });
+  const total = await Review.countDocuments(query);
 
-  logger.logInfo(NAMESPACE, `Place reviews retrieved: ${req.params.placeId}`);
-  return successPatterns.retrieved(res, {
-    data: reviews,
-    meta: { page, limit, total },
-  });
-});
-
-/**
- * @desc    Get reviews by a user
- * @route   GET /api/users/:userId/reviews
- * @access  Public
- */
-export const getUserReviews = asyncHandler(async (req, res) => {
-  const page = parseInt(req.query.page, 10) || 1;
-  const limit = parseInt(req.query.limit, 10) || 10;
-  const startIndex = (page - 1) * limit;
-
-  const reviews = await Review.find({ user_id: req.params.userId })
-    .populate("place_id", "name type photo")
-    .sort({ createdAt: -1 })
-    .skip(startIndex)
-    .limit(limit);
-
-  const total = await Review.countDocuments({ user_id: req.params.userId });
-
-  logger.logInfo(NAMESPACE, `User reviews retrieved: ${req.params.userId}`);
+  logger.logInfo(
+    NAMESPACE,
+    `Reviews retrieved for ${placeId ? "place" : "user"}: ${placeId || userId}`
+  );
   return successPatterns.retrieved(res, {
     data: reviews,
     meta: { page, limit, total },

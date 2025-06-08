@@ -10,8 +10,7 @@ import {
   getNotificationsByType,
   deleteOldNotifications,
 } from "../Controllers/notificationController.js";
-import { protect } from "../Middleware/auth.js";
-import { isAdmin } from "../Middleware/ownership.js";
+import { protect, isAdmin } from "../Middleware/auth.js";
 const router = express.Router();
 
 // Public routes (none)

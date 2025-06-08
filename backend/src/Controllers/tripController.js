@@ -6,7 +6,6 @@ import logger from "../Utils/logger.js";
 import {
   successPatterns,
   errorPatterns,
-  HTTP_STATUS,
   asyncHandler,
 } from "../Utils/responses.js";
 

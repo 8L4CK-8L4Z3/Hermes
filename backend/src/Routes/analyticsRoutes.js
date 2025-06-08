@@ -12,8 +12,7 @@ import {
   getAnalyticsByMetric,
   getPopularContent,
 } from "../Controllers/analyticsController.js";
-import { protect } from "../Middleware/auth.js";
-import { isAdmin } from "../Middleware/ownership.js";
+import { protect, isAdmin } from "../Middleware/auth.js";
 import { cache } from "../Middleware/cache.js";
 
 const router = express.Router();

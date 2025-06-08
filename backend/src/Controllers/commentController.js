@@ -5,7 +5,6 @@ import { commentValidator } from "../Middleware/validators.js";
 import {
   successPatterns,
   errorPatterns,
-  HTTP_STATUS,
   asyncHandler,
 } from "../Utils/responses.js";
 

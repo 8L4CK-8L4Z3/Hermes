@@ -4,8 +4,7 @@ import {
   getReview,
   updateReview,
   deleteReview,
-  getPlaceReviews,
-  getUserReviews,
+  getReviews,
   likeReview,
   unlikeReview,
   getHelpfulReviews,
@@ -31,7 +30,6 @@ router.post("/:id/unlike", protect, unlikeReview);
 // Routes that will be mounted under different paths
 // These will be used as: app.use('/api/places/:placeId/reviews', reviewRoutes)
 // and app.use('/api/users/:userId/reviews', reviewRoutes)
-router.get("/", getPlaceReviews); // For /api/places/:placeId/reviews
-router.get("/", getUserReviews); // For /api/users/:userId/reviews
+router.get("/", getReviews); // For /api/places/:placeId/reviews and /api/users/:userId/reviews
 
 export default router;

@@ -500,47 +500,39 @@ All admin routes require both `protect` and `isAdmin` middleware
 
 ## Search Routes (`/search`)
 
-All search routes use the `apiLimiter` middleware for rate limiting
-
 #### GET `/search`
 
 - **Controller**: `searchAll`
-- **Middleware**: `apiLimiter`
 - **Query Parameters**: `q` (search query)
 - **Description**: Search across all content types
 
 #### GET `/search/destinations`
 
 - **Controller**: `searchDestinations`
-- **Middleware**: `apiLimiter`
 - **Query Parameters**: `q` (search query)
 - **Description**: Search destinations
 
 #### GET `/search/places`
 
 - **Controller**: `searchPlaces`
-- **Middleware**: `apiLimiter`
 - **Query Parameters**: `q` (search query)
 - **Description**: Search places
 
 #### GET `/search/users`
 
 - **Controller**: `searchUsers`
-- **Middleware**: `apiLimiter`
 - **Query Parameters**: `q` (search query)
 - **Description**: Search users
 
 #### GET `/search/posts`
 
 - **Controller**: `searchPosts`
-- **Middleware**: `apiLimiter`
 - **Query Parameters**: `q` (search query)
 - **Description**: Search posts
 
 #### GET `/search/suggestions`
 
 - **Controller**: `getSearchSuggestions`
-- **Middleware**: `apiLimiter`
 - **Query Parameters**: `q` (search query)
 - **Description**: Get search suggestions based on partial query
 
@@ -760,12 +752,6 @@ All admin routes require both `protect` and `isAdmin` middleware
   - Used primarily on public GET routes
   - Default duration: 15 minutes
   - Helps improve performance and reduce database load
-
-### Rate Limiting
-
-- `apiLimiter`: Implements rate limiting for API endpoints
-  - Applied to search routes to prevent abuse
-  - Limits number of requests per IP address
 
 ### Error Handling
 

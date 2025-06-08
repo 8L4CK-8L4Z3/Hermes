@@ -3,7 +3,7 @@ import { generateToken, refreshToken } from "../Utils/token.js";
 import {
   successResponse,
   errorResponse,
-  HTTP_STATUS,
+  asyncHandler,
 } from "../Utils/responses.js";
 import { JWT_COOKIE_EXPIRE } from "../Configs/config.js";
 import bcrypt from "bcryptjs";
@@ -16,7 +16,7 @@ import {
 // @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
-export const register = async (req, res) => {
+export const register = asyncHandler(async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
@@ -74,12 +74,12 @@ export const register = async (req, res) => {
       error: error.message,
     });
   }
-};
+});
 
 // @desc    Login user
 // @route   POST /api/auth/login
 // @access  Public
-export const login = async (req, res) => {
+export const login = asyncHandler(async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -133,12 +133,12 @@ export const login = async (req, res) => {
       error: error.message,
     });
   }
-};
+});
 
 // @desc    Logout user
 // @route   POST /api/auth/logout
 // @access  Private
-export const logout = async (req, res) => {
+export const logout = asyncHandler(async (req, res) => {
   try {
     // Clear cookie
     res.cookie("token", "none", {
@@ -156,12 +156,12 @@ export const logout = async (req, res) => {
       error: error.message,
     });
   }
-};
+});
 
 // @desc    Refresh token
 // @route   POST /api/auth/refresh-token
 // @access  Private
-export const refreshTokenHandler = async (req, res) => {
+export const refreshTokenHandler = asyncHandler(async (req, res) => {
   try {
     const newToken = await refreshToken(req, res);
     return successResponse(res, {
@@ -175,12 +175,12 @@ export const refreshTokenHandler = async (req, res) => {
       error: error.message,
     });
   }
-};
+});
 
 // @desc    Forgot password
 // @route   POST /api/auth/forgot-password
 // @access  Public
-export const forgotPassword = async (req, res) => {
+export const forgotPassword = asyncHandler(async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -211,12 +211,12 @@ export const forgotPassword = async (req, res) => {
       error: error.message,
     });
   }
-};
+});
 
 // @desc    Reset password
 // @route   POST /api/auth/reset-password/:resetToken
 // @access  Public
-export const resetPassword = async (req, res) => {
+export const resetPassword = asyncHandler(async (req, res) => {
   try {
     const { resetToken } = req.params;
     const { password } = req.body;
@@ -249,12 +249,12 @@ export const resetPassword = async (req, res) => {
       error: error.message,
     });
   }
-};
+});
 
 // @desc    Verify email
 // @route   GET /api/auth/verify-email/:token
 // @access  Public
-export const verifyEmail = async (req, res) => {
+export const verifyEmail = asyncHandler(async (req, res) => {
   try {
     const { token } = req.params;
 
@@ -280,12 +280,12 @@ export const verifyEmail = async (req, res) => {
       error: error.message,
     });
   }
-};
+});
 
 // @desc    Update password
 // @route   PUT /api/auth/update-password
 // @access  Private
-export const updatePassword = async (req, res) => {
+export const updatePassword = asyncHandler(async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     const user = await User.findById(req.userId);
@@ -313,4 +313,4 @@ export const updatePassword = async (req, res) => {
       error: error.message,
     });
   }
-};
+});

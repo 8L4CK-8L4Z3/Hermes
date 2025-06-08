@@ -11,9 +11,6 @@ import {
 
 const router = express.Router();
 
-// Apply rate limiting to all search routes
-router.use(apiLimiter);
-
 // Search routes
 router.get("/", searchAll);
 router.get("/destinations", searchDestinations);

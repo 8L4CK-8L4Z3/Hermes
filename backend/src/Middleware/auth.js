@@ -72,3 +72,12 @@ export const isModerator = async (req, res, next) => {
     });
   }
 };
+
+export const isAdmin = (req, res, next) => {
+  if (req.user.role !== "admin") {
+    return next(
+      new errorResponse("You are not authorized to access this resource", 403)
+    );
+  }
+  next();
+};

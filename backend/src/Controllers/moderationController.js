@@ -8,7 +8,6 @@ import {
   successPatterns,
   errorPatterns,
   asyncHandler,
-  HTTP_STATUS,
 } from "../Utils/responses.js";
 
 const NAMESPACE = "ModerationController";
