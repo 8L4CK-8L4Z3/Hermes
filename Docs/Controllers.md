@@ -18,16 +18,12 @@
 - `deleteAccount`: Delete user account
 - `getFollowers`: Get user's followers
 - `getFollowing`: Get users being followed
-- `followUser`: Follow another user
-- `unfollowUser`: Unfollow a user
 - `getUserStats`: Get user statistics (trips, reviews, etc.)
 - `updatePreferences`: Update user preferences (language, notifications)
 - `updateLastLogin`: Update last login timestamp
-- `verifyEmail`: Handle email verification
 - `getUserActivity`: Get user's recent activity
 - `updateUserPhoto`: Update user profile photo
 - `updateUserStats`: Update user statistics (tripsCount, reviewsCount, followersCount, followingCount)
-- `updateUserPreferences`: Update user preferences (language, notifications)
 - `getUserPreferences`: Get user preferences
 - `verifyUser`: Update user verification status
 
@@ -49,10 +45,7 @@
 - `updateActivity`: Update activity details
 - `getTripActivities`: Get all activities for a trip
 - `getTripTimeline`: Get trip timeline with activities
-- `updateTripBudget`: Update trip budget details
 - `updateTripVisibility`: Update trip public/private status
-- `updateTripActivity`: Update activity details
-- `removeTripActivity`: Remove activity from trip
 
 ## Destination Controller (`destinationController.js`)
 
@@ -73,14 +66,10 @@
 - `getPlace`: Get place details
 - `updatePlace`: Update place information
 - `deletePlace`: Delete place
-- `searchPlaces`: Search places
 - `getPlacesByType`: Get places by type (accommodation, restaurant, activity)
 - `getPlacesByDestination`: Get places in a destination
 - `getPopularPlaces`: Get trending places
 - `updatePlaceRating`: Update place average rating
-- `updatePlacePriceRange`: Update place price range
-- `updatePlaceOpeningHours`: Update place opening hours
-- `updatePlaceAddress`: Update place address
 - `getPlaceStats`: Get place statistics (views, reviews)
 - `getPlacesByPriceRange`: Get places by price range
 - `getPlacesByOpeningHours`: Get places by opening hours
@@ -105,8 +94,6 @@
 - `deletePost`: Delete post
 - `getFeed`: Get social feed
 - `getUserPosts`: Get posts by a user
-- `likePost`: Like a post
-- `unlikePost`: Unlike a post
 - `updatePostVisibility`: Update post visibility settings
 - `updatePostType`: Update post type
 - `updatePostLocation`: Update post location

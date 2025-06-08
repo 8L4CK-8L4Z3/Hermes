@@ -1,4 +1,4 @@
-# Middleware Exports Documentation
+# Middleware Documentation
 
 This document lists all exported functions and variables from the middleware modules.
 
@@ -11,9 +11,90 @@ Authentication middleware that verifies JWT tokens from:
 - Cookies (`token`)
 - Authorization header (`Bearer token`)
 
+If token is valid, adds the user object to `req.user` for use in subsequent middleware/routes.
+
 ### `isModerator(req, res, next)`
 
-Verifies if the authenticated user has moderator privileges.
+Verifies if the authenticated user has moderator privileges by checking the `isMod` boolean flag.
+Returns 403 Forbidden if user is not a moderator.
+
+### `isAdmin(req, res, next)`
+
+Verifies if the authenticated user has admin privileges by checking the `isAdmin` boolean flag.
+Returns 403 Forbidden if user is not an admin.
+
+## Input Sanitization Middleware (`inputSanitizer.js`)
+
+### `sanitizeInput(req, res, next)`
+
+Global middleware for XSS prevention. Sanitizes:
+
+- `req.body`
+- `req.query`
+- `req.params`
+
+### `sanitizeData(data, seen = new WeakSet())`
+
+Utility function for recursive data sanitization:
+
+- Handles nested objects and arrays
+- Prevents circular references
+- Preserves Date objects
+- Sanitizes strings using XSS library
+- Returns primitives unchanged
+
+## Ownership Middleware (`ownership.js`)
+
+### `checkTripOwnership(req, res, next)`
+
+Verifies if the authenticated user owns the requested trip:
+
+- Checks if trip exists
+- Verifies user ID matches trip owner ID
+- Returns 403 Forbidden if unauthorized
+
+### `checkDestinationOwnership(req, res, next)`
+
+Verifies destination ownership within a trip:
+
+- Checks if trip exists
+- Verifies user ID matches trip owner ID
+- Checks if destination exists and belongs to the trip
+- Returns 403 Forbidden if unauthorized
+
+## Cache Middleware (`cache.js`)
+
+### `cache(duration = DEFAULT_EXPIRATION, keyGenerator)`
+
+Redis-based caching middleware factory:
+
+- Only caches GET requests
+- Supports custom cache key generation
+- Default expiration: 1 hour (3600 seconds)
+- Only caches successful responses (200-299)
+- Includes logging for cache operations
+
+### `clearCache(pattern)`
+
+Utility function to clear cache entries matching a pattern:
+
+- Uses Redis SCAN for efficient pattern matching
+- Supports batch deletion of matched keys
+- Includes logging for cache clearing operations
+
+### `CACHE_DURATIONS`
+
+Predefined cache duration constants:
+
+```javascript
+{
+  MINUTE_5: 300,
+  MINUTE_15: 900,
+  HOUR_1: 3600,
+  HOUR_6: 21600,
+  DAY_1: 86400
+}
+```
 
 ## Validation Middleware (`validators.js`)
 
@@ -21,138 +102,95 @@ Verifies if the authenticated user has moderator privileges.
 
 #### `userRegistrationValidator`
 
-Validates user registration data:
-
-- Username:
-  - Length: 3-30 characters
-  - Pattern: Letters, numbers, and underscores only
-  - Required
-- Email:
-  - Valid email format
-  - Normalized
-  - Required
-- Password:
-  - Minimum 8 characters
-  - Must contain at least one letter and one number
-  - Allowed special characters: @$!%*#?&
-  - Required
+- Username: 3-30 chars, alphanumeric + underscore
+- Email: Valid format, normalized
+- Password: Min 6 chars, must contain letter and number
 
 #### `userLoginValidator`
 
-Validates login credentials:
+- Email: Valid format
+- Password: Not empty
 
-- Email: Valid email format
-- Password: Must not be empty
+#### `userUpdateValidator`
 
-#### `userPreferencesValidator`
-
-Validates user preferences:
-
-- Language:
-  - Optional
-  - Must be one of: 'en', 'fr', 'es', 'de', 'it', 'pt'
-- Notifications:
-  - email: Boolean (optional)
-  - push: Boolean (optional)
-
-#### `userStatsValidator`
-
-Validates user statistics updates:
-
-- tripsCount: Non-negative integer (optional)
-- reviewsCount: Non-negative integer (optional)
-- followersCount: Non-negative integer (optional)
-- followingCount: Non-negative integer (optional)
+- Username (optional): 3-30 chars, alphanumeric + underscore
+- Photo (optional): Valid URL
+- Bio (optional): Max 500 chars
 
 ### Content Validation
 
 #### `postValidator`
 
-Validates post content:
-
-- Content:
-  - Length: 1-1000 characters
-  - Required
-- Media:
-  - Valid URL
-  - Optional
+- Content: 1-1000 chars
+- Media (optional): Valid URL
+- Type (optional): ["trip_share", "review_share", "general", "announcement"]
+- Visibility (optional): ["public", "followers", "private"]
+- Tags: Array of strings
+- Location: Point coordinates
 
 #### `commentValidator`
 
-Validates comment content:
-
-- Content: Trimmed text
+- Content: 1-1000 chars
+- Parent comment ID (optional): Valid MongoDB ID
 
 #### `reviewValidator`
 
-Validates review submissions:
-
-- Rating:
-  - Integer between 0-5
-  - Required
-- Content: Trimmed text
+- Place ID: Required, valid MongoDB ID
+- Rating: Integer 1-5
+- Comment: Required, trimmed
+- Photos: Array of {url, caption}
+- Visit date (optional): ISO8601
+- Categories (optional):
+  - cleanliness: 0-5
+  - service: 0-5
+  - value: 0-5
+  - atmosphere: 0-5
 
 ### Trip Related Validation
 
 #### `tripValidator`
 
-Validates trip details:
-
-- Title:
-  - Length: 3-100 characters
-  - Required
-- Description: Optional
-- StartDate:
-  - Valid ISO8601 date
-  - Required
-- EndDate:
-  - Valid ISO8601 date
-  - Must be after startDate
-  - Required
+- Title: 3-100 chars
+- Start date: Required, ISO8601
+- End date: Required, ISO8601, after start date
+- Destinations: Non-empty array
+- Status (optional): ["planning", "ongoing", "completed", "cancelled"]
+- Budget (optional): {amount: float, currency: string}
+- Activities (optional): Array of {place_id, date, notes}
 
 #### `placeValidator`
 
-Validates place data:
-
-- Name:
-  - Length: 2-100 characters
-  - Required
-- Description: Optional
-- Location:
-  - Required
-  - Non-empty
-- Coordinates:
-  - Optional
-  - Must be array [latitude, longitude]
+- Destination ID: Required, valid MongoDB ID
+- Type: Required
+- Name: 2-100 chars
+- Description: Required
+- Photo (optional): Valid URL
+- Price range (optional): ["$", "$$", "$$$", "$$$$"]
+- Opening hours: Required
+- Address: Required
 
 #### `destinationValidator`
 
-Validates destination data:
-
-- Name:
-  - Length: 2-100 characters
-  - Required
-- Description: Optional
-- Location:
-  - Required
-  - Non-empty
+- Name: 2-100 chars
+- Description: Required
+- Location: Required
+- Photo (optional): Valid URL
 
 ### Other Validators
 
 #### `idParamValidator`
 
-Validates route parameters:
-
-- id: Must be valid MongoDB ObjectId
+- ID: Valid MongoDB ObjectId
 
 #### `analyticsValidator`
 
-Validates analytics data:
-
-- date: Valid ISO8601 date
-- metrics: Must be an object
-- popularDestinations: Must be an array
-- popularPlaces: Must be an array
+- Date: Valid ISO8601
+- Metrics: Object containing:
+  - newUsers (optional): Non-negative integer
+  - activeUsers (optional): Non-negative integer
+  - newTrips (optional): Non-negative integer
+  - newReviews (optional): Non-negative integer
+  - newPosts (optional): Non-negative integer
 
 #### `moderationLogValidator`
 
@@ -218,54 +256,13 @@ Validates content reports:
   - Required
   - Length: 10-500 characters
 
-## Ownership Middleware (`ownership.js`)
+#### `validateModAction`
 
-### `checkTripOwnership(req, res, next)`
+Validates moderation actions on reports:
 
-Verifies if the authenticated user owns the requested trip.
-
-### `checkDestinationOwnership(req, res, next)`
-
-Verifies destination ownership within a trip.
-
-### `isAdmin(req, res, next)`
-
-Verifies if the user has admin privileges.
-
-## Cache Middleware (`cache.js`)
-
-### `cache(duration, keyGenerator)`
-
-Factory function that creates Redis-based caching middleware.
-
-- Parameters:
-  - `duration`: Cache duration in seconds (default: 3600)
-  - `keyGenerator`: Optional function to generate cache keys
-
-### `clearCache(pattern)`
-
-Utility function to clear cache entries matching a pattern.
-
-### `CACHE_DURATIONS`
-
-Exported constant with predefined cache durations:
-
-```javascript
-{
-  MINUTE_5: 300,
-  MINUTE_15: 900,
-  HOUR_1: 3600,
-  HOUR_6: 21600,
-  DAY_1: 86400
-}
-```
-
-## Input Sanitization Middleware (`inputSanitizer.js`)
-
-### `sanitizeInput(req, res, next)`
-
-Global middleware for XSS prevention.
-
-### `sanitizeData(data)`
-
-Utility function for recursive data sanitization.
+- action:
+  - Required
+  - Must be one of: 'remove', 'warn', 'ignore'
+- resolution_note:
+  - Required
+  - Length: 10-500 characters

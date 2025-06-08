@@ -41,7 +41,6 @@ app.use(
     credentials: true,
   })
 );
-app.use(sanitizeInput);
 
 // Rate limiting
 app.use("/api", apiLimiter);
@@ -52,6 +51,7 @@ app.use("/api/upload", uploadLimiter);
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(cookieParser());
+app.use(sanitizeInput);
 app.use(compression()); // Compress responses
 
 // Logging

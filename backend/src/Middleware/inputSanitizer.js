@@ -37,28 +37,41 @@ const sanitizeInput = (req, res, next) => {
 /**
  * Recursively sanitizes data objects
  * @param {*} data - Data to sanitize
+ * @param {WeakSet} [seen=new WeakSet()] - Used to detect circular references
  * @returns {*} - Sanitized data
  */
-const sanitizeData = (data) => {
-  if (Array.isArray(data)) {
-    return data.map((item) => sanitizeData(item));
-  }
-
-  if (data instanceof Object && !(data instanceof Date)) {
-    const sanitizedData = {};
-    for (const [key, value] of Object.entries(data)) {
-      sanitizedData[key] = sanitizeData(value);
+const sanitizeData = (data, seen = new WeakSet()) => {
+  // Return early if data is not an object or is null
+  if (typeof data !== "object" || data === null) {
+    if (typeof data === "string") {
+      return xss(data);
     }
-    return sanitizedData;
+    return data;
   }
 
-  // If the value is a string, sanitize it
-  if (typeof data === "string") {
-    return xss(data);
+  // Return date objects without sanitizing properties.
+  if (data instanceof Date) {
+    return data;
   }
 
-  // Return unchanged if not a string, array, or object
-  return data;
+  // If we have seen this object before, it's a circular reference.
+  if (seen.has(data)) {
+    // Return the data as-is to break the circular reference.
+    return data;
+  }
+
+  // Add the object to the set of seen objects.
+  seen.add(data);
+
+  if (Array.isArray(data)) {
+    return data.map((item) => sanitizeData(item, seen));
+  }
+
+  const sanitizedData = {};
+  for (const [key, value] of Object.entries(data)) {
+    sanitizedData[key] = sanitizeData(value, seen);
+  }
+  return sanitizedData;
 };
 
 export { sanitizeInput, sanitizeData };

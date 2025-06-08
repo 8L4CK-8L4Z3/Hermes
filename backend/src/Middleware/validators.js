@@ -10,12 +10,14 @@ const userRegistrationValidator = [
     .withMessage("Username can only contain letters, numbers and underscores"),
   body("email")
     .trim()
+    .notEmpty()
+    .withMessage("Email is required")
     .isEmail()
     .normalizeEmail()
     .withMessage("Please enter a valid email"),
   body("password")
-    .isLength({ min: 8 })
-    .withMessage("Password must be at least 8 characters long")
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters long")
     .matches(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]/)
     .withMessage("Password must contain at least one letter and one number"),
 ];
@@ -25,6 +27,22 @@ const userLoginValidator = [
   body("password").notEmpty().withMessage("Password is required"),
 ];
 
+const userUpdateValidator = [
+  body("username")
+    .optional()
+    .trim()
+    .isLength({ min: 3, max: 30 })
+    .withMessage("Username must be between 3 and 30 characters")
+    .matches(/^[a-zA-Z0-9_]+$/)
+    .withMessage("Username can only contain letters, numbers and underscores"),
+  body("photo").optional().isURL().withMessage("Photo must be a valid URL"),
+  body("bio")
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage("Bio can be at most 500 characters"),
+];
+
 // Post Validators
 const postValidator = [
   body("content")
@@ -32,6 +50,28 @@ const postValidator = [
     .isLength({ min: 1, max: 1000 })
     .withMessage("Post content must be between 1 and 1000 characters"),
   body("media").optional().isURL().withMessage("Media must be a valid URL"),
+  body("type")
+    .optional()
+    .isIn(["trip_share", "review_share", "general", "announcement"])
+    .withMessage("Invalid post type"),
+  body("visibility")
+    .optional()
+    .isIn(["public", "followers", "private"])
+    .withMessage("Invalid visibility type"),
+  body("tags").optional().isArray().withMessage("Tags must be an array"),
+  body("tags.*").optional().isString().withMessage("Each tag must be a string"),
+  body("location.type")
+    .optional()
+    .isIn(["Point"])
+    .withMessage("Location type must be 'Point'"),
+  body("location.coordinates")
+    .optional()
+    .isArray({ min: 2, max: 2 })
+    .withMessage("Coordinates must be an array of two numbers"),
+  body("location.coordinates.*")
+    .optional()
+    .isFloat()
+    .withMessage("Coordinates must contain valid numbers"),
 ];
 
 // Comment Validators
@@ -40,14 +80,53 @@ const commentValidator = [
     .trim()
     .isLength({ min: 1, max: 1000 })
     .withMessage("Comment content must be between 1 and 1000 characters"),
+  body("parent_comment_id")
+    .optional()
+    .isMongoId()
+    .withMessage("Invalid parent comment ID"),
 ];
 
 // Review Validators
 const reviewValidator = [
+  body("place_id")
+    .notEmpty()
+    .withMessage("Place ID is required")
+    .isMongoId()
+    .withMessage("Invalid Place ID"),
   body("rating")
-    .isInt({ min: 0, max: 5 })
-    .withMessage("Rating must be between 0 and 5"),
-  body("content").trim(),
+    .isInt({ min: 1, max: 5 })
+    .withMessage("Rating must be between 1 and 5"),
+  body("comment").trim().notEmpty().withMessage("Comment is required"),
+  body("photos").optional().isArray().withMessage("Photos must be an array"),
+  body("photos.*.url")
+    .optional()
+    .isURL()
+    .withMessage("Each photo must have a valid URL"),
+  body("photos.*.caption")
+    .optional()
+    .isString()
+    .withMessage("Caption must be a string"),
+  body("visit_date")
+    .optional()
+    .isISO8601()
+    .withMessage("Visit date must be a valid date"),
+  body("categories").optional().isObject(),
+  body("categories.cleanliness")
+    .optional()
+    .isFloat({ min: 0, max: 5 })
+    .withMessage("Cleanliness rating must be between 0 and 5"),
+  body("categories.service")
+    .optional()
+    .isFloat({ min: 0, max: 5 })
+    .withMessage("Service rating must be between 0 and 5"),
+  body("categories.value")
+    .optional()
+    .isFloat({ min: 0, max: 5 })
+    .withMessage("Value rating must be between 0 and 5"),
+  body("categories.atmosphere")
+    .optional()
+    .isFloat({ min: 0, max: 5 })
+    .withMessage("Atmosphere rating must be between 0 and 5"),
 ];
 
 // Trip Validators
@@ -56,39 +135,74 @@ const tripValidator = [
     .trim()
     .isLength({ min: 3, max: 100 })
     .withMessage("Trip title must be between 3 and 100 characters"),
-  body("description").trim(),
-  body("startDate").isISO8601().withMessage("Start date must be a valid date"),
-  body("endDate")
+  body("start_date")
+    .notEmpty()
+    .withMessage("Start date is required")
+    .isISO8601()
+    .withMessage("Start date must be a valid date"),
+  body("end_date")
+    .notEmpty()
+    .withMessage("End date is required")
     .isISO8601()
     .withMessage("End date must be a valid date")
-    .custom((endDate, { req }) => {
-      if (new Date(endDate) <= new Date(req.body.startDate)) {
+    .custom((end_date, { req }) => {
+      if (new Date(end_date) <= new Date(req.body.start_date)) {
         throw new Error("End date must be after start date");
       }
       return true;
     }),
+  body("destinations")
+    .isArray({ min: 1 })
+    .withMessage("At least one destination is required"),
+  body("destinations.*")
+    .trim()
+    .notEmpty()
+    .withMessage("Destination cannot be empty"),
+  body("status")
+    .optional()
+    .isIn(["planning", "ongoing", "completed", "cancelled"])
+    .withMessage("Invalid trip status"),
+  body("isPublic").optional().isBoolean(),
+  body("budget.amount").optional().isFloat({ min: 0 }),
+  body("budget.currency").optional().isString(),
+  body("activities").optional().isArray(),
+  body("activities.*.place_id")
+    .optional()
+    .isMongoId()
+    .withMessage("Invalid Place ID in activities"),
+  body("activities.*.date")
+    .optional()
+    .isISO8601()
+    .withMessage("Invalid date in activities"),
+  body("activities.*.notes")
+    .optional()
+    .isString()
+    .withMessage("Notes must be a string"),
 ];
 
 // Place Validators
 const placeValidator = [
+  body("destination_id")
+    .notEmpty()
+    .withMessage("Destination ID is required")
+    .isMongoId()
+    .withMessage("Invalid Destination ID"),
+  body("type").trim().notEmpty().withMessage("Type is required"),
   body("name")
     .trim()
     .isLength({ min: 2, max: 100 })
     .withMessage("Place name must be between 2 and 100 characters"),
-  body("description").trim(),
-  body("location").trim().notEmpty().withMessage("Location is required"),
-  body("coordinates")
+  body("description").trim().notEmpty().withMessage("Description is required"),
+  body("photo").optional().isURL().withMessage("Photo must be a valid URL"),
+  body("price_range")
     .optional()
-    .isArray()
-    .withMessage("Coordinates must be an array")
-    .custom((value) => {
-      if (value && (!Array.isArray(value) || value.length !== 2)) {
-        throw new Error(
-          "Coordinates must be an array of [latitude, longitude]"
-        );
-      }
-      return true;
-    }),
+    .isIn(["$", "$$", "$$$", "$$$$"])
+    .withMessage("Invalid price range"),
+  body("opening_hours")
+    .trim()
+    .notEmpty()
+    .withMessage("Opening hours are required"),
+  body("address").trim().notEmpty().withMessage("Address is required"),
 ];
 
 // Destination Validators
@@ -97,8 +211,9 @@ const destinationValidator = [
     .trim()
     .isLength({ min: 2, max: 100 })
     .withMessage("Destination name must be between 2 and 100 characters"),
-  body("description").trim(),
+  body("description").trim().notEmpty().withMessage("Description is required"),
   body("location").trim().notEmpty().withMessage("Location is required"),
+  body("photo").optional().isURL().withMessage("Photo must be a valid URL"),
 ];
 
 // ID Parameter Validator (reusable for any route that uses IDs)
@@ -108,14 +223,72 @@ const idParamValidator = [
 
 // Analytics Validators
 const analyticsValidator = [
-  body("date").isISO8601().withMessage("Date must be a valid date"),
+  body("date")
+    .notEmpty()
+    .withMessage("Date is required")
+    .isISO8601()
+    .withMessage("Date must be a valid date"),
   body("metrics").isObject().withMessage("Metrics must be an object"),
+  body("metrics.newUsers")
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage("newUsers must be a non-negative integer"),
+  body("metrics.activeUsers")
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage("activeUsers must be a non-negative integer"),
+  body("metrics.newTrips")
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage("newTrips must be a non-negative integer"),
+  body("metrics.newReviews")
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage("newReviews must be a non-negative integer"),
+  body("metrics.newPosts")
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage("newPosts must be a non-negative integer"),
+  body("metrics.totalLikes")
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage("totalLikes must be a non-negative integer"),
+  body("metrics.totalComments")
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage("totalComments must be a non-negative integer"),
   body("popularDestinations")
+    .optional()
     .isArray()
     .withMessage("Popular destinations must be an array"),
+  body("popularDestinations.*.destination_id")
+    .optional()
+    .isMongoId()
+    .withMessage("Invalid Destination ID in popularDestinations"),
+  body("popularDestinations.*.views")
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage("views must be a non-negative integer"),
+  body("popularDestinations.*.saves")
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage("saves must be a non-negative integer"),
   body("popularPlaces")
+    .optional()
     .isArray()
     .withMessage("Popular places must be an array"),
+  body("popularPlaces.*.place_id")
+    .optional()
+    .isMongoId()
+    .withMessage("Invalid Place ID in popularPlaces"),
+  body("popularPlaces.*.views")
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage("views must be a non-negative integer"),
+  body("popularPlaces.*.reviews")
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage("reviews must be a non-negative integer"),
 ];
 
 // ModerationLog Validators
@@ -124,7 +297,7 @@ const moderationLogValidator = [
     .trim()
     .notEmpty()
     .withMessage("Action is required")
-    .isIn(["warn", "ban", "delete", "approve", "reject"])
+    .isIn(["report", "remove", "warn", "ignore", "ban_user", "unban_user"])
     .withMessage("Invalid moderation action"),
   body("target_type")
     .trim()
@@ -140,11 +313,17 @@ const moderationLogValidator = [
     .withMessage("Invalid target ID format"),
   body("reason").trim().notEmpty().withMessage("Reason is required"),
   body("status")
+    .optional()
     .trim()
-    .notEmpty()
-    .withMessage("Status is required")
-    .isIn(["pending", "resolved", "rejected"])
+    .isIn(["pending", "resolved"])
     .withMessage("Invalid status"),
+  body("resolution.action")
+    .optional()
+    .isIn(["remove", "warn", "ignore"])
+    .withMessage("Invalid resolution action"),
+  body("resolution.note").optional().isString(),
+  body("resolution.moderator_id").optional().isMongoId(),
+  body("resolution.date").optional().isISO8601(),
 ];
 
 // Enhanced Follow Validators
@@ -186,7 +365,7 @@ const likeValidator = [
     .trim()
     .notEmpty()
     .withMessage("Target type is required")
-    .isIn(["post", "comment", "review"])
+    .isIn(["Post", "Comment", "Review"])
     .withMessage("Invalid target type"),
   body("target_id")
     .trim()
@@ -238,7 +417,7 @@ const validateReport = [
     .trim()
     .notEmpty()
     .withMessage("Target type is required")
-    .isIn(["review", "post", "comment"])
+    .isIn(["review", "post", "comment", "user"])
     .withMessage("Invalid target type"),
   body("target_id")
     .trim()
@@ -289,4 +468,5 @@ export {
   userPreferencesValidator,
   validateReport,
   validateModAction,
+  userUpdateValidator,
 };

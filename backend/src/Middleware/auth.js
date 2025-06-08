@@ -55,29 +55,22 @@ export const protect = async (req, res, next) => {
   }
 };
 
-export const isModerator = async (req, res, next) => {
-  try {
-    if (!req.user.roles || !req.user.roles.includes("moderator")) {
-      return errorResponse(res, {
-        code: HTTP_STATUS.FORBIDDEN,
-        message: "Access denied. Moderator role required.",
-      });
-    }
-    next();
-  } catch (error) {
+export const isModerator = (req, res, next) => {
+  if (!req.user.isMod) {
     return errorResponse(res, {
-      code: HTTP_STATUS.INTERNAL_SERVER_ERROR,
-      message: "Error checking moderator role",
-      error: error.message,
+      code: HTTP_STATUS.FORBIDDEN,
+      message: "Access denied. Moderator role required.",
     });
   }
+  next();
 };
 
 export const isAdmin = (req, res, next) => {
-  if (req.user.role !== "admin") {
-    return next(
-      new errorResponse("You are not authorized to access this resource", 403)
-    );
+  if (!req.user.isAdmin) {
+    return errorResponse(res, {
+      code: HTTP_STATUS.FORBIDDEN,
+      message: "Access denied. Admin role required.",
+    });
   }
   next();
 };

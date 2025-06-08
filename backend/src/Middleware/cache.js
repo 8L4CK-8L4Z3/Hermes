@@ -48,22 +48,25 @@ export const cache = (duration = DEFAULT_EXPIRATION, keyGenerator) => {
 
       // Override res.json method
       res.json = function (body) {
-        // Store the response in cache
-        redis
-          .setex(key, duration, JSON.stringify(body))
-          .then(() => {
-            logger.logDebug(
-              NAMESPACE,
-              `Successfully cached response for key: ${key}`
-            );
-          })
-          .catch((err) => {
-            logger.logError(
-              NAMESPACE,
-              `Failed to cache response for key: ${key}`,
-              err
-            );
-          });
+        // Only cache successful responses
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          // Store the response in cache
+          redis
+            .setex(key, duration, JSON.stringify(body))
+            .then(() => {
+              logger.logDebug(
+                NAMESPACE,
+                `Successfully cached response for key: ${key}`
+              );
+            })
+            .catch((err) => {
+              logger.logError(
+                NAMESPACE,
+                `Failed to cache response for key: ${key}`,
+                err
+              );
+            });
+        }
 
         // Call original send
         return originalSend.call(this, body);
@@ -87,7 +90,22 @@ export const clearCache = async (pattern) => {
       NAMESPACE,
       `Attempting to clear cache with pattern: ${pattern}`
     );
-    const keys = await redis.keys(pattern);
+
+    let cursor = "0";
+    const keys = [];
+    do {
+      const [newCursor, foundKeys] = await redis.scan(
+        cursor,
+        "MATCH",
+        pattern,
+        "COUNT",
+        100
+      );
+      cursor = newCursor;
+      if (foundKeys.length > 0) {
+        keys.push(...foundKeys);
+      }
+    } while (cursor !== "0");
 
     if (keys.length > 0) {
       await redis.del(keys);
