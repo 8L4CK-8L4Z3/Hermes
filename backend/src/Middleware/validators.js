@@ -216,10 +216,13 @@ const destinationValidator = [
   body("photo").optional().isURL().withMessage("Photo must be a valid URL"),
 ];
 
-// ID Parameter Validator (reusable for any route that uses IDs)
-const idParamValidator = [
-  param("id").isMongoId().withMessage("Invalid ID format"),
+// A factory for creating MongoDB ObjectId validators for URL parameters
+export const createMongoIdValidator = (paramName = "id") => [
+  param(paramName).isMongoId().withMessage(`Invalid ${paramName} format`),
 ];
+
+// ID Parameter Validator (reusable for any route that uses IDs)
+const idParamValidator = createMongoIdValidator("id");
 
 // Analytics Validators
 const analyticsValidator = [
@@ -289,6 +292,9 @@ const analyticsValidator = [
     .optional()
     .isInt({ min: 0 })
     .withMessage("reviews must be a non-negative integer"),
+  validateModAction,
+  userUpdateValidator,
+  createMongoIdValidator,
 ];
 
 // ModerationLog Validators
@@ -469,4 +475,5 @@ export {
   validateReport,
   validateModAction,
   userUpdateValidator,
+  createMongoIdValidator,
 };

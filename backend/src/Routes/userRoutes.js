@@ -15,15 +15,16 @@ import {
   verifyUser,
 } from "../Controllers/userController.js";
 import { protect, isAdmin } from "../Middleware/auth.js";
+import { idParamValidator } from "../Middleware/validators.js";
 
 const router = express.Router();
 
 // Public routes
-router.get("/profile/:id", getProfile);
-router.get("/:id/followers", getFollowers);
-router.get("/:id/following", getFollowing);
-router.get("/:id/stats", getUserStats);
-router.get("/:id/activity", getUserActivity);
+router.get("/profile/:id", idParamValidator, getProfile);
+router.get("/:id/followers", idParamValidator, getFollowers);
+router.get("/:id/following", idParamValidator, getFollowing);
+router.get("/:id/stats", idParamValidator, getUserStats);
+router.get("/:id/activity", idParamValidator, getUserActivity);
 
 // Protected routes
 router.put("/profile", protect, updateProfile);

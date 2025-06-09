@@ -4,7 +4,7 @@ import Destination from "../Models/Destination.js";
 export const checkTripOwnership = async (req, res, next) => {
   const trip = await Trip.findById(req.params.tripId);
   if (!trip) return next(new errorResponse("Trip not found", 404));
-  if (trip.user_id.id !== req.user.id) {
+  if (trip.user_id.toString() !== req.user.id) {
     return next(
       new errorResponse("You are not authorized to access this trip", 403)
     );
@@ -16,7 +16,7 @@ export const checkDestinationOwnership = async (req, res, next) => {
   const trip = await Trip.findById(req.params.tripId);
   if (!trip) return next(new errorResponse("Trip not found", 404));
 
-  if (trip.user_id.id !== req.user.id) {
+  if (trip.user_id.toString() !== req.user.id) {
     return next(
       new errorResponse(
         "You are not authorized to access this destination",

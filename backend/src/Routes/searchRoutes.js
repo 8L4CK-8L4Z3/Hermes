@@ -1,5 +1,4 @@
 import express from "express";
-import { apiLimiter } from "../Utils/rateLimiter.js";
 import {
   searchAll,
   searchDestinations,

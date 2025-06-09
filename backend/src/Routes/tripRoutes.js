@@ -19,16 +19,23 @@ import {
   updateTripVisibility,
 } from "../Controllers/tripController.js";
 import { protect } from "../Middleware/auth.js";
-import { tripValidator } from "../Middleware/validators.js";
+import {
+  tripValidator,
+  createMongoIdValidator,
+} from "../Middleware/validators.js";
 import { checkTripOwnership } from "../Middleware/ownership.js";
 import { cache } from "../Middleware/cache.js";
 
 const router = express.Router();
 
+const userIdValidator = createMongoIdValidator("userId");
+const destinationIdValidator = createMongoIdValidator("destinationId");
+const activityIdValidator = createMongoIdValidator("activityId");
+
 // Public routes with caching
 router.get("/public", cache("15m"), getPublicTrips);
 router.get("/:id", cache("15m"), getTrip);
-router.get("/user/:userId", cache("15m"), getUserTrips);
+router.get("/user/:userId", userIdValidator, cache("15m"), getUserTrips);
 router.get("/:id/activities", cache("15m"), getTripActivities);
 router.get("/:id/timeline", cache("15m"), getTripTimeline);
 
@@ -44,6 +51,7 @@ router.delete("/:id", checkTripOwnership, deleteTrip);
 router.post("/:id/destinations", checkTripOwnership, addDestination);
 router.delete(
   "/:id/destinations/:destinationId",
+  destinationIdValidator,
   checkTripOwnership,
   removeDestination
 );
@@ -52,10 +60,16 @@ router.delete(
 router.post("/:id/activities", checkTripOwnership, addActivity);
 router.delete(
   "/:id/activities/:activityId",
+  activityIdValidator,
   checkTripOwnership,
   removeActivity
 );
-router.patch("/:id/activities/:activityId", checkTripOwnership, updateActivity);
+router.patch(
+  "/:id/activities/:activityId",
+  activityIdValidator,
+  checkTripOwnership,
+  updateActivity
+);
 
 // Trip attributes
 router.patch("/:id/status", checkTripOwnership, updateTripStatus);

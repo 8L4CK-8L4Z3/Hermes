@@ -1,5 +1,7 @@
 # Controllers Structure
 
+This document lists all exported functions and variables from the controller modules. See the [Routing Documentation](./Routes.md) for how these controllers are used in the application.
+
 ## Authentication Controller (`authController.js`)
 
 - `register`: Create new user account
