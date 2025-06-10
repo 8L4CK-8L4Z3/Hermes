@@ -1,0 +1,24 @@
+"use client"
+
+import { useState } from "react"
+
+const DestinationCard = ({ image, name, alt }) => {
+  const [isHovered, setIsHovered] = useState(false)
+
+  return (
+    <div
+      className={`relative rounded-2xl overflow-hidden shadow-medium transition-transform duration-200 cursor-pointer ${
+        isHovered ? "transform -translate-y-1" : ""
+      }`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <img src={image || "/placeholder.svg"} alt={alt} className="w-full h-48 object-cover" />
+      <div className="absolute bottom-4 left-4">
+        <span className="text-white text-xl font-semibold drop-shadow-lg">{name}</span>
+      </div>
+    </div>
+  )
+}
+
+export default DestinationCard

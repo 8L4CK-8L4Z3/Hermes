@@ -78,25 +78,26 @@ This document provides a comprehensive roadmap and strategy for your end-of-stud
 - **State Management:** Zustand for global state, Tanstack-Query for API data and caching.
 - **Validation:** Zod for all forms and user/admin input.
 - **Security:** Role-based access for admin, protected routes, server-side checks.
-- **Backend:** Express routes for CRUD operations, with endpoints for both user and admin features.
+- **Backend:** Express routes for CRUD operations, with rssole-based access for admin endpoints.
 
 ---
 
 ## Database Structure
 
-| Collection        | Main Fields                                                                                                 | Purpose                                                      |
-|-------------------|------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
-| Users             | id, username, email, password (hash), photo, bio, isAdmin, isMod                                           | User accounts, roles, and profile info                       |
-| Trips             | id, user_id, title, start_date, end_date, destinations                                                      | User-created trip itineraries                                |
-| Destinations      | id, name, description, location, photo                                                                      | Destination data                                             |
-| Places            | id, destination_id, type (accommodation, restaurant, activity), name, description, photo, average_rating    | Places within destinations                                   |
-| Reviews           | id, user_id, place_id, rating, comment, photos                                                              | User reviews for places                                      |
-| Follows           | user_id, follower_id                                                                                        | User follow relationships                                    |
-| Posts             | id, user_id, content, media, created_at, updated_at                                                         | Social posts (trip shares, updates, etc.)                    |
-| Comments          | id, post_id, user_id, content, created_at, parent_comment_id (nullable)                                     | Comments and replies on posts                                |
-| Likes             | id, user_id, target_type (post/comment/review), target_id, created_at                                      | Likes on posts, comments, or reviews                         |
-| Notifications     | id, user_id, type, data, is_read, created_at                                                                | User notifications (mentions, follows, likes, etc.)          |
-| ModerationLogs    | id, moderator_id, action, target_type, target_id, reason, created_at                                        | Record of moderation actions                                 |
+| Collection        | Main Fields                                                                                                                          | Purpose                                                      |
+|-------------------|--------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| Users             | id, username, email, password_hash, photo, bio, isAdmin, isMod, lastLogin, isVerified, preferences, stats, created_at, updated_at    | User accounts, roles, and profile info                       |
+| Trips             | id, user_id, title, start_date, end_date, destinations[], status, isPublic, budget, activities[], created_at, updated_at             | User-created trip itineraries                                |
+| Destinations      | id, name, description, location, photo, created_at, updated_at                                                                        | Destination data                                             |
+| Places            | id, destination_id, type, name, description, photo, average_rating, price_range, opening_hours, address, created_at, updated_at       | Places within destinations                                   |
+| Reviews           | id, user_id, place_id, rating, comment, photos[], helpful_votes, visit_date, categories, created_at, updated_at                       | User reviews for places                                      |
+| Follows           | id, user_id, follower_id, created_at, updated_at                                                                                      | User follow relationships                                    |
+| Posts             | id, user_id, content, media, type, visibility, tags[], location, created_at, updated_at                                               | Social posts (trip shares, updates, etc.)                    |
+| Comments          | id, post_id, user_id, content, parent_comment_id, created_at, updated_at                                                              | Comments and replies on posts                                |
+| Likes             | id, user_id, target_type, target_id, created_at, updated_at                                                                          | Likes on posts, comments, or reviews                         |
+| Notifications     | id, user_id, type, data, is_read, created_at, updated_at                                                                             | User notifications (mentions, follows, likes, etc.)          |
+| ModerationLogs    | id, moderator_id, action, target_type, target_id, reason, status, resolution, created_at, updated_at                                  | Record of moderation actions                                 |
+| Analytics         | id, date, metrics, popularDestinations[], popularPlaces[], created_at, updated_at                                                     | Analytics and tracking data                                  |
 
 **Notes:**
 
