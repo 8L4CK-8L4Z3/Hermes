@@ -813,7 +813,8 @@ L'architecture N-tiers est un standard éprouvé qui garantit la séparation des
 
 **Fig. 3.1 : Diagramme d'architecture logique détaillée**
 
-```mermaid%%{
+```mermaid
+%%{
     init: {
         'theme': 'base',
         'themeVariables': {
