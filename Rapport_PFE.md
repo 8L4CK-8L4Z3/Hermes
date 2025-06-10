@@ -1,26 +1,24 @@
-# Rapport de Projet de Fin d'Études
-
+---
+title: "Rapport de Projet de Fin d'Études"
+author: "Nom de l'étudiant"
+date: "2024"
+geometry: margin=2.5cm
+header-includes:
+    - \usepackage{float}
+    - \floatplacement{figure}{H}
 ---
 
-<!-- 
-**Instructions pour l'étudiant:**
-Ce document est une version lourdement détaillée de votre rapport, conçue pour atteindre une longueur substantielle (cible 38+ pages après formatage et ajout de visuels). Il suit la structure et les recommandations de M. Lahmer.
-Les sections marquées avec [À COMPLÉTER] sont des placeholders où vous devez ajouter votre propre contenu.
--->
+# Résumé / Abstract
 
-## Résumé / Abstract
-
-Aujourd'hui, Internet a changé la façon dont les gens organisent et vivent leurs voyages. Beaucoup de sites permettent de réserver des hôtels ou des billets, mais peu proposent de vraiment partager ses expériences et de profiter des conseils d'autres voyageurs. C'est pour répondre à ce besoin que ce projet a été réalisé : créer une application web qui aide à planifier ses voyages et à partager ses souvenirs avec une communauté.
+Aujourd'hui, Internet a changé la façon dont les gens organisent et vivent leurs voyages. Beaucoup de sites permettent de réserver des hôtels ou des billets, mais peu proposent de vraiment partager ses expériences et de profiter des conseils d'autres voyageurs. C'est pour répondre à ce besoin que ce projet a été réalisé : créer une application web qui aide à planifier ses voyages et à partager ses souvenirs avec une communauté.
 Le principal problème était de réunir, sur une seule plateforme, la planification de voyages (choix des destinations, gestion du budget, organisation des étapes) et le partage d'avis, de photos et de conseils entre utilisateurs. L'objectif était de rendre l'application facile à utiliser, sécurisée, et capable d'évoluer avec le temps.
 Pour cela, j'ai développé une application avec des outils modernes (MongoDB, Express, React, Node.js). L'utilisateur peut créer son itinéraire, ajouter des lieux à visiter, gérer son budget, écrire des avis, poster des photos, et suivre d'autres voyageurs. Un espace d'administration permet aussi de gérer les comptes et de modérer les contenus.
 Le résultat est une application simple, agréable à utiliser, et qui fonctionne bien. Elle permet de planifier un voyage de A à Z, de partager ses expériences, et de découvrir de nouveaux endroits grâce à la communauté. Ce projet montre qu'il est possible, même avec des moyens limités, de réaliser une plateforme complète et moderne, prête à être améliorée dans le futur.
 
----
-
-## Liste des abréviations
+# Liste des abréviations
 
 | Abréviation | Signification |
-| :--- | :--- |
+|-------------|---------------|
 | MERN | MongoDB, Express, React, Node.js |
 | API | Application Programming Interface |
 | JWT | JSON Web Token |
@@ -35,21 +33,80 @@ Le résultat est une application simple, agréable à utiliser, et qui fonctionn
 | REST | REpresentational State Transfer |
 | ODM | Object-Document Mapper |
 
----
+\newpage
 
-## Table des figures
+# Table des figures
 
-*Cette liste sera générée automatiquement à partir des légendes de vos figures lors de la compilation finale du document.*
+| Numéro | Description |
+|--------|-------------|
+| Figure 1.1 | [Diagramme de Gantt prévisionnel du projet](#figure-11--diagramme-de-gantt-prévisionnel-du-projet) |
+| Figure 2.1 | [Diagramme global des cas d'utilisation](#figure-21--diagramme-global-des-cas-dutilisation) |
+| Figure 2.2 | [Diagramme de Base de Données](#figure-22--diagramme-de-base-donnee) |
+| Figure 2.3 | [Diagramme des méthodes](#figure-23--diagramme-des-méthodes) |
+| Figure 3.1 | [Diagramme d'architecture logique détaillée](#figure-31--diagramme-darchitecture-logique-détaillée) |
+| Figure 3.2 | [Diagramme d'architecture de déploiement Cloud](#figure-32--diagramme-darchitecture-de-déploiement-cloud) |
+| Figure 4.3 | [Pages d'authentification](#figure-43--pages-dauthentification) |
+| Figure 4.4 | [Fil d'actualité (Feed)](#figure-44--fil-dactualité-feed) |
+| Figure 4.5 | [Planificateur de voyage (Planner)](#figure-45--planificateur-de-voyage-planner) |
+| Figure 4.6 | [Page de profil utilisateur](#figure-46--page-de-profil-utilisateur) |
+| Figure 4.7 | [Page de lieu (Place)](#figure-47--page-de-lieu-place) |
+| Figure 4.8 | [Page de recherche](#figure-48--page-de-recherche) |
+| Figure 4.9 | [Vues responsives sur mobile](#figure-49--vues-responsives-sur-mobile) |
+| Figure 4.10 | [Tableau de bord de l'administrateur](#figure-410--tableau-de-bord-de-ladministrateur) |
+| Figure 4.11 | [Gestion du contenu et des utilisateurs](#**figure**-411--gestion-du-contenu-et-des-utilisateurs) |
+| Figure 4.12 | [Gestion des destinations](#figure-412--gestion-des-destinations) |
 
----
+\newpage
 
-## Table des matières
+# Table des matières
 
-*Cette table sera générée automatiquement à partir des titres de votre document lors de la compilation finale.*
+- [Résumé / Abstract](#résumé--abstract)
+- [Liste des abréviations](#liste-des-abréviations)
+- [Table des figures](#table-des-figures)
+- [Table des matières](#table-des-matières)
+- [Introduction](#introduction)
+- [Chapitre I : Contexte général du projet](#chapitre-i--contexte-général-du-projet)
+  - [1.1 Cahier des charges et objectifs du projet](#11-cahier-des-charges-et-objectifs-du-projet)
+  - [1.2 Conduite du projet et Processus adopté](#12-conduite-du-projet-et-processus-adopté)
+  - [1.3 Planning prévisionnel du projet (Gantt)](#13-planning-prévisionnel-du-projet-gantt)
+- [Chapitre II : Etude Fonctionnelle](#chapitre-ii--etude-fonctionnelle)
+  - [2.1 Etude de l'existant et Benchmarking](#21-etude-de-lexistant-et-benchmarking)
+    - [2.1.1 Analyse concurrentielle](#211-analyse-concurrentielle)
+    - [2.1.2 Benchmarking Technologique](#212-benchmarking-technologique)
+  - [2.2 Capture des besoins fonctionnels](#22-capture-des-besoins-fonctionnels)
+    - [2.2.1 Diagramme des cas d'utilisation](#221-diagramme-des-cas-dutilisation)
+    - [2.2.2 Description textuelle détaillée](#222-description-textuelle-détaillée)
+  - [2.3 Besoins non fonctionnels détaillés](#23-besoins-non-fonctionnels-détaillés)
+  - [2.4 Diagramme de classes du domaine](#24-diagramme-de-classes-du-domaine)
+- [Chapitre III : Etude Technique](#chapitre-iii--etude-technique)
+  - [3.1 Architecture logique de l'application](#31-architecture-logique-de-lapplication)
+  - [3.2 Architecture physique](#32-architecture-physique)
+  - [3.3 Technologies et outils utilisés - Justifications](#33-technologies-et-outils-utilisés---justifications)
+- [Chapitre IV : Mise en œuvre et Extraits de Code](#chapitre-iv--mise-en-œuvre-et-extraits-de-code)
+  - [4.1 Architecture du projet (Arborescence)](#41-architecture-du-projet-arborescence)
+  - [4.2 Implémentation de la Sécurité](#42-implémentation-de-la-sécurité)
+    - [4.2.1 Middleware de protection de route (`protect.js`)](#421-middleware-de-protection-de-route-protectjs)
+    - [4.3 Implémentation de la logique métier](#43-implémentation-de-la-logique-métier)
+      - [4.3.1 Modèle de données Mongoose (`tripModel.js`)](#431-modèle-de-données-mongoose-tripmodeljs)
+      - [4.3.2 Contrôleur (`tripController.js`)](#432-contrôleur-tripcontrollerjs)
+    - [4.4 Implémentation Frontend](#44-implémentation-frontend)
+      - [4.4.1 Communication avec l'API (`useTrips.js` avec Tanstack Query)](#441-communication-avec-lapi-usetripsjs-avec-tanstack-query)
+    - [4.5 Galerie d'Interface Utilisateur](#45-galerie-dinterface-utilisateur)
+- [Chapitre V : Tests et Validation](#chapitre-v--tests-et-validation)
+  - [5.1 Stratégie de Test Adoptée](#51-stratégie-de-test-adoptée)
+  - [5.2 Outils de Test](#52-outils-de-test)
+  - [5.3 Exemples de Scénarios de Test](#53-exemples-de-scénarios-de-test)
+    - [5.3.1 Scénario de Test Backend avec Postman](#531-scénario-de-test-backend-avec-postman)
+    - [5.3.2 Scénario de Test Manuel Frontend](#532-scénario-de-test-manuel-frontend)
+- [Conclusion](#conclusion)
+- [Webographie / Bibliographie](#webographie--bibliographie)
+  - [Documentation Officielles](#documentation-officielles)
+  - [Articles et Guides de référence](#articles-et-guides-de-référence)
+  - [Articles et Guides de référence](#articles-et-guides-de-référence-1)
 
----
+\newpage
 
-## Introduction
+# Introduction
 
 L'avènement du numérique a profondément transformé l'industrie du tourisme. Les voyageurs modernes, hyper-connectés, recherchent des expériences de plus en plus personnalisées et authentiques. Cette tendance a favorisé l'émergence du "social travel", où le partage d'expériences et les recommandations communautaires jouent un rôle central dans la planification des voyages. Les plateformes traditionnelles, souvent axées sur la simple réservation, peinent parfois à intégrer cette dimension sociale de manière fluide et intuitive. C'est dans ce contexte que s'inscrit ce projet de fin d'études.
 
@@ -59,37 +116,35 @@ Construite sur la stack MERN (MongoDB, Express, React, Node.js), une technologie
 
 Ce rapport se propose de détailler l'ensemble du cycle de vie du projet. Le premier chapitre posera le contexte général, en présentant le cahier des charges et la méthodologie de gestion adoptée. Le deuxième chapitre sera consacré à l'analyse fonctionnelle approfondie, capturant les besoins des utilisateurs à travers des cas d'utilisation détaillés. Le troisième chapitre se concentrera sur l'étude technique, justifiant les choix d'architecture et de technologies. Le quatrième chapitre illustrera la mise en œuvre concrète avec des exemples de code. Le cinquième chapitre présentera la stratégie de test mise en place pour assurer la qualité du logiciel. Enfin, une conclusion générale synthétisera le travail accompli, les défis rencontrés et les perspectives d'évolution du projet.
 
----
+# Chapitre I : Contexte général du projet
 
-## Chapitre I : Contexte général du projet
-
-### 1.1 Cahier des charges et objectifs du projet
+## 1.1 Cahier des charges et objectifs du projet
 
 Le cahier des charges initial visait la création d'une application web robuste, scalable et intuitive pour la planification de voyages. Il mettait l'accent sur la dimension sociale et communautaire, tout en assurant des performances et une sécurité de haut niveau.
 
 **Objectifs principaux décomposés :**
 
 1. **Planification de voyages avancée :**
-    * Permettre aux utilisateurs de créer des itinéraires avec plusieurs destinations.
-    * Associer des lieux spécifiques (hôtels, restaurants, activités) à chaque étape du voyage.
-    * Gérer un calendrier et un budget pour chaque voyage.
+    - Permettre aux utilisateurs de créer des itinéraires avec plusieurs destinations.
+    - Associer des lieux spécifiques (hôtels, restaurants, activités) à chaque étape du voyage.
+    - Gérer un calendrier et un budget pour chaque voyage.
     .
 2. **Plateforme de partage d'expériences riche :**
-    * Offrir la possibilité de rédiger des avis détaillés sur des lieux, avec un système de notation.
-    * Permettre le partage de voyages complets ou de posts individuels (photos, statuts).
-    * Implémenter un système social de "follow" pour créer un fil d'actualité personnalisé.
+    - Offrir la possibilité de rédiger des avis détaillés sur des lieux, avec un système de notation.
+    - Permettre le partage de voyages complets ou de posts individuels (photos, statuts).
+    - Implémenter un système social de "follow" pour créer un fil d'actualité personnalisé.
 3. **Système de recommandations intelligent :**
-    * Afficher les destinations et lieux populaires en se basant sur les interactions (avis, sauvegardes).
-    * Proposer des suggestions de contenu ou d'utilisateurs à suivre.
+    - Afficher les destinations et lieux populaires en se basant sur les interactions (avis, sauvegardes).
+    - Proposer des suggestions de contenu ou d'utilisateurs à suivre.
 4. **Gestion et sécurité des données utilisateur :**
-    * Garantir une authentification sécurisée et la protection des données personnelles.
-    * Donner aux utilisateurs le contrôle sur la visibilité de leurs informations et de leurs partages (public, abonnés, privé).
+    - Garantir une authentification sécurisée et la protection des données personnelles.
+    - Donner aux utilisateurs le contrôle sur la visibilité de leurs informations et de leurs partages (public, abonnés, privé).
 5. **Back-office d'administration complet :**
-    * Fournir des outils pour la gestion des comptes utilisateurs (bannissement, vérification).
-    * Mettre en place un système de modération pour le contenu généré par les utilisateurs (avis, posts).
-    * Afficher des statistiques de base sur l'utilisation de la plateforme.
+    - Fournir des outils pour la gestion des comptes utilisateurs (bannissement, vérification).
+    - Mettre en place un système de modération pour le contenu généré par les utilisateurs (avis, posts).
+    - Afficher des statistiques de base sur l'utilisation de la plateforme.
 
-### 1.2 Conduite du projet et Processus adopté
+## 1.2 Conduite du projet et Processus adopté
 
 Pour mener à bien ce projet dans les délais impartis, une méthodologie de gestion de projet itérative, inspirée des principes **Agile**, a été choisie. Cette approche privilégie la flexibilité, la collaboration et la livraison de valeur par incréments.
 
@@ -102,24 +157,22 @@ Cette approche a permis de prioriser les développements, d'obtenir des retours 
 
 **Outils de gestion de projet :**
 
-* **Versionnement :** `Git` a été utilisé pour le contrôle de version, avec `GitHub` comme plateforme d'hébergement du code source, facilitant la collaboration et le suivi des modifications.
-* **Suivi des tâches :** Suivi des tâches : Le suivi de l'avancement du projet a été réalisé à l'aide d'un tableau Kanban directement intégré dans la documentation interne (Docs/Readme.md). Ce tableau, structuré en colonnes "To Do", "In Progress" et "Done", a permis de gérer les tâches sous forme de "user stories", de les organiser en sprints et de suivre leur progression tout au long du développement. Ce choix a permis une centralisation simple et efficace du suivi, sans recourir à un outil externe comme Trello ou Jira.
+- **Versionnement :** `Git` a été utilisé pour le contrôle de version, avec `GitHub` comme plateforme d'hébergement du code source, facilitant la collaboration et le suivi des modifications.
+- **Suivi des tâches :** Suivi des tâches : Le suivi de l'avancement du projet a été réalisé à l'aide d'un tableau Kanban directement intégré dans la documentation interne (Docs/Readme.md). Ce tableau, structuré en colonnes "To Do", "In Progress" et "Done", a permis de gérer les tâches sous forme de "user stories", de les organiser en sprints et de suivre leur progression tout au long du développement. Ce choix a permis une centralisation simple et efficace du suivi, sans recourir à un outil externe comme Trello ou Jira.
 
-### 1.3 Planning prévisionnel du projet (Gantt)
+## 1.3 Planning prévisionnel du projet (Gantt)
 
 **Fig. 1.1 : Diagramme de Gantt prévisionnel du projet**
 
-![Diagramme de Gantt](Images/Diag/Gantt.png)
+![Diagramme de Gantt](Images/Diag/Gantt.png){width=100%}
 
-*Commentaire : Le diagramme de Gantt ci-dessus illustre la planification du projet sur environ 4 mois. On y observe les phases initiales d'analyse et de conception, suivies par deux grands sprints de développement en parallèle (Frontend/Backend) avec des phases de tests intermédiaires. Le projet se termine par une phase de tests finaux et le déploiement. Le chemin critique (marqué `crit`) met en évidence les tâches essentielles qui ne doivent pas prendre de retard pour respecter les délais.*
+*Figure 1.1 : Diagramme de Gantt prévisionnel du projet*
 
----
+# Chapitre II : Etude Fonctionnelle
 
-## Chapitre II : Etude Fonctionnelle
+## 2.1 Etude de l'existant et Benchmarking
 
-### 2.1 Etude de l'existant et Benchmarking
-
-#### 2.1.1 Analyse concurrentielle
+### 2.1.1 Analyse concurrentielle
 
 Cette section analyse les principaux acteurs du marché pour situer notre projet. L'étude se concentre sur leurs forces, leurs faiblesses et leur positionnement afin d'identifier les opportunités pour notre application.
 
@@ -133,7 +186,7 @@ Cette section analyse les principaux acteurs du marché pour situer notre projet
 | **Points Faibles** | - Interface vieillissante<br>- Expérience utilisateur fragmentée<br>- Publicité omniprésente | - Planification pré-voyage limitée<br>- Peu d'informations détaillées sur les lieux<br>- Modèle social basique | - Peut être complexe pour des besoins simples<br>- Moins axé sur le "souvenir" post-voyage<br>- Certaines fonctions clés sont payantes | - Communauté à construire<br>- Contenu initial limité<br>- Pas de réservation intégrée |
 | **Modèle Économique** | Publicité, commissions sur réservation. | Vente de livres photo imprimés. | Freemium (Abonnement Wanderlog Pro pour fonctions avancées). | Potentiel : fonctionnalités premium, partenariats ciblés, B2B pour agences. |
 
-#### 2.1.2 Benchmarking Technologique
+### 2.1.2 Benchmarking Technologique
 
 Le choix de la stack technologique a été guidé par des critères de performance, de maturité de l'écosystème et de productivité de développement.
 
@@ -144,9 +197,9 @@ Le choix de la stack technologique a été guidé par des critères de performan
 | **Frontend** | **React** | Angular, Vue.js | L'écosystème de React est le plus vaste. Son approche par composants et le Virtual DOM offrent une grande flexibilité et performance. La disponibilité de bibliothèques comme Tanstack Query est un avantage décisif. |
 | **Gestion d'état (Client)** | **Zustand + Tanstack Query** | Redux Toolkit, Apollo Client | `Zustand` offre une gestion simple de l'état global sans le "boilerplate" de Redux. `Tanstack Query` est la solution de référence pour la gestion de l'état serveur (caching, synchronisation), la séparant proprement de l'état client. |
 
-### 2.2 Capture des besoins fonctionnels
+## 2.2 Capture des besoins fonctionnels
 
-#### 2.2.1 Diagramme des cas d'utilisation
+### 2.2.1 Diagramme des cas d'utilisation
 
 **Fig. 2.1 : Diagramme global des cas d'utilisation**
 
@@ -154,20 +207,20 @@ Le choix de la stack technologique a été guidé par des critères de performan
 
 *Commentaire : Ce diagramme montre les deux acteurs principaux, l'Utilisateur et l'Administrateur, et les ensembles de fonctionnalités qui leur sont accessibles. On distingue clairement les cas d'utilisation liés à la gestion de compte, à la planification, à l'interaction sociale et à l'administration.*
 
-#### 2.2.2 Description textuelle détaillée
+### 2.2.2 Description textuelle détaillée
 
 Voici une description détaillée des cas d'utilisation les plus importants du système.
 
 **Cas d'Utilisation 1 : S'inscrire sur la plateforme**
 
-* **ID:** UC-001
-* **Titre:** S'inscrire sur la plateforme
-* **Description:** Un nouveau visiteur souhaite créer un compte pour accéder aux fonctionnalités de l'application.
-* **Acteur:** Visiteur
-* **Déclencheur:** Le visiteur clique sur le bouton "S'inscrire".
-* **Préconditions:** Aucune.
-* **Postconditions:** Un nouveau compte utilisateur est créé avec le statut "non vérifié". Un email de vérification est envoyé à l'adresse fournie. L'utilisateur est connecté et redirigé vers la page d'accueil.
-* **Scénario Nominal:**
+- **ID:** UC-001
+- **Titre:** S'inscrire sur la plateforme
+- **Description:** Un nouveau visiteur souhaite créer un compte pour accéder aux fonctionnalités de l'application.
+- **Acteur:** Visiteur
+- **Déclencheur:** Le visiteur clique sur le bouton "S'inscrire".
+- **Préconditions:** Aucune.
+- **Postconditions:** Un nouveau compte utilisateur est créé avec le statut "non vérifié". Un email de vérification est envoyé à l'adresse fournie. L'utilisateur est connecté et redirigé vers la page d'accueil.
+- **Scénario Nominal:**
     1. Le visiteur remplit le formulaire d'inscription (nom d'utilisateur, email, mot de passe).
     2. Le système valide la conformité des données (voir EX1, EX2).
     3. Le système vérifie l'unicité du nom d'utilisateur et de l'email (voir EX3).
@@ -175,57 +228,57 @@ Voici une description détaillée des cas d'utilisation les plus importants du s
     5. Le système enregistre le nouvel utilisateur en base de données.
     6. Le système envoie un email de vérification.
     7. Le système génère un JWT, le place dans un cookie et connecte l'utilisateur.
-* **Exceptions:**
-  * **EX1: Données invalides.** Le système affiche un message d'erreur. Retour à l'étape 1.
-  * **EX2: Mot de passe trop faible.** Le système affiche les exigences de mot de passe. Retour à l'étape 1.
-  * **EX3: Email ou nom d'utilisateur déjà utilisé.** Le système affiche un message d'erreur. Retour à l'étape 1.
+- **Exceptions:**
+  - **EX1: Données invalides.** Le système affiche un message d'erreur. Retour à l'étape 1.
+  - **EX2: Mot de passe trop faible.** Le système affiche les exigences de mot de passe. Retour à l'étape 1.
+  - **EX3: Email ou nom d'utilisateur déjà utilisé.** Le système affiche un message d'erreur. Retour à l'étape 1.
 
 **Cas d'Utilisation 2 : Créer un voyage**
 
-* **ID:** UC-002
-* **Titre:** Créer un nouveau voyage
-* **Description:** Un utilisateur authentifié souhaite démarrer la planification d'un nouveau voyage en créant un itinéraire de base.
-* **Acteur:** Utilisateur (connecté)
-* **Déclencheur:** L'utilisateur clique sur le bouton "Créer un voyage".
-* **Préconditions:** L'utilisateur doit être authentifié.
-* **Postconditions:** Un nouveau voyage est créé et associé au profil de l'utilisateur. L'utilisateur est redirigé vers la page de gestion de ce voyage.
-* **Scénario Nominal:**
+- **ID:** UC-002
+- **Titre:** Créer un nouveau voyage
+- **Description:** Un utilisateur authentifié souhaite démarrer la planification d'un nouveau voyage en créant un itinéraire de base.
+- **Acteur:** Utilisateur (connecté)
+- **Déclencheur:** L'utilisateur clique sur le bouton "Créer un voyage".
+- **Préconditions:** L'utilisateur doit être authentifié.
+- **Postconditions:** Un nouveau voyage est créé et associé au profil de l'utilisateur. L'utilisateur est redirigé vers la page de gestion de ce voyage.
+- **Scénario Nominal:**
     1. L'utilisateur remplit les informations principales du voyage (Titre, dates de début et de fin, description).
     2. L'utilisateur définit la visibilité du voyage (Public, Privé).
     3. L'utilisateur soumet le formulaire.
     4. Le système valide les données (ex: la date de fin ne peut pas être antérieure à la date de début).
     5. Le système enregistre le nouveau voyage en base de données.
     6. Le système redirige l'utilisateur vers la page détaillée du voyage nouvellement créé.
-* **Exceptions:**
-  * **EX1: Données invalides.** Le système affiche des messages d'erreur clairs sous les champs concernés.
+- **Exceptions:**
+  - **EX1: Données invalides.** Le système affiche des messages d'erreur clairs sous les champs concernés.
 
 **Cas d'Utilisation 3 : Suivre un autre utilisateur**
 
-* **ID:** UC-003
-* **Titre:** Suivre un autre utilisateur
-* **Description:** Un utilisateur souhaite s'abonner au contenu d'un autre utilisateur pour voir ses voyages publics et ses posts dans son fil d'actualité.
-* **Acteur:** Utilisateur (connecté)
-* **Déclencheur:** L'utilisateur clique sur le bouton "Suivre" sur le profil d'un autre utilisateur.
-* **Préconditions:** L'utilisateur doit être authentifié et ne doit pas déjà suivre l'utilisateur cible.
-* **Postconditions:** Une relation "suit" est créée entre les deux utilisateurs. Le contenu de l'utilisateur suivi apparaîtra dans le fil d'actualité de l'utilisateur suiveur.
-* **Scénario Nominal:**
+- **ID:** UC-003
+- **Titre:** Suivre un autre utilisateur
+- **Description:** Un utilisateur souhaite s'abonner au contenu d'un autre utilisateur pour voir ses voyages publics et ses posts dans son fil d'actualité.
+- **Acteur:** Utilisateur (connecté)
+- **Déclencheur:** L'utilisateur clique sur le bouton "Suivre" sur le profil d'un autre utilisateur.
+- **Préconditions:** L'utilisateur doit être authentifié et ne doit pas déjà suivre l'utilisateur cible.
+- **Postconditions:** Une relation "suit" est créée entre les deux utilisateurs. Le contenu de l'utilisateur suivi apparaîtra dans le fil d'actualité de l'utilisateur suiveur.
+- **Scénario Nominal:**
     1. L'utilisateur navigue vers le profil d'un autre utilisateur.
     2. L'utilisateur clique sur "Suivre".
     3. Le système enregistre la nouvelle relation d'abonnement en base de données.
     4. Le bouton "Suivre" se transforme en "Ne plus suivre".
-* **Exceptions:**
-  * **EX1: L'utilisateur essaie de se suivre lui-même.** Le système n'affiche pas le bouton "Suivre" sur le propre profil de l'utilisateur.
+- **Exceptions:**
+  - **EX1: L'utilisateur essaie de se suivre lui-même.** Le système n'affiche pas le bouton "Suivre" sur le propre profil de l'utilisateur.
 
 **Cas d'Utilisation 4 : Rédiger un avis sur un lieu**
 
-* **ID:** UC-004
-* **Titre:** Rédiger un avis
-* **Description:** Un utilisateur authentifié souhaite partager son expérience sur un lieu (restaurant, hôtel, etc.) qu'il a visité.
-* **Acteur:** Utilisateur (connecté)
-* **Déclencheur:** L'utilisateur clique sur "Donner un avis" sur la page d'un lieu.
-* **Préconditions:** L'utilisateur doit être authentifié. Le lieu doit exister dans la base de données.
-* **Postconditions:** Le nouvel avis est sauvegardé. La note moyenne du lieu est mise à jour. L'avis est visible sur la page du lieu et potentiellement sur le profil de l'utilisateur.
-* **Scénario Nominal:**
+- **ID:** UC-004
+- **Titre:** Rédiger un avis
+- **Description:** Un utilisateur authentifié souhaite partager son expérience sur un lieu (restaurant, hôtel, etc.) qu'il a visité.
+- **Acteur:** Utilisateur (connecté)
+- **Déclencheur:** L'utilisateur clique sur "Donner un avis" sur la page d'un lieu.
+- **Préconditions:** L'utilisateur doit être authentifié. Le lieu doit exister dans la base de données.
+- **Postconditions:** Le nouvel avis est sauvegardé. La note moyenne du lieu est mise à jour. L'avis est visible sur la page du lieu et potentiellement sur le profil de l'utilisateur.
+- **Scénario Nominal:**
     1. L'utilisateur sélectionne une note (de 1 à 5).
     2. L'utilisateur rédige un commentaire textuel.
     3. L'utilisateur peut optionnellement ajouter des photos.
@@ -233,43 +286,43 @@ Voici une description détaillée des cas d'utilisation les plus importants du s
     5. Le système valide les données (note et commentaire obligatoires).
     6. Le système enregistre l'avis en base de données.
     7. Le système recalcule et met à jour la note moyenne du lieu concerné.
-* **Exceptions:**
-  * **EX1: L'utilisateur a déjà laissé un avis pour ce lieu.** Le système propose de modifier l'avis existant.
+- **Exceptions:**
+  - **EX1: L'utilisateur a déjà laissé un avis pour ce lieu.** Le système propose de modifier l'avis existant.
 
 **Cas d'Utilisation 5 : Modérer un contenu**
 
-* **ID:** UC-005
-* **Titre:** Modérer un contenu
-* **Description:** Un administrateur ou un modérateur souhaite supprimer un contenu (avis, post) qui a été signalé comme inapproprié.
-* **Acteur:** Administrateur / Modérateur
-* **Déclencheur:** L'administrateur accède au tableau de bord de modération et sélectionne un contenu signalé.
-* **Préconditions:** L'utilisateur doit être authentifié et avoir un rôle d'administrateur ou de modérateur.
-* **Postconditions:** Le contenu ciblé est supprimé de la plateforme. L'auteur du contenu peut être notifié.
-* **Scénario Nominal:**
+- **ID:** UC-005
+- **Titre:** Modérer un contenu
+- **Description:** Un administrateur ou un modérateur souhaite supprimer un contenu (avis, post) qui a été signalé comme inapproprié.
+- **Acteur:** Administrateur / Modérateur
+- **Déclencheur:** L'administrateur accède au tableau de bord de modération et sélectionne un contenu signalé.
+- **Préconditions:** L'utilisateur doit être authentifié et avoir un rôle d'administrateur ou de modérateur.
+- **Postconditions:** Le contenu ciblé est supprimé de la plateforme. L'auteur du contenu peut être notifié.
+- **Scénario Nominal:**
     1. L'administrateur consulte la liste des contenus signalés.
     2. Il examine le contenu et le motif du signalement.
     3. Il décide de supprimer le contenu et clique sur "Supprimer".
     4. Le système demande une confirmation.
     5. Après confirmation, le système supprime le contenu de la base de données.
     6. Le contenu n'est plus visible sur l'application.
-* **Exceptions:**
-  * **EX1: L'administrateur décide que le contenu n'est pas inapproprié.** Il rejette le signalement, et le contenu reste visible.
+- **Exceptions:**
+  - **EX1: L'administrateur décide que le contenu n'est pas inapproprié.** Il rejette le signalement, et le contenu reste visible.
 
-### 2.3 Besoins non fonctionnels détaillés
+## 2.3 Besoins non fonctionnels détaillés
 
-* **Sécurité :**
-  * **Défense en profondeur :** La sécurité est assurée par une approche multi-couches. Chaque requête traverse une chaîne de middlewares de sécurité (`helmet`, `hpp`, `express-rate-limit`, `xss`) avant même d'atteindre la logique applicative.
-  * **Gestion de l'authentification :** Le flux JWT utilise des access tokens à courte durée de vie (ex: 15 min) et des refresh tokens à plus longue durée de vie (ex: 7 jours) stockés dans des cookies `HttpOnly`, ce qui rend le vol de token via XSS très difficile. Le `refresh token` permet de renouveler silencieusement la session sans que l'utilisateur ait à se reconnecter.
-  * **Contrôle d'accès basé sur les rôles (RBAC) :** Les middlewares `isAdmin` et `isModerator` ne se contentent pas de vérifier un booléen. Ils sont le point d'entrée d'une logique d'autorisation qui pourrait être étendue (ex: permissions granulaires). Ils garantissent une séparation stricte des privilèges.
-* **Performance et Scalabilité :**
-  * **Stratégie de Caching :** Le caching `Redis` est appliqué intelligemment sur les routes `GET` coûteuses et fréquemment demandées (ex: `/destinations/popular`, `/trips/public`). Les clés de cache sont structurées (ex: `cache:trips:public`) pour permettre une invalidation granulaire (ex: vider tout le cache des voyages via `clearCache('cache:trips:*')` lorsqu'un nouveau voyage public est créé).
-  * **Optimisation Frontend :** `Vite` est configuré pour le "code splitting" automatique par route. Ainsi, l'utilisateur ne télécharge que le code JavaScript nécessaire à la page qu'il visite. Les images bénéficieront de "lazy loading" pour ne charger que celles visibles à l'écran.
-  * **Architecture "Stateless" :** Le backend est conçu pour être "stateless" (sans état). L'état de la session est entièrement contenu dans le JWT côté client. Cela signifie que l'on peut déployer plusieurs instances du backend derrière un load balancer pour une scalabilité horizontale facile.
-* **Fiabilité et Maintenabilité :**
-  * **Journalisation (Logging) :** `Winston` est configuré pour enregistrer les logs dans des fichiers rotatifs (`winston-daily-rotate-file`). Les niveaux de logs (info, warn, error) permettent de filtrer les informations. En production, seuls les avertissements et les erreurs sont enregistrés, tandis qu'en développement, le logging est plus verbeux pour faciliter le débogage.
-  * **Gestion des erreurs centralisée :** Un middleware de gestion d'erreur final est mis en place dans `Express`. Il intercepte toutes les erreurs non capturées, les journalise, et renvoie une réponse JSON propre au client (sans fuite de détails d'implémentation).
+- **Sécurité :**
+  - **Défense en profondeur :** La sécurité est assurée par une approche multi-couches. Chaque requête traverse une chaîne de middlewares de sécurité (`helmet`, `hpp`, `express-rate-limit`, `xss`) avant même d'atteindre la logique applicative.
+  - **Gestion de l'authentification :** Le flux JWT utilise des access tokens à courte durée de vie (ex: 15 min) et des refresh tokens à plus longue durée de vie (ex: 7 jours) stockés dans des cookies `HttpOnly`, ce qui rend le vol de token via XSS très difficile. Le `refresh token` permet de renouveler silencieusement la session sans que l'utilisateur ait à se reconnecter.
+  - **Contrôle d'accès basé sur les rôles (RBAC) :** Les middlewares `isAdmin` et `isModerator` ne se contentent pas de vérifier un booléen. Ils sont le point d'entrée d'une logique d'autorisation qui pourrait être étendue (ex: permissions granulaires). Ils garantissent une séparation stricte des privilèges.
+- **Performance et Scalabilité :**
+  - **Stratégie de Caching :** Le caching `Redis` est appliqué intelligemment sur les routes `GET` coûteuses et fréquemment demandées (ex: `/destinations/popular`, `/trips/public`). Les clés de cache sont structurées (ex: `cache:trips:public`) pour permettre une invalidation granulaire (ex: vider tout le cache des voyages via `clearCache('cache:trips:*')` lorsqu'un nouveau voyage public est créé).
+  - **Optimisation Frontend :** `Vite` est configuré pour le "code splitting" automatique par route. Ainsi, l'utilisateur ne télécharge que le code JavaScript nécessaire à la page qu'il visite. Les images bénéficieront de "lazy loading" pour ne charger que celles visibles à l'écran.
+  - **Architecture "Stateless" :** Le backend est conçu pour être "stateless" (sans état). L'état de la session est entièrement contenu dans le JWT côté client. Cela signifie que l'on peut déployer plusieurs instances du backend derrière un load balancer pour une scalabilité horizontale facile.
+- **Fiabilité et Maintenabilité :**
+  - **Journalisation (Logging) :** `Winston` est configuré pour enregistrer les logs dans des fichiers rotatifs (`winston-daily-rotate-file`). Les niveaux de logs (info, warn, error) permettent de filtrer les informations. En production, seuls les avertissements et les erreurs sont enregistrés, tandis qu'en développement, le logging est plus verbeux pour faciliter le débogage.
+  - **Gestion des erreurs centralisée :** Un middleware de gestion d'erreur final est mis en place dans `Express`. Il intercepte toutes les erreurs non capturées, les journalise, et renvoie une réponse JSON propre au client (sans fuite de détails d'implémentation).
 
-### 2.4 Diagramme de classes du domaine
+## 2.4 Diagramme de classes du domaine
 
 **Fig. 2.2 : Diagramme de Base Donnee**
 *Commentaire: Ce diagramme a été amélioré et diviser pour montrer plus de détails sur les attributs et les cardinalités.*
@@ -282,19 +335,17 @@ Voici une description détaillée des cas d'utilisation les plus importants du s
 
 ![Diagramme des méthodes](Images/Diag/DBMethodes.png)
 
----
+# Chapitre III : Etude Technique
 
-## Chapitre III : Etude Technique
-
-### 3.1 Architecture logique de l'application
+## 3.1 Architecture logique de l'application
 
 L'architecture N-tiers est un standard éprouvé qui garantit la séparation des préoccupations (`Separation of Concerns`), un principe fondamental en ingénierie logicielle.
 
 **Fig. 3.1 : Diagramme d'architecture logique détaillée**
 
-![Diagramme d'architecture logique](Images/Diag/LogArch.png)
+![Diagramme d'architecture logique](Images/Diag/LogArch.png){width=100%}
 
-*Commentaire: Ce schéma illustre le flux d'une requête HTTP depuis le navigateur de l'utilisateur jusqu'à la base de données et retour. On y voit clairement le rôle de chaque couche: le Frontend pour la vue, le Backend pour la logique (Routes -> Middlewares -> Contrôleurs -> Services/Models) et la couche Persistance pour le stockage. Une couche de cache (Redis) est également représentée pour optimiser les performances.*
+*Figure 3.1 : Diagramme d'architecture logique détaillée*
 
 **Flux de données typique (Exemple: Créer un voyage)**
 
@@ -307,15 +358,15 @@ L'architecture N-tiers est un standard éprouvé qui garantit la séparation des
 7. **Retour:** La réponse remonte la chaîne : Mongoose renvoie l'objet au contrôleur, qui envoie une réponse JSON `201 Created` au client.
 8. **Client (React):** `Tanstack Query` reçoit la réponse, met à jour son cache, et l'UI se rafraîchit pour afficher le nouveau voyage.
 
-### 3.2 Architecture physique
+## 3.2 Architecture physique
 
 Le déploiement en production d'une application web moderne repose sur une architecture distribuée, résiliente et scalable, exploitant les services cloud spécialisés.
 
-* **Frontend (React) :** Déployé sur un service de hosting statique comme **Vercel** ou **Netlify**. Ces services offrent un CDN (Content Delivery Network) global, garantissant des temps de chargement rapides partout dans le monde, ainsi que des fonctionnalités de CI/CD intégrées.
-* **Backend (Node.js) :** L'application est conteneurisée avec **Docker** pour assurer la portabilité et la reproductibilité de l'environnement. Le conteneur est ensuite déployé sur une plateforme PaaS (Platform as a Service) comme **Heroku**, **Render** ou **AWS Elastic Beanstalk**. Le PaaS permet une mise à l'échelle facile (horizontale et verticale).
-* **Base de Données (MongoDB) :** Hébergée sur un service managé comme **MongoDB Atlas**. Cela délègue la complexité de la gestion de la BDD (sauvegardes, réplication, scaling, sécurité) à un fournisseur expert.
-* **Cache (Redis) :** Hébergé sur un service managé comme **Upstash**, **Heroku Data for Redis** ou **AWS ElastiCache**. Utiliser un service managé simplifie la maintenance et garantit la haute disponibilité.
-* **Stockage de fichiers (Média) :** Les fichiers uploadés par les utilisateurs (photos de profil, images de posts) sont stockés sur le serveur backend.
+- **Frontend (React) :** Déployé sur un service de hosting statique comme **Vercel** ou **Netlify**. Ces services offrent un CDN (Content Delivery Network) global, garantissant des temps de chargement rapides partout dans le monde, ainsi que des fonctionnalités de CI/CD intégrées.
+- **Backend (Node.js) :** L'application est conteneurisée avec **Docker** pour assurer la portabilité et la reproductibilité de l'environnement. Le conteneur est ensuite déployé sur une plateforme PaaS (Platform as a Service) comme **Heroku**, **Render** ou **AWS Elastic Beanstalk**. Le PaaS permet une mise à l'échelle facile (horizontale et verticale).
+- **Base de Données (MongoDB) :** Hébergée sur un service managé comme **MongoDB Atlas**. Cela délègue la complexité de la gestion de la BDD (sauvegardes, réplication, scaling, sécurité) à un fournisseur expert.
+- **Cache (Redis) :** Hébergé sur un service managé comme **Upstash**, **Heroku Data for Redis** ou **AWS ElastiCache**. Utiliser un service managé simplifie la maintenance et garantit la haute disponibilité.
+- **Stockage de fichiers (Média) :** Les fichiers uploadés par les utilisateurs (photos de profil, images de posts) sont stockés sur le serveur backend.
 
 **Fig. 3.2 : Diagramme d'architecture de déploiement Cloud**
 
@@ -323,7 +374,7 @@ Le déploiement en production d'une application web moderne repose sur une archi
 
 *Commentaire: Ce diagramme montre comment les différents composants de l'application sont déployés sur des services cloud indépendants et spécialisés. Le trafic est réparti par un Load Balancer entre plusieurs instances du backend, qui sont stateless. Les données, le cache et les fichiers sont gérés par des services managés externes pour une meilleure scalabilité et fiabilité.*
 
-### 3.3 Technologies et outils utilisés - Justifications
+## 3.3 Technologies et outils utilisés - Justifications
 
 | Domaine | Technologie | Version | Justification du Choix |
 | :--- | :--- | :--- | :--- |
@@ -335,13 +386,11 @@ Le déploiement en production d'une application web moderne repose sur une archi
 | | Zod | `3.25.56`| **Inférence de type :** Permet de déclarer un schéma de validation et d'en déduire automatiquement le type TypeScript. **Isomorphique :** Les mêmes schémas peuvent être utilisés sur le serveur et sur le client. |
 | **Styling** | TailwindCSS | `4.1.8` | **Productivité :** Permet de styler les composants directement dans le HTML/JSX sans changer de contexte. **Personnalisation :** Entièrement configurable pour correspondre à une charte graphique précise. **Performance :** Ne génère que les classes CSS réellement utilisées, produisant des fichiers CSS très légers. |
 
----
-
-## Chapitre IV : Mise en œuvre et Extraits de Code
+# Chapitre IV : Mise en œuvre et Extraits de Code
 
 Cette section présente des extraits de code significatifs qui illustrent les concepts architecturaux décrits précédemment.
 
-### 4.1 Architecture du projet (Arborescence)
+## 4.1 Architecture du projet (Arborescence)
 
 Une structure de projet claire est essentielle pour la maintenabilité et la collaboration. L'approche monorepo a été écartée au profit de deux dépôts distincts (backend et frontend) pour une séparation nette des préoccupations.
 
@@ -383,9 +432,9 @@ frontend
 
 *Commentaire: L'architecture frontend est organisée par fonctionnalités (`features`), ce qui améliore la scalabilité et la co-localisation du code lié. Les composants, hooks et services partagés sont placés dans des dossiers communs pour être réutilisés à travers l'application.*
 
-### 4.2 Implémentation de la Sécurité
+## 4.2 Implémentation de la Sécurité
 
-#### 4.2.1 Middleware de protection de route (`protect.js`)
+### 4.2.1 Middleware de protection de route (`protect.js`)
 
 Ce middleware est le gardien de nos routes sécurisées.
 
@@ -597,8 +646,6 @@ export const useCreateTrip = () => {
 
 *Commentaire: Ce hook personnalisé abstrait la logique de communication avec l'API. `useGetTrips` récupère et met en cache les voyages. `useCreateTrip` gère la création et, en cas de succès (`onSuccess`), invalide le cache pour que la liste des voyages se mette automatiquement à jour.*
 
----
-
 ### 4.5 Galerie d'Interface Utilisateur
 
 L'interface utilisateur a été conçue avec une approche "mobile-first", en privilégiant la clarté, la simplicité d'utilisation et une esthétique moderne. L'utilisation de TailwindCSS a permis de créer un design system cohérent et entièrement responsive, garantissant une expérience utilisateur optimale sur toutes les tailles d'écrans, du smartphone à l'ordinateur de bureau.
@@ -648,13 +695,11 @@ L'interface utilisateur a été conçue avec une approche "mobile-first", en pri
 ![Gestion des destinations](Images/DestinationManagement.png)
 *Commentaire : Une interface spécifique permet aux administrateurs d'enrichir la base de données de l'application en ajoutant ou en modifiant des destinations, des lieux d'intérêt et leurs informations associées.*
 
----
-
-## Chapitre V : Tests et Validation
+# Chapitre V : Tests et Validation
 
 Pour garantir la qualité, la robustesse et la non-régression de l'application, une stratégie de test pragmatique et ciblée a été mise en œuvre. Plutôt que de viser une couverture de test automatisée complète, l'approche s'est concentrée sur les aspects les plus critiques du système : la validation de la logique backend via des tests d'API et la vérification du comportement du frontend par des tests manuels et exploratoires approfondis.
 
-### 5.1 Stratégie de Test Adoptée
+## 5.1 Stratégie de Test Adoptée
 
 La stratégie de test a été divisée en deux volets complémentaires :
 
@@ -662,7 +707,7 @@ La stratégie de test a été divisée en deux volets complémentaires :
 
 2. **Tests Manuels et Exploratoires (Frontend) :** Le frontend, étant l'interface directe avec l'utilisateur, a été validé par des tests manuels. Cette méthode permet non seulement de vérifier que les fonctionnalités sont conformes aux spécifications, mais aussi d'évaluer l'expérience utilisateur (UX) de manière qualitative. En utilisant des outils d'aide au débogage comme les React DevTools, ces tests manuels ont été augmentés d'une inspection technique précise de l'état des composants et des flux de données côté client.
 
-### 5.2 Outils de Test
+## 5.2 Outils de Test
 
 | Outil | Type de Test | Justification du Choix |
 | :--- | :--- | :--- |
@@ -670,46 +715,44 @@ La stratégie de test a été divisée en deux volets complémentaires :
 | **React DevTools** | Débogage & Inspection (Frontend) | Extension de navigateur essentielle pour inspecter la hiérarchie des composants React, visualiser et manipuler l'état (géré par Zustand et Tanstack Query) en temps réel, et profiler les performances de rendu pour identifier les goulots d'étranglement. |
 | **Outils de développement du Navigateur** | Tests Manuels & Débogage | Indispensables pour tout développement web. Ils ont été utilisés pour inspecter le DOM, déboguer le code JavaScript, analyser le trafic réseau (vérification des appels API), et simuler différentes tailles d'écran pour valider le responsive design. |
 
-### 5.3 Exemples de Scénarios de Test
+## 5.3 Exemples de Scénarios de Test
 
-#### 5.3.1 Scénario de Test Backend avec Postman
+### 5.3.1 Scénario de Test Backend avec Postman
 
 **Objectif :** Valider le endpoint de création de voyage (`POST /api/trips`).
 
 Une collection Postman a été créée pour les routes "Trips", contenant des requêtes pour chaque action CRUD.
 
-* **Test Case 1 : Création réussie par un utilisateur authentifié**
+- **Test Case 1 : Création réussie par un utilisateur authentifié**
     1. **Prérequis :** Exécuter une requête `POST /api/auth/login` avec des identifiants valides pour obtenir un JWT. Le token est automatiquement stocké dans une variable d'environnement Postman.
     2. **Requête :** Envoyer une requête `POST` à `{{URL}}/api/trips`. Le token est inclus dans les cookies de la requête. Le `body` de la requête contient un JSON valide pour un nouveau voyage.
 
-* **Test Case 2 : Échec car l'utilisateur n'est pas authentifié**
+- **Test Case 2 : Échec car l'utilisateur n'est pas authentifié**
     1. **Requête :** Envoyer la même requête `POST` à `{{URL}}/api/trips`, mais cette fois en s'assurant qu'aucun token d'authentification n'est envoyé.
 
-#### 5.3.2 Scénario de Test Manuel Frontend
+### 5.3.2 Scénario de Test Manuel Frontend
 
 **Objectif :** Valider le formulaire de création de voyage du point de vue de l'utilisateur.
 
-* **Scénario de test :**
+- **Scénario de test :**
     1. **Connexion :** Se connecter à l'application avec un compte de test.
     2. **Navigation :** Accéder à la page de création d'un nouveau voyage.
     3. **Inspection initiale :** Ouvrir les **React DevTools**. Sélectionner le composant du formulaire de voyage pour inspecter son état initial et ses `props`.
     4. **Test du cas passant :**
-        * Remplir le formulaire avec des données valides (titre, dates, etc.).
-        * Cliquer sur le bouton "Créer le voyage".
+        - Remplir le formulaire avec des données valides (titre, dates, etc.).
+        - Cliquer sur le bouton "Créer le voyage".
     5. **Vérifications multiples :**
-        * **Réseau :** Dans l'onglet "Network" des outils du navigateur, observer qu'une requête `POST` est envoyée à `/api/trips` avec le bon `payload` et qu'elle reçoit une réponse `201`.
-        * **État React :** À l'aide des **React DevTools** et de l'extension dédiée à Tanstack Query, observer que le cache de la requête `['trips']` est bien invalidé, déclenchant une nouvelle récupération des données pour mettre la liste des voyages à jour.
-        * **UI :** Constater que l'utilisateur est bien redirigé vers la nouvelle page du voyage et qu'un message de succès s'affiche.
+        - **Réseau :** Dans l'onglet "Network" des outils du navigateur, observer qu'une requête `POST` est envoyée à `/api/trips` avec le bon `payload` et qu'elle reçoit une réponse `201`.
+        - **État React :** À l'aide des **React DevTools** et de l'extension dédiée à Tanstack Query, observer que le cache de la requête `['trips']` est bien invalidé, déclenchant une nouvelle récupération des données pour mettre la liste des voyages à jour.
+        - **UI :** Constater que l'utilisateur est bien redirigé vers la nouvelle page du voyage et qu'un message de succès s'affiche.
     6. **Test du cas d'erreur (validation front) :**
-        * Rafraîchir la page et tenter de soumettre le formulaire avec des données invalides (ex: une date de fin antérieure à la date de début).
+        - Rafraîchir la page et tenter de soumettre le formulaire avec des données invalides (ex: une date de fin antérieure à la date de début).
     7. **Vérifications :**
-        * **UI :** Constater que des messages d'erreur clairs apparaissent sous les champs concernés et que le bouton de soumission est potentiellement désactivé.
-        * **État React :** Avec les **React DevTools**, vérifier que l'état du composant reflète maintenant ces erreurs de validation.
-        * **Réseau :** Confirmer dans l'onglet "Network" qu'aucune requête API n'a été envoyée, ce qui prouve que la validation côté client a bien fonctionné.
+        - **UI :** Constater que des messages d'erreur clairs apparaissent sous les champs concernés et que le bouton de soumission est potentiellement désactivé.
+        - **État React :** Avec les **React DevTools**, vérifier que l'état du composant reflète maintenant ces erreurs de validation.
+        - **Réseau :** Confirmer dans l'onglet "Network" qu'aucune requête API n'a été envoyée, ce qui prouve que la validation côté client a bien fonctionné.
 
----
-
-## Conclusion
+# Conclusion
 
 Ce projet de fin d'études a permis de mener à bien le cycle complet de conception, de développement et de planification du déploiement d'une application web moderne de "social travel". L'objectif initial, qui était de créer une plateforme intégrée pour la planification de voyages et le partage d'expériences, a été atteint avec succès.
 
@@ -722,34 +765,39 @@ Le principal défi technique a été la gestion de l'état asynchrone et du cach
 **Limites et perspectives d'évolution**
 Malgré ses fonctionnalités, l'application présente des limites inhérentes à un projet de cette envergure. L'absence de fonctionnalités temps réel comme la messagerie instantanée ou la planification collaborative simultanée est une piste d'amélioration majeure. Le moteur de recherche pourrait être enrichi avec des filtres plus avancés (par budget, par type d'activité, etc.). À plus long terme, plusieurs évolutions sont envisageables :
 
-* **Application Mobile Native :** Développer une application iOS/Android en React Native pour capitaliser sur la base de code JavaScript existante et offrir une meilleure expérience mobile.
-* **Intelligence Artificielle :** Intégrer un système de recommandations basé sur le machine learning pour suggérer des destinations, des activités ou des utilisateurs à suivre.
-* **Monétisation :** Implémenter des fonctionnalités "premium" (planification avancée, stockage illimité de photos) via un système d'abonnement.
-* **Intégrations tierces :** Permettre la réservation d'hôtels ou d'activités directement depuis la plateforme via des API partenaires.
+- **Application Mobile Native :** Développer une application iOS/Android en React Native pour capitaliser sur la base de code JavaScript existante et offrir une meilleure expérience mobile.
+- **Intelligence Artificielle :** Intégrer un système de recommandations basé sur le machine learning pour suggérer des destinations, des activités ou des utilisateurs à suivre.
+- **Monétisation :** Implémenter des fonctionnalités "premium" (planification avancée, stockage illimité de photos) via un système d'abonnement.
+- **Intégrations tierces :** Permettre la réservation d'hôtels ou d'activités directement depuis la plateforme via des API partenaires.
 
 **Apports du projet**
 Ce projet a été une expérience extrêmement formatrice. Sur le plan technique, il m'a permis de consolider ma maîtrise de l'écosystème JavaScript/TypeScript, de l'architecture full-stack MERN et des défis liés au déploiement d'applications web scalables. Sur le plan méthodologique, la gestion du projet, bien que simplifiée, a nécessité une planification rigoureuse et une approche itérative pour respecter les échéances. Enfin, sur le plan personnel, ce travail a renforcé mon autonomie, ma capacité à rechercher des solutions techniques complexes et à mener un projet d'ingénierie logicielle de sa conception à sa conclusion.
 
----
+# Webographie / Bibliographie
 
-## Webographie / Bibliographie
+## Documentation Officielles
 
-*Les liens suivants constituent une sélection des ressources techniques et conceptuelles clés utilisées tout au long du projet.*
+- Documentation de Node.js : <https://nodejs.org/en/docs/>
+- Documentation d'Express.js : <https://expressjs.com/>
+- Documentation de React : <https://react.dev/>
+- Documentation de Mongoose : <https://mongoosejs.com/docs/guides.html>
+- Documentation de MongoDB : <https://www.mongodb.com/docs/>
+- Documentation de Tanstack Query : <https://tanstack.com/query/latest/docs/react/overview>
+- Documentation de Zustand : <https://github.com/pmndrs/zustand>
+- Documentation de Zod : <https://zod.dev/>
+- Documentation de Tailwind CSS : <https://tailwindcss.com/docs>
+- Documentation de Postman : <https://learning.postman.com/docs/getting-started/introduction/>
 
-* **Documentation Officielles :**
-  * Documentation de Node.js : <https://nodejs.org/en/docs/>
-  * Documentation d'Express.js : <https://expressjs.com/>
-  * Documentation de React : <https://react.dev/>
-  * Documentation de Mongoose : <https://mongoosejs.com/docs/guides.html>
-  * Documentation de MongoDB : <https://www.mongodb.com/docs/>
-  * Documentation de Tanstack Query : <https://tanstack.com/query/latest/docs/react/overview>
-  * Documentation de Zustand : <https://github.com/pmndrs/zustand>
-  * Documentation de Zod : <https://zod.dev/>
-  * Documentation de Tailwind CSS : <https://tailwindcss.com/docs>
-  * Documentation de Postman : <https://learning.postman.com/docs/getting-started/introduction/>
+## Articles et Guides de référence
 
-* **Articles et Guides de référence :**
-  * OWASP Cheat Sheet Series (pour les bonnes pratiques de sécurité) : <https://cheatsheetseries.owasp.org/>
-  * "DigitalOcean Community Tutorials" pour divers guides sur Node.js et le déploiement.
-  * Articles de blog de "web.dev" par les équipes de Google Chrome sur les performance web.
-  * Vidéos de Fireship.io pour des aperçus concis sur les technologies et architectures.
+- OWASP Cheat Sheet Series : <https://cheatsheetseries.owasp.org/>
+- DigitalOcean Community Tutorials
+- Articles de blog de web.dev par les équipes de Google Chrome
+- Vidéos de Fireship.io
+
+## Articles et Guides de référence
+
+- OWASP Cheat Sheet Series : <https://cheatsheetseries.owasp.org/>
+- DigitalOcean Community Tutorials
+- Articles de blog de web.dev par les équipes de Google Chrome
+- Vidéos de Fireship.io
