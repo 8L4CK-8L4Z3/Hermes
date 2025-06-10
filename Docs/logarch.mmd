@@ -1,0 +1,47 @@
+%%{
+    init: {
+        'theme': 'base',
+        'themeVariables': {
+            'primaryColor': '#2563eb',
+            'primaryTextColor': '#ffffff',
+            'primaryBorderColor': '#1e40af',
+            'lineColor': '#64748b',
+            'secondaryColor': '#4f46e5',
+            'tertiaryColor': '#f1f5f9',
+            'fontFamily': 'system-ui',
+            'fontSize': '16px'
+        }
+    }
+}%%
+
+flowchart TD
+    subgraph "Client (Navigateur)"
+        UI["React / Tanstack Query"]
+    end
+
+    subgraph "Backend (Serveur Node.js)"
+        ROUTER["Couche Routeur (Express Router)"]
+        MIDDLEWARES["Couche Middlewares (Auth, Validation, Sécurité)"]
+        CONTROLLERS["Couche Contrôleurs (Logique de requête/réponse)"]
+        SERVICES["Couche Services (Logique métier complexe)"]
+        MODELS["Couche Modèles (DAL) (Mongoose Schemas)"]
+    end
+
+    subgraph "Infrastructure"
+        DB[(Base de Données MongoDB)]
+        CACHE[(Cache Redis)]
+    end
+
+    UI -- "Requête HTTP (API Call)" --> ROUTER
+    ROUTER -- "next()" --> MIDDLEWARES
+    MIDDLEWARES -- "next()" --> CONTROLLERS
+    CONTROLLERS -- "Appelle" --> SERVICES
+    SERVICES -- "Utilise" --> MODELS
+    MODELS -- "Requête BDD" --> DB
+    DB -- "Réponse BDD" --> MODELS
+    MODELS -- "Retourne les données" --> SERVICES
+    SERVICES -- "Retourne" --> CONTROLLERS
+    CONTROLLERS -- "Réponse JSON" --> UI
+
+    %% Cache
+    SERVICES -- "Get/Set Cache" --> CACHE

@@ -1,0 +1,59 @@
+%%{
+    init: {
+        'theme': 'base',
+        'themeVariables': {
+            'primaryColor': '#0f766e',
+            'primaryTextColor': '#ffffff',
+            'primaryBorderColor': '#115e59',
+            'lineColor': '#475569',
+            'secondaryColor': '#0369a1',
+            'tertiaryColor': '#f8fafc',
+            'fontFamily': 'system-ui',
+            'fontSize': '16px'
+        }
+    }
+}%%
+
+graph TD
+    subgraph "Utilisateur Final"
+        UserDevice["Navigateur Web / Mobile"]
+    end
+
+    subgraph "Réseau / Edge"
+        CDN["CDN (Vercel / Netlify)"]
+        LB["Load Balancer"]
+    end
+
+    subgraph "Infrastructure Cloud (ex: AWS, Heroku)"
+        Frontend["Frontend React (Fichiers Statiques)"]
+        
+        subgraph "Backend Services"
+            direction LR
+            App1["Instance 1 du Backend (Conteneur Docker)"]
+            App2["Instance 2 du Backend (Conteneur Docker)"]
+            AppN["Instance N..."]
+        end
+
+        DBaaS[("Database as a Service\nMongoDB Atlas")]
+        CacheaaS[("Cache as a Service\nRedis / Upstash")]
+        S3[("Stockage Objet\nAWS S3 / R2")]
+    end
+
+    UserDevice -- "HTTPS" --> CDN
+    CDN -- "Sert les assets statiques" --> Frontend
+    UserDevice -- "Requête API\n/api/*" --> LB
+    LB -- "Distribue le trafic" --> App1
+    LB -- "Distribue le trafic" --> App2
+    LB -- "Distribue le trafic" --> AppN
+
+    App1 -- "Lit/Écrit" --> DBaaS
+    App2 -- "Lit/Écrit" --> DBaaS
+    AppN -- "Lit/Écrit" --> DBaaS
+
+    App1 -- "Lit/Écrit" --> CacheaaS
+    App2 -- "Lit/Écrit" --> CacheaaS
+    AppN -- "Lit/Écrit" --> CacheaaS
+
+    App1 -- "Upload/Download" --> S3
+    App2 -- "Upload/Download" --> S3
+    AppN -- "Upload/Download" --> S3

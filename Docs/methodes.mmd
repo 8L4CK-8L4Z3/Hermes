@@ -1,0 +1,225 @@
+%%{init: {
+    'theme': 'base',
+    'themeVariables': {
+        'primaryColor': '#e6f3ff',
+        'primaryTextColor': '#000',
+        'primaryBorderColor': '#1a75ff',
+        'lineColor': '#1a75ff',
+        'secondaryColor': '#f9f9f9',
+        'tertiaryColor': '#fff'
+    },
+    'classDiagram': {
+        'useMaxWidth': false
+    }
+}}%%
+
+classDiagram
+    %% User Management Classes
+    class User:::userManagement {
+        +register()
+        +login()
+        +logout()
+        +refreshTokenHandler()
+        +forgotPassword()
+        +resetPassword()
+        +verifyEmail()
+        +updatePassword()
+        +getProfile()
+        +updateProfile()
+        +deleteAccount()
+        +getFollowers()
+        +getFollowing()
+        +getUserStats()
+        +updatePreferences()
+        +updateLastLogin()
+        +getUserActivity()
+        +updateUserPhoto()
+        +updateUserStats()
+        +getUserPreferences()
+        +verifyUser()
+    }
+
+    class Follow:::userManagement {
+        +followUser()
+        +unfollowUser()
+        +getFollowers()
+        +getFollowing()
+        +getFollowSuggestions()
+        +getFollowStats()
+        +getMutualFollowers()
+    }
+
+    %% Content Classes
+    class Trip:::content {
+        +createTrip()
+        +getTrip()
+        +updateTrip()
+        +deleteTrip()
+        +getUserTrips()
+        +addDestination()
+        +removeDestination()
+        +updateTripStatus()
+        +shareTrip()
+        +getPublicTrips()
+        +updateBudget()
+        +addActivity()
+        +removeActivity()
+        +updateActivity()
+        +getTripActivities()
+        +getTripTimeline()
+        +updateTripVisibility()
+    }
+
+    class Destination:::content {
+        +createDestination()
+        +getDestination()
+        +updateDestination()
+        +deleteDestination()
+        +searchDestinations()
+        +getPopularDestinations()
+        +getNearbyDestinations()
+        +updateDestinationPhoto()
+        +getDestinationStats()
+        +getDestinationPlaces()
+    }
+
+    class Place:::content {
+        +createPlace()
+        +getPlace()
+        +updatePlace()
+        +deletePlace()
+        +getPlacesByType()
+        +getPlacesByDestination()
+        +getPopularPlaces()
+        +updatePlaceRating()
+        +getPlaceStats()
+        +getPlacesByPriceRange()
+        +getPlacesByOpeningHours()
+    }
+
+    %% Social Interaction Classes
+    class Post:::social {
+        +createPost()
+        +getPost()
+        +updatePost()
+        +deletePost()
+        +getFeed()
+        +getUserPosts()
+        +updatePostVisibility()
+        +updatePostType()
+        +updatePostLocation()
+        +getPostsByType()
+        +getPostsByVisibility()
+        +getPostsByLocation()
+        +getPostsByTags()
+    }
+
+    class Comment:::social {
+        +createComment()
+        +getComment()
+        +updateComment()
+        +deleteComment()
+        +getPostComments()
+        +likeComment()
+        +unlikeComment()
+        +getCommentReplies()
+        +getCommentThread()
+        +updateCommentContent()
+    }
+
+    class Review:::social {
+        +createReview()
+        +getReview()
+        +updateReview()
+        +deleteReview()
+        +getReviews()
+        +likeReview()
+        +unlikeReview()
+        +getHelpfulReviews()
+        +getReviewsByVisitDate()
+    }
+
+    class Like:::social {
+        +likeContent()
+        +unlikeContent()
+        +getLikes()
+        +getUserLikes()
+        +getLikesByType()
+        +getLikedContent()
+    }
+
+    %% System Classes
+    class Notification:::system {
+        +getNotifications()
+        +markAsRead()
+        +markAllAsRead()
+        +deleteNotification()
+        +getUnreadCount()
+        +createNotification()
+        +updateNotificationReadStatus()
+        +getNotificationsByType()
+        +deleteOldNotifications()
+    }
+
+    class Analytics:::system {
+        +getUserAnalytics()
+        +getContentAnalytics()
+        +getDestinationAnalytics()
+        +getPlaceAnalytics()
+        +getSearchAnalytics()
+        +updateDailyMetrics()
+        +updatePopularDestinations()
+        +updatePopularPlaces()
+        +getAnalyticsByDate()
+        +getAnalyticsByMetric()
+        +getPopularContent()
+    }
+
+    class Moderation:::system {
+        +reportContent()
+        +getReports()
+        +handleReport()
+        +getModerationQueue()
+        +logModerationAction()
+        +getModerationHistory()
+        +getModeratorStats()
+    }
+
+    class Search:::system {
+        +searchAll()
+        +searchDestinations()
+        +searchPlaces()
+        +searchUsers()
+        +searchPosts()
+        +getSearchSuggestions()
+    }
+
+    %% Relationships
+    User --> Trip : creates
+    User --> Review : writes
+    User --> Post : creates
+    User --> Comment : writes
+    User --> Follow : follows
+    User --> Like : likes
+    User --> Notification : receives
+    User --> Moderation : moderates
+    User --> Moderation : is_target_of
+    Trip --> Place : has_activity
+    Destination --> Place : has
+    Place --> Review : receives
+    Post --> Comment : has
+    Post --> Like : receives
+    Post --> Moderation : is_target_of
+    Comment --> Like : receives
+    Comment --> Comment : replies_to
+    Comment --> Moderation : is_target_of
+    Review --> Like : receives
+    Review --> Moderation : is_target_of
+    Analytics --> Destination : tracks
+    Analytics --> Place : tracks
+
+    %% Class styling
+    classDef userManagement fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    classDef content fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef social fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    classDef system fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px 

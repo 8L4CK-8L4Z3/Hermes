@@ -1,0 +1,80 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#f8fafc',
+    'primaryTextColor': '#1e293b',
+    'primaryBorderColor': '#3b82f6',
+    'lineColor': '#e2e8f0',
+    'sectionBkgColor': '#f1f5f9',
+    'altSectionBkgColor': '#ffffff',
+    'gridColor': '#e2e8f0',
+    'taskBkgColor': '#ffffff',
+    'taskTextColor': '#1e293b',
+    'taskTextLightColor': '#475569',
+    'taskTextOutsideColor': '#1e293b',
+    'taskTextClickableColor': '#3b82f6',
+    'activeTaskBkgColor': '#dbeafe',
+    'activeTaskBorderColor': '#3b82f6',
+    'doneTaskBkgColor': '#dcfce7',
+    'doneTaskBorderColor': '#16a34a',
+    'critBkgColor': '#fef2f2',
+    'critBorderColor': '#dc2626',
+    'section0': '#3b82f6',
+    'section1': '#8b5cf6',
+    'section2': '#06b6d4',
+    'section3': '#10b981',
+    'section4': '#f59e0b',
+    'section5': '#ef4444',
+    'cScale0': '#3b82f6',
+    'cScale1': '#8b5cf6',
+    'cScale2': '#06b6d4',
+    'cScale3': '#10b981',
+    'cScale4': '#f59e0b',
+    'cScale5': '#ef4444',
+    'fontFamily': 'Inter, system-ui, -apple-system, sans-serif',
+    'fontSize': '14px',
+    'fontWeight': '500'
+  }
+}}%%
+gantt
+    title 🚀 Planning Prévisionnel du Projet - Plateforme de Voyage
+    dateFormat  YYYY-MM-DD
+    axisFormat  %m/%d
+    
+    section 📊 Phase d'Analyse
+    📋 Définition du cahier des charges     :done, an_cahier, 2024-02-01, 3d
+    🔍 Étude de l'existant et benchmark     :done, an_bench, after an_cahier, 5d
+    📝 Capture des besoins fonctionnels     :done, an_besoins, after an_cahier, 5d
+    ⚙️ Définition des besoins non-fonc.     :active, an_nonfonc, after an_bench, 2d
+    
+    section 🎨 Phase de Conception
+    🏗️ Architecture logique et physique     :crit, des_archi, after an_besoins, 4d
+    🗄️ Conception de la BDD Schema        :crit, des_bdd, after an_besoins, 4d
+    🎯 Maquettes UI/UX Wireframes         :des_ui, after des_archi, 6d
+    🔧 Choix technologiques détaillés       :des_tech, after des_bdd, 2d
+    
+    section 💻 Développement Sprint 1 - Core
+    🚀 Backend Initialisation projet      :crit, dev_be1_init, after des_tech, 3d
+    🔐 Backend Modèles BDD et Auth         :crit, dev_be1_auth, after dev_be1_init, 7d
+    🌐 Backend API CRUD Voyages            :crit, dev_be1_api, after dev_be1_auth, 7d
+    ⚡ Frontend Initialisation projet     :crit, dev_fe1_init, after des_ui, 3d
+    🎨 Frontend Pages Auth et UI base      :dev_fe1_auth, after dev_fe1_init, 7d
+    🔗 Frontend API integration Pages      :dev_fe1_api, after dev_fe1_auth, 7d
+    
+    section 🧪 Tests et Intégration S1
+    ✅ Tests d'intégration API et UI      :crit, test_s1, after dev_fe1_api, 5d
+    
+    section 💻 Développement Sprint 2 - Admin
+    👑 Backend API Admin et Modération     :crit, dev_be2_admin, after test_s1, 7d
+    ⚡ Backend Optimisations Cache         :dev_be2_opti, after dev_be2_admin, 4d
+    📊 Frontend Dashboard Admin           :crit, dev_fe2_admin, after dev_be2_admin, 7d
+    👥 Frontend Fonctionnalités sociales  :dev_fe2_social, after dev_fe2_admin, 6d
+    
+    section 🔍 Phase de Tests Finaux
+    🔬 Tests API complets Postman      :crit, test_api, after dev_be2_opti, 7d
+    🖱️ Tests manuels et exploratoires UI :crit, test_ui, after dev_fe2_social, 7d
+    🐛 Correction des bugs critiques       :crit, test_bugs, after test_api, 5d
+    
+    section 🚀 Déploiement et Go-Live
+    🐳 Préparation production Docker     :crit, dep_docker, after test_bugs, 3d
+    📚 Rédaction documentation finale      :dep_docs, after dep_docker, 4d

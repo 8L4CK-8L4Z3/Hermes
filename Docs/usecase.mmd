@@ -1,0 +1,56 @@
+flowchart LR
+    %% Actors
+    U([👤 Utilisateur])
+    A([🛡️ Administrateur])
+
+    %% User Account Management
+    subgraph "Compte"
+        LOGIN([🔑 S'authentifier])
+        REG([📝 S'inscrire])
+        PROFILE([⚙️ Modifier profil])
+    end
+    U ----> LOGIN
+    U ----> REG
+    U ----> PROFILE
+
+    %% Social Features
+    subgraph "Social"
+        FEED([📰 Fil d'actualité])
+        FOLLOW([➕ Suivre])
+        POST([✍️ Créer post])
+    end
+    U----> FEED
+    U----> FOLLOW
+    U----> POST
+
+    %% Trip Planning
+    subgraph "Planification"
+        CREATE_TRIP([🗺️ Créer voyage])
+        ADD_PLACE([📍 Ajouter lieu])
+        MANAGE_BUDGET([💰 Gérer budget])
+    end
+    U ----> CREATE_TRIP
+    U ----> ADD_PLACE
+    U ----> MANAGE_BUDGET
+
+    %% Sharing
+    subgraph "Partage"
+        WRITE_REVIEW([⭐ Rédiger avis])
+        UPLOAD_PHOTO([📷 Télécharger photo])
+    end
+    U ----> WRITE_REVIEW
+    U ----> UPLOAD_PHOTO
+
+    %% Admin
+    subgraph "Administration"
+        MANAGE_USERS([👥 Gérer utilisateurs])
+        MODERATE([🗑️ Modérer contenu])
+        VIEW_STATS([📊 Statistiques])
+    end
+    A ----> MANAGE_USERS
+    A ----> MODERATE
+    A ----> VIEW_STATS
+
+    %% Layout tweaks for readability
+    classDef actor fill:#e0f2fe,stroke:#0284c7,stroke-width:2px;
+    class U,A actor;

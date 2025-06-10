@@ -232,35 +232,62 @@ Le choix de la stack technologique a été guidé par des critères de performan
 **Fig. 2.1 : Diagramme global des cas d'utilisation**
 
 ```mermaid
-graph TD
-    subgraph "Système de Planification de Voyage"
-        U((Utilisateur))
-        A((Administrateur))
+flowchart LR
+    %% Actors
+    U([👤 Utilisateur])
+    A([🛡️ Administrateur])
 
-        U -- "Gère" --> CPT[Gérer son Compte]
-        CPT --> LOGIN[S'authentifier]
-        CPT --> REG[S'inscrire]
-        CPT --> PROFILE[Modifier son profil]
-
-        U -- "Interagit avec" --> SOC[Fonctionnalités Sociales]
-        SOC --> FEED[Consulter le fil d'actualité]
-        SOC --> FOLLOW[Suivre un utilisateur]
-        SOC --> POST[Créer un post]
-
-        U -- "Planifie" --> PLAN[Planification de Voyage]
-        PLAN --> CREATE_TRIP[Créer un voyage]
-        PLAN --> ADD_PLACE[Ajouter des lieux]
-        PLAN --> MANAGE_BUDGET[Gérer le budget]
-
-        U -- "Partage" --> SHARE[Partage d'Expériences]
-        SHARE --> WRITE_REVIEW[Rédiger un avis]
-        SHARE --> UPLOAD_PHOTO[Télécharger des photos]
-
-        A -- "Gère" --> ADMIN[Administration]
-        ADMIN --> MANAGE_USERS[Gérer les utilisateurs]
-        ADMIN --> MODERATE[Modérer le contenu]
-        ADMIN --> VIEW_STATS[Consulter les statistiques]
+    %% User Account Management
+    subgraph "Compte"
+        LOGIN([🔑 S'authentifier])
+        REG([📝 S'inscrire])
+        PROFILE([⚙️ Modifier profil])
     end
+    U ----> LOGIN
+    U ----> REG
+    U ----> PROFILE
+
+    %% Social Features
+    subgraph "Social"
+        FEED([📰 Fil d'actualité])
+        FOLLOW([➕ Suivre])
+        POST([✍️ Créer post])
+    end
+    U----> FEED
+    U----> FOLLOW
+    U----> POST
+
+    %% Trip Planning
+    subgraph "Planification"
+        CREATE_TRIP([🗺️ Créer voyage])
+        ADD_PLACE([📍 Ajouter lieu])
+        MANAGE_BUDGET([💰 Gérer budget])
+    end
+    U ----> CREATE_TRIP
+    U ----> ADD_PLACE
+    U ----> MANAGE_BUDGET
+
+    %% Sharing
+    subgraph "Partage"
+        WRITE_REVIEW([⭐ Rédiger avis])
+        UPLOAD_PHOTO([📷 Télécharger photo])
+    end
+    U ----> WRITE_REVIEW
+    U ----> UPLOAD_PHOTO
+
+    %% Admin
+    subgraph "Administration"
+        MANAGE_USERS([👥 Gérer utilisateurs])
+        MODERATE([🗑️ Modérer contenu])
+        VIEW_STATS([📊 Statistiques])
+    end
+    A ----> MANAGE_USERS
+    A ----> MODERATE
+    A ----> VIEW_STATS
+
+    %% Layout tweaks for readability
+    classDef actor fill:#e0f2fe,stroke:#0284c7,stroke-width:2px;
+    class U,A actor;
 ```
 
 *Commentaire : Ce diagramme montre les deux acteurs principaux, l'Utilisateur et l'Administrateur, et les ensembles de fonctionnalités qui leur sont accessibles. On distingue clairement les cas d'utilisation liés à la gestion de compte, à la planification, à l'interaction sociale et à l'administration.*
@@ -382,55 +409,399 @@ Voici une description détaillée des cas d'utilisation les plus importants du s
 
 ### 2.4 Diagramme de classes du domaine
 
-**Fig. 2.2 : Diagramme de classes conceptuel**
-*Commentaire: Ce diagramme a été amélioré pour montrer plus de détails sur les attributs et les cardinalités.*
+**Fig. 2.2 : Diagramme de Base Donnee**
+*Commentaire: Ce diagramme a été amélioré et diviser pour montrer plus de détails sur les attributs et les cardinalités.*
 
 ```mermaid
-classDiagram
-    class User {
-        +id: string
-        +username: string
-        +email: string
-        +password_hash: string
-        +isAdmin: boolean
-        +createTrip()
-        +writeReview()
-    }
+erDiagram
+  USERS {
+    string id PK
+    string username
+    string email
+    string password_hash
+    string photo
+    string bio
+    boolean isAdmin
+    boolean isMod
+    date lastLogin
+    boolean isVerified
+    object preferences
+    object stats
+    date created_at
+    date updated_at
+  }
+  TRIPS {
+    string id PK
+    string user_id FK
+    string title
+    date start_date
+    date end_date
+    string[] destinations
+    string status
+    boolean isPublic
+    object budget
+    array activities
+    date created_at
+    date updated_at
+  }
+  DESTINATIONS {
+    string id PK
+    string name
+    string description
+    string location
+    string photo
+    date created_at
+    date updated_at
+  }
+  PLACES {
+    string id PK
+    string destination_id FK
+    string type
+    string name
+    string description
+    string photo
+    float average_rating
+    string price_range
+    string opening_hours
+    string address
+    date created_at
+    date updated_at
+  }
+  REVIEWS {
+    string id PK
+    string user_id FK
+    string place_id FK
+    int rating
+    string comment
+    array photos
+    object helpful_votes
+    date visit_date
+    object categories
+    date created_at
+    date updated_at
+  }
+  FOLLOWS {
+    string id PK
+    string user_id FK
+    string follower_id FK
+    date created_at
+    date updated_at
+  }
+  POSTS {
+    string id PK
+    string user_id FK
+    string content
+    string media
+    string type
+    string visibility
+    string[] tags
+    object location
+    date created_at
+    date updated_at
+  }
+  COMMENTS {
+    string id PK
+    string post_id FK
+    string user_id FK
+    string content
+    date created_at
+    date updated_at
+    string parent_comment_id
+  }
+  LIKES {
+    string id PK
+    string user_id FK
+    string target_type
+    string target_id
+    date created_at
+    date updated_at
+  }
+  NOTIFICATIONS {
+    string id PK
+    string user_id FK
+    string type
+    object data
+    boolean is_read
+    date created_at
+    date updated_at
+  }
+  MODERATIONLOGS {
+    string id PK
+    string moderator_id FK
+    string action
+    string target_type
+    string target_id
+    string reason
+    string status
+    object resolution
+    date created_at
+    date updated_at
+  }
+  ANALYTICS {
+    string id PK
+    date date
+    object metrics
+    array popularDestinations
+    array popularPlaces
+    date created_at
+    date updated_at
+  }
 
-    class Trip {
-        +id: string
-        +title: string
-        +start_date: date
-        +end_date: date
-        +isPublic: boolean
-    }
-
-    class Place {
-        +id: string
-        +name: string
-        +description: string
-        +average_rating: float
-    }
-
-    class Review {
-        +id: string
-        +rating: int
-        +comment: string
-    }
-
-    class Post {
-        +id: string
-        +content: string
-    }
-
-    User "1" -- "0..*" Trip : "creates"
-    User "1" -- "0..*" Review : "writes"
-    User "1" -- "0..*" Post : "authors"
-    Place "1" -- "0..*" Review : "has"
-    User "1" -- "0..*" User : "follows"
+  USERS ||--o{ TRIPS : "creates"
+  USERS ||--o{ REVIEWS : "writes"
+  USERS ||--o{ POSTS : "creates"
+  USERS ||--o{ COMMENTS : "writes"
+  USERS ||--o{ FOLLOWS : "follows"
+  USERS ||--o{ LIKES : "likes"
+  USERS ||--o{ NOTIFICATIONS : "receives"
+  USERS ||--o{ MODERATIONLOGS : "moderates"
+  USERS ||--o{ MODERATIONLOGS : "is target of"
+  TRIPS }o--o{ PLACES : "has activity at"
+  DESTINATIONS ||--o{ PLACES : "has"
+  PLACES ||--o{ REVIEWS : "receives"
+  POSTS ||--o{ COMMENTS : "has"
+  POSTS ||--o{ LIKES : "receives"
+  POSTS ||--o{ MODERATIONLOGS : "is target of"
+  COMMENTS ||--o{ LIKES : "receives"
+  COMMENTS ||--o{ COMMENTS : "replies to"
+  COMMENTS ||--o{ MODERATIONLOGS : "is target of"
+  REVIEWS ||--o{ LIKES : "receives"
+  REVIEWS ||--o{ MODERATIONLOGS : "is target of"
+  ANALYTICS }o--o{ DESTINATIONS : "tracks"
+  ANALYTICS }o--o{ PLACES : "tracks"
 ```
 
 *Commentaire: Ce diagramme de classes UML illustre les entités principales. La classe `User` est centrale. La relation réflexive sur `User` modélise le système de "follow". Les cardinalités (ex: "1..*") précisent les relations entre les objets.*
+
+**Fig. 2.3 : Diagramme de Methodes**
+
+```mermaid
+%%{init: {
+    'theme': 'base',
+    'themeVariables': {
+        'primaryColor': '#e6f3ff',
+        'primaryTextColor': '#000',
+        'primaryBorderColor': '#1a75ff',
+        'lineColor': '#1a75ff',
+        'secondaryColor': '#f9f9f9',
+        'tertiaryColor': '#fff'
+    },
+    'classDiagram': {
+        'useMaxWidth': false
+    }
+}}%%
+
+classDiagram
+    %% User Management Classes
+    class User:::userManagement {
+        +register()
+        +login()
+        +logout()
+        +refreshTokenHandler()
+        +forgotPassword()
+        +resetPassword()
+        +verifyEmail()
+        +updatePassword()
+        +getProfile()
+        +updateProfile()
+        +deleteAccount()
+        +getFollowers()
+        +getFollowing()
+        +getUserStats()
+        +updatePreferences()
+        +updateLastLogin()
+        +getUserActivity()
+        +updateUserPhoto()
+        +updateUserStats()
+        +getUserPreferences()
+        +verifyUser()
+    }
+
+    class Follow:::userManagement {
+        +followUser()
+        +unfollowUser()
+        +getFollowers()
+        +getFollowing()
+        +getFollowSuggestions()
+        +getFollowStats()
+        +getMutualFollowers()
+    }
+
+    %% Content Classes
+    class Trip:::content {
+        +createTrip()
+        +getTrip()
+        +updateTrip()
+        +deleteTrip()
+        +getUserTrips()
+        +addDestination()
+        +removeDestination()
+        +updateTripStatus()
+        +shareTrip()
+        +getPublicTrips()
+        +updateBudget()
+        +addActivity()
+        +removeActivity()
+        +updateActivity()
+        +getTripActivities()
+        +getTripTimeline()
+        +updateTripVisibility()
+    }
+
+    class Destination:::content {
+        +createDestination()
+        +getDestination()
+        +updateDestination()
+        +deleteDestination()
+        +searchDestinations()
+        +getPopularDestinations()
+        +getNearbyDestinations()
+        +updateDestinationPhoto()
+        +getDestinationStats()
+        +getDestinationPlaces()
+    }
+
+    class Place:::content {
+        +createPlace()
+        +getPlace()
+        +updatePlace()
+        +deletePlace()
+        +getPlacesByType()
+        +getPlacesByDestination()
+        +getPopularPlaces()
+        +updatePlaceRating()
+        +getPlaceStats()
+        +getPlacesByPriceRange()
+        +getPlacesByOpeningHours()
+    }
+
+    %% Social Interaction Classes
+    class Post:::social {
+        +createPost()
+        +getPost()
+        +updatePost()
+        +deletePost()
+        +getFeed()
+        +getUserPosts()
+        +updatePostVisibility()
+        +updatePostType()
+        +updatePostLocation()
+        +getPostsByType()
+        +getPostsByVisibility()
+        +getPostsByLocation()
+        +getPostsByTags()
+    }
+
+    class Comment:::social {
+        +createComment()
+        +getComment()
+        +updateComment()
+        +deleteComment()
+        +getPostComments()
+        +likeComment()
+        +unlikeComment()
+        +getCommentReplies()
+        +getCommentThread()
+        +updateCommentContent()
+    }
+
+    class Review:::social {
+        +createReview()
+        +getReview()
+        +updateReview()
+        +deleteReview()
+        +getReviews()
+        +likeReview()
+        +unlikeReview()
+        +getHelpfulReviews()
+        +getReviewsByVisitDate()
+    }
+
+    class Like:::social {
+        +likeContent()
+        +unlikeContent()
+        +getLikes()
+        +getUserLikes()
+        +getLikesByType()
+        +getLikedContent()
+    }
+
+    %% System Classes
+    class Notification:::system {
+        +getNotifications()
+        +markAsRead()
+        +markAllAsRead()
+        +deleteNotification()
+        +getUnreadCount()
+        +createNotification()
+        +updateNotificationReadStatus()
+        +getNotificationsByType()
+        +deleteOldNotifications()
+    }
+
+    class Analytics:::system {
+        +getUserAnalytics()
+        +getContentAnalytics()
+        +getDestinationAnalytics()
+        +getPlaceAnalytics()
+        +getSearchAnalytics()
+        +updateDailyMetrics()
+        +updatePopularDestinations()
+        +updatePopularPlaces()
+        +getAnalyticsByDate()
+        +getAnalyticsByMetric()
+        +getPopularContent()
+    }
+
+    class Moderation:::system {
+        +reportContent()
+        +getReports()
+        +handleReport()
+        +getModerationQueue()
+        +logModerationAction()
+        +getModerationHistory()
+        +getModeratorStats()
+    }
+
+    class Search:::system {
+        +searchAll()
+        +searchDestinations()
+        +searchPlaces()
+        +searchUsers()
+        +searchPosts()
+        +getSearchSuggestions()
+    }
+
+    %% Relationships
+    User --> Trip : creates
+    User --> Review : writes
+    User --> Post : creates
+    User --> Comment : writes
+    User --> Follow : follows
+    User --> Like : likes
+    User --> Notification : receives
+    User --> Moderation : moderates
+    User --> Moderation : is_target_of
+    Trip --> Place : has_activity
+    Destination --> Place : has
+    Place --> Review : receives
+    Post --> Comment : has
+    Post --> Like : receives
+    Post --> Moderation : is_target_of
+    Comment --> Like : receives
+    Comment --> Comment : replies_to
+    Comment --> Moderation : is_target_of
+    Review --> Like : receives
+    Review --> Moderation : is_target_of
+    Analytics --> Destination : tracks
+    Analytics --> Place : tracks
+
+    %% Class styling
+    classDef userManagement fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    classDef content fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef social fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    classDef system fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px 
+```
 
 ---
 
@@ -442,23 +813,38 @@ L'architecture N-tiers est un standard éprouvé qui garantit la séparation des
 
 **Fig. 3.1 : Diagramme d'architecture logique détaillée**
 
-```mermaid
-graph TD
+```mermaid%%{
+    init: {
+        'theme': 'base',
+        'themeVariables': {
+            'primaryColor': '#2563eb',
+            'primaryTextColor': '#ffffff',
+            'primaryBorderColor': '#1e40af',
+            'lineColor': '#64748b',
+            'secondaryColor': '#4f46e5',
+            'tertiaryColor': '#f1f5f9',
+            'fontFamily': 'system-ui',
+            'fontSize': '16px'
+        }
+    }
+}%%
+
+flowchart TD
     subgraph "Client (Navigateur)"
-        UI[React / Tanstack Query]
+        UI["React / Tanstack Query"]
     end
 
     subgraph "Backend (Serveur Node.js)"
-        ROUTER[Couche Routeur <br><i>(Express Router)</i>]
-        MIDDLEWARES[Couche Middlewares <br><i>(Auth, Validation, Sécurité)</i>]
-        CONTROLLERS[Couche Contrôleurs <br><i>(Logique de requête/réponse)</i>]
-        SERVICES[Couche Services <br><i>(Logique métier complexe)</i>]
-        MODELS[Couche Modèles (DAL) <br><i>(Mongoose Schemas)</i>]
+        ROUTER["Couche Routeur (Express Router)"]
+        MIDDLEWARES["Couche Middlewares (Auth, Validation, Sécurité)"]
+        CONTROLLERS["Couche Contrôleurs (Logique de requête/réponse)"]
+        SERVICES["Couche Services (Logique métier complexe)"]
+        MODELS["Couche Modèles (DAL) (Mongoose Schemas)"]
     end
 
     subgraph "Infrastructure"
-        DB[(Base de Données <br><i>MongoDB</i>)]
-        CACHE[(Cache <br><i>Redis</i>)]
+        DB[(Base de Données MongoDB)]
+        CACHE[(Cache Redis)]
     end
 
     UI -- "Requête HTTP (API Call)" --> ROUTER
@@ -502,34 +888,50 @@ Le déploiement en production d'une application web moderne repose sur une archi
 **Fig. 3.2 : Diagramme d'architecture de déploiement Cloud**
 
 ```mermaid
+%%{
+    init: {
+        'theme': 'base',
+        'themeVariables': {
+            'primaryColor': '#0f766e',
+            'primaryTextColor': '#ffffff',
+            'primaryBorderColor': '#115e59',
+            'lineColor': '#475569',
+            'secondaryColor': '#0369a1',
+            'tertiaryColor': '#f8fafc',
+            'fontFamily': 'system-ui',
+            'fontSize': '16px'
+        }
+    }
+}%%
+
 graph TD
     subgraph "Utilisateur Final"
-        UserDevice[Navigateur Web / Mobile]
+        UserDevice["Navigateur Web / Mobile"]
     end
 
     subgraph "Réseau / Edge"
-        CDN[CDN (Vercel / Netlify)]
-        LB[Load Balancer]
+        CDN["CDN (Vercel / Netlify)"]
+        LB["Load Balancer"]
     end
 
     subgraph "Infrastructure Cloud (ex: AWS, Heroku)"
-        Frontend[Frontend React<br><i>(Fichiers Statiques)</i>]
+        Frontend["Frontend React (Fichiers Statiques)"]
         
         subgraph "Backend Services"
             direction LR
-            App1[Instance 1 du Backend<br><i>(Conteneur Docker)</i>]
-            App2[Instance 2 du Backend<br><i>(Conteneur Docker)</i>]
-            AppN[Instance N...]
+            App1["Instance 1 du Backend (Conteneur Docker)"]
+            App2["Instance 2 du Backend (Conteneur Docker)"]
+            AppN["Instance N..."]
         end
 
-        DBaaS[(Database as a Service<br><i>MongoDB Atlas</i>)]
-        CacheaaS[(Cache as a Service<br><i>Redis / Upstash</i>)]
-        S3[(Stockage Objet<br><i>AWS S3 / R2</i>)]
+        DBaaS[("Database as a Service\nMongoDB Atlas")]
+        CacheaaS[("Cache as a Service\nRedis / Upstash")]
+        S3[("Stockage Objet\nAWS S3 / R2")]
     end
 
     UserDevice -- "HTTPS" --> CDN
     CDN -- "Sert les assets statiques" --> Frontend
-    UserDevice -- "Requête API<br>/api/*" --> LB
+    UserDevice -- "Requête API\n/api/*" --> LB
     LB -- "Distribue le trafic" --> App1
     LB -- "Distribue le trafic" --> App2
     LB -- "Distribue le trafic" --> AppN
@@ -575,28 +977,16 @@ Une structure de projet claire est essentielle pour la maintenabilité et la col
 
 ```
 /
-├── backend
-│   ├── logs
-│   └── src
-│       ├── Configs
-│       ├── Controllers
-│       ├── Middleware
-│       ├── Models
-│       ├── Routes
-│       └── Utils
-├── Docs
-└── frontend
-    ├── public
-    └── src
-        ├── Assets
-        ├── Components
-        ├── Hooks
-        ├── Libs
-        ├── Pages
-        ├── Schemas
-        ├── Stores
-        ├── Styles
-        └── Utils
+backend
+├── logs
+└── src
+    ├── Configs
+    ├── Controllers
+    ├── Middleware
+    ├── Models
+    ├── Routes
+    └── Utils
+
 ```
 
 *Commentaire: La structure du backend sépare clairement les `routes` (définition de l'API), les `controllers` (logique métier), les `models` (schémas BDD), les `middlewares` (logique transversale) et la `config`, ce qui rend le projet facile à maintenir.*
@@ -605,30 +995,18 @@ Une structure de projet claire est essentielle pour la maintenabilité et la col
 
 ```
 /
-├── public/                 # Fichiers statiques (favicon, etc.)
-├── src/
-│   ├── api/                # Fonctions d'appel à l'API backend (ex: axios instances)
-│   │   └── trips.js        # Définition des routes /api/trips
-│   ├── assets/             # Images, polices, etc.
-│   ├── components/
-│   │   ├── common/         # Composants réutilisables (Button, Input, etc.)
-│   │   └── layout/         # Composants de mise en page (Navbar, Footer, etc.)
-│   ├── features/           # Organisation par fonctionnalité (Auth, Trips, Profile)
-│   │   ├── auth/
-│   │   │   ├── components/ # Composants spécifiques à l'auth
-│   │   │   └── hooks/      # Hooks spécifiques (useLogin, etc.)
-│   │   └── trips/
-│   ├── hooks/              # Hooks globaux réutilisables (ex: useDarkMode)
-│   ├── lib/                # Fonctions utilitaires (formatage de dates, etc.)
-│   ├── pages/              # Composants correspondant aux routes de l'app
-│   ├── providers/          # Fournisseurs de contexte (React Query, Theme, etc.)
-│   ├── services/           # Logique client complexe (state management, etc.)
-│   ├── App.jsx             # Composant racine de l'application
-│   └── main.jsx            # Point d'entrée de l'application React
-├── .eslintrc.cjs
-├── index.html
-├── package.json
-└── vite.config.js
+frontend
+├── public
+└── src
+    ├── Assets
+    ├── Components
+    ├── Hooks
+    ├── Libs
+    ├── Pages
+    ├── Schemas
+    ├── Stores
+    ├── Styles
+    └── Utils
 ```
 
 *Commentaire: L'architecture frontend est organisée par fonctionnalités (`features`), ce qui améliore la scalabilité et la co-localisation du code lié. Les composants, hooks et services partagés sont placés dans des dossiers communs pour être réutilisés à travers l'application.*
@@ -846,6 +1224,57 @@ export const useCreateTrip = () => {
 ```
 
 *Commentaire: Ce hook personnalisé abstrait la logique de communication avec l'API. `useGetTrips` récupère et met en cache les voyages. `useCreateTrip` gère la création et, en cas de succès (`onSuccess`), invalide le cache pour que la liste des voyages se mette automatiquement à jour.*
+
+---
+
+### 4.5 Galerie d'Interface Utilisateur
+
+L'interface utilisateur a été conçue avec une approche "mobile-first", en privilégiant la clarté, la simplicité d'utilisation et une esthétique moderne. L'utilisation de TailwindCSS a permis de créer un design system cohérent et entièrement responsive, garantissant une expérience utilisateur optimale sur toutes les tailles d'écrans, du smartphone à l'ordinateur de bureau.
+
+**Fig. 4.3 : Pages d'authentification**
+![Page de connexion](Images/LoginPage.png)
+![Page d'inscription](Images/RegisterPage.png)
+*Commentaire : Les formulaires de connexion et d'inscription sont épurés, avec des indications claires pour l'utilisateur et une validation instantanée des champs. Les versions mobiles (`LoginPageMobile.png`, `RegisterPageMobile.png`) suivent le même principe.*
+
+**Fig. 4.4 : Fil d'actualité (Feed)**
+![Feed sur bureau](Images/Feed.png)
+*Commentaire : Le fil d'actualité est la page d'accueil après connexion. Il présente les voyages et activités des utilisateurs suivis de manière visuelle et engageante. La navigation principale est accessible en haut.*
+
+**Fig. 4.5 : Planificateur de voyage (Planner)**
+![Planificateur de voyage](Images/Planner.png)
+*Commentaire : L'interface de planification est le cœur fonctionnel de l'application. Elle permet de construire un itinéraire, d'ajouter des étapes, de visualiser le trajet sur une carte et de gérer les détails de chaque journée.*
+
+**Fig. 4.6 : Page de profil utilisateur**
+![Profil utilisateur](Images/Profile.png)
+*Commentaire : Chaque utilisateur dispose d'un profil public présentant ses voyages, ses statistiques et ses publications. C'est également ici que les autres utilisateurs peuvent choisir de le suivre.*
+
+**Fig. 4.7 : Page de lieu (Place)**
+![Détails d'un lieu](Images/PlacePageAbout.png)
+![Avis sur un lieu](Images/PlacePageReviews.png)
+*Commentaire : Les pages de lieux fournissent des informations détaillées (description, carte, services) et agrègent les avis, notes et photos des autres voyageurs.*
+
+**Fig. 4.8 : Page de recherche**
+![Recherche en tuiles](Images/SearchPageTiles.png)
+![Recherche en liste](Images/SearchPageList.png)
+*Commentaire : La fonction de recherche est flexible, offrant des vues en grille (visuelle) ou en liste (dense) pour s'adapter aux préférences de l'utilisateur.*
+
+**Fig. 4.9 : Examplaire Vues responsives sur mobile**
+![Feed sur mobile](Images/FeedMobile.png)
+![Planificateur sur mobile](Images/PlannerMobile.png)
+*Commentaire : L'application est entièrement responsive. Les interfaces complexes comme le fil d'actualité et le planificateur sont réorganisées pour une utilisation optimale sur des écrans plus petits, avec une navigation tactile.*
+
+**Fig. 4.10 : Tableau de bord de l'administrateur**
+![Tableau de bord Admin](Images/AdminDashboard.png)
+*Commentaire : Le back-office offre une vue d'ensemble de l'activité de la plateforme. Les administrateurs peuvent suivre les métriques clés et accéder rapidement aux différentes sections de gestion.*
+
+**Fig. 4.11 : Gestion du contenu et des utilisateurs**
+![Gestion des utilisateurs](Images/User%20Management.png)
+![Modération de contenu](Images/ContentMod.png)
+*Commentaire : Les administrateurs disposent d'outils dédiés pour la gestion des comptes utilisateurs (bannissement, vérification) et la modération des contenus signalés (avis, posts), garantissant la sécurité et la qualité de la communauté.*
+
+**Fig. 4.12 : Gestion des destinations**
+![Gestion des destinations](Images/DestinationManagement.png)
+*Commentaire : Une interface spécifique permet aux administrateurs d'enrichir la base de données de l'application en ajoutant ou en modifiant des destinations, des lieux d'intérêt et leurs informations associées.*
 
 ---
 
