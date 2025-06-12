@@ -1,44 +1,101 @@
-import { cn } from "@/Libs/utils";
-import { Button } from "@/Components/ui/button";
-import { Input } from "@/Components/ui/input";
-import { Label } from "@/Components/ui/label";
+"use client"
 
-export function RegisterForm({ className, ...props }) {
+import { useContext } from "react"
+import { AuthContext, NavigationContext } from "@/App"
+
+export const RegisterForm = () => {
+  const { login } = useContext(AuthContext)
+  const { navigate } = useContext(NavigationContext)
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    login() // Simulate registration and login
+    navigate("home") // Redirect to home page
+  }
+
   return (
-    <form className={cn("flex flex-col gap-6", className)} {...props}>
-      <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">Create your account</h1>
-        <p className="text-balance text-sm  text-muted-foreground">
-          Enter your information below to create your account
-        </p>
+    <div className="space-y-6">
+      <div className="space-y-2 text-center">
+        <h1 className="text-3xl font-bold">Create an account</h1>
+        <p className="text-gray-500">Enter your information to get started</p>
       </div>
-      <div className="grid gap-6">
-        <div className="grid gap-2">
-          <Label htmlFor="name">Full Name</Label>
-          <Input id="name" type="text" placeholder="John Doe" required />
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label htmlFor="first-name" className="text-sm font-medium leading-none">
+              First name
+            </label>
+            <input
+              id="first-name"
+              type="text"
+              placeholder="John"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="last-name" className="text-sm font-medium leading-none">
+              Last name
+            </label>
+            <input
+              id="last-name"
+              type="text"
+              placeholder="Doe"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              required
+            />
+          </div>
         </div>
-        <div className="grid gap-2">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="m@example.com" required />
+        <div className="space-y-2">
+          <label htmlFor="email" className="text-sm font-medium leading-none">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            placeholder="name@example.com"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            required
+          />
         </div>
-        <div className="grid gap-2">
-          <Label htmlFor="password">Password</Label>
-          <Input id="password" type="password" required />
+        <div className="space-y-2">
+          <label htmlFor="password" className="text-sm font-medium leading-none">
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            placeholder="••••••••"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            required
+          />
         </div>
-        <div className="grid gap-2">
-          <Label htmlFor="confirm-password">Confirm Password</Label>
-          <Input id="confirm-password" type="password" required />
+        <div className="flex items-center space-x-2">
+          <input id="terms" type="checkbox" className="h-4 w-4 rounded border-gray-300" required />
+          <label htmlFor="terms" className="text-sm text-gray-500">
+            I agree to the{" "}
+            <button type="button" className="text-blue-600 hover:text-blue-500">
+              Terms of Service
+            </button>{" "}
+            and{" "}
+            <button type="button" className="text-blue-600 hover:text-blue-500">
+              Privacy Policy
+            </button>
+          </label>
         </div>
-        <Button type="submit" className="w-full">
+        <button
+          type="submit"
+          className="w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+        >
           Create Account
-        </Button>
-      </div>
+        </button>
+      </form>
       <div className="text-center text-sm">
         Already have an account?{" "}
-        <a href="/login" className="underline underline-offset-4">
+        <button onClick={() => navigate("login")} className="text-blue-600 hover:text-blue-500">
           Sign in
-        </a>
+        </button>
       </div>
-    </form>
-  );
+    </div>
+  )
 }

@@ -1,9 +1,14 @@
-import tailwindcssAnimate from "tailwindcss-animate";
-
 /** @type {import('tailwindcss').Config} */
+import animate from "tailwindcss-animate";
+import plugin from "tailwindcss/plugin";
+
 export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+    "*.{js,ts,jsx,tsx,mdx}",
+  ],
   darkMode: ["class"],
-  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     container: {
       center: true,
@@ -13,7 +18,28 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "Roboto",
+          "sans-serif",
+        ],
+      },
       colors: {
+        gray: {
+          50: "#f8f9fa",
+          100: "#f1f3f4",
+          200: "#e8eaed",
+          300: "#dadce0",
+          400: "#bdc1c6",
+          500: "#9aa0a6",
+          600: "#80868b",
+          700: "#5f6368",
+          800: "#3c4043",
+          900: "#202124",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -49,9 +75,19 @@ export default {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        DEFAULT: "0.5rem",
+        lg: "0.5rem",
+        md: "calc(0.5rem - 2px)",
+        sm: "calc(0.5rem - 4px)",
+      },
+      boxShadow: {
+        soft: "0 2px 8px rgba(0, 0, 0, 0.08)",
+        medium: "0 4px 16px rgba(0, 0, 0, 0.1)",
+        large: "0 8px 32px rgba(0, 0, 0, 0.12)",
+      },
+      spacing: {
+        15: "3.75rem",
+        30: "7.5rem",
       },
       keyframes: {
         "accordion-down": {
@@ -69,5 +105,33 @@ export default {
       },
     },
   },
-  plugins: [tailwindcssAnimate],
+  plugins: [
+    animate,
+    plugin(function ({ addComponents }) {
+      addComponents({
+        ".btn": {
+          "@apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background":
+            {},
+        },
+        ".btn-primary": {
+          "@apply bg-primary text-primary-foreground hover:bg-primary/90": {},
+        },
+        ".btn-secondary": {
+          "@apply bg-secondary text-secondary-foreground hover:bg-secondary/80":
+            {},
+        },
+        ".btn-outline": {
+          "@apply border border-input hover:bg-accent hover:text-accent-foreground":
+            {},
+        },
+        ".card": {
+          "@apply rounded-lg border bg-card text-card-foreground shadow-sm": {},
+        },
+        ".input": {
+          "@apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50":
+            {},
+        },
+      });
+    }),
+  ],
 };

@@ -1,39 +1,71 @@
-import { cn } from "@/Libs/utils"
-import { Button } from "@/Components/ui/button"
-import { Input } from "@/Components/ui/input"
-import { Label } from "@/Components/ui/label"
+"use client"
 
-export function LoginForm({ className, ...props }) {
+import { useContext } from "react"
+import { AuthContext, NavigationContext } from "@/App"
+
+export const LoginForm = () => {
+  const { login } = useContext(AuthContext)
+  const { navigate } = useContext(NavigationContext)
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    login() // Simulate login
+    navigate("home") // Redirect to home page
+  }
+
   return (
-    <form className={cn("flex flex-col gap-6", className)} {...props}>
-      <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">Login to your account</h1>
-        <p className="text-balance text-sm text-muted-foreground">Enter your email below to login to your account</p>
+    <div className="space-y-6">
+      <div className="space-y-2 text-center">
+        <h1 className="text-3xl font-bold">Welcome back</h1>
+        <p className="text-gray-500">Enter your credentials to access your account</p>
       </div>
-      <div className="grid gap-6">
-        <div className="grid gap-2">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="m@example.com" required />
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <label htmlFor="email" className="text-sm font-medium leading-none">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            placeholder="name@example.com"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            required
+          />
         </div>
-        <div className="grid gap-2">
-          <div className="flex items-center">
-            <Label htmlFor="password">Password</Label>
-            <a href="#" className="ml-auto text-sm underline-offset-4 hover:underline">
-              Forgot your password?
-            </a>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label htmlFor="password" className="text-sm font-medium leading-none">
+              Password
+            </label>
+            <button
+              type="button"
+              onClick={() => navigate("forgot-password")}
+              className="text-sm text-blue-600 hover:text-blue-500"
+            >
+              Forgot password?
+            </button>
           </div>
-          <Input id="password" type="password" required />
+          <input
+            id="password"
+            type="password"
+            placeholder="••••••••"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            required
+          />
         </div>
-        <Button type="submit" className="w-full">
-          Login
-        </Button>
-      </div>
+        <button
+          type="submit"
+          className="w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+        >
+          Sign In
+        </button>
+      </form>
       <div className="text-center text-sm">
-        Don&apos;t have an account?{" "}
-        <a href="/register" className="underline underline-offset-4">
+        Don't have an account?{" "}
+        <button onClick={() => navigate("register")} className="text-blue-600 hover:text-blue-500">
           Sign up
-        </a>
+        </button>
       </div>
-    </form>
-  );
+    </div>
+  )
 }

@@ -1,10 +1,11 @@
-import LogoSVG from "@/Assets/Logo.svg";
-
-export function Logo() {
+import logo from "@/Assets/Logo.svg"
+const Logo = () => {
   return (
-    <a href="/" className="flex items-center gap-2 font-medium">
-      <img src={LogoSVG} alt="Logo" className="h-6 w-6" />
-      <span className="text-lg font-semibold">Hermes</span>
-    </a>
-  );
+    <div className="flex items-center space-x-2">
+      <img src={logo} alt="Hermes Logo" className="w-8 h-8" />
+      <span className="text-xl font-medium text-gray-900">Hermes</span>
+    </div>
+  )
 }
+
+export default Logo
