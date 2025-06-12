@@ -4,6 +4,7 @@ import {
   successResponse,
   errorResponse,
   asyncHandler,
+  HTTP_STATUS,
 } from "../Utils/responses.js";
 import { JWT_COOKIE_EXPIRE } from "../Configs/config.js";
 import bcrypt from "bcryptjs";
@@ -84,7 +85,7 @@ export const login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
     // Check if user exists
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+password_hash");
     if (!user) {
       return errorResponse(res, {
         code: HTTP_STATUS.UNAUTHORIZED,
@@ -93,7 +94,7 @@ export const login = asyncHandler(async (req, res) => {
     }
 
     // Check password
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       return errorResponse(res, {
         code: HTTP_STATUS.UNAUTHORIZED,
@@ -112,7 +113,7 @@ export const login = asyncHandler(async (req, res) => {
     const cookieExpire = parseInt(JWT_COOKIE_EXPIRE) || 8; // Default to 8 days if not set
     res.cookie("token", token, {
       httpOnly: true,
-      expires: new Date(Date.now() + cookieExpire * 24 * 60 * 60 * 1000),
+      expires: new Date(Date.now() + cookieExpire  * 60 * 60 * 1000),
     });
 
     return successResponse(res, {
@@ -234,7 +235,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
     }
 
     // Update password
-    user.password = password;
+    user.password_hash = await bcrypt.hash(password, 10);
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
     await user.save();
@@ -288,10 +289,17 @@ export const verifyEmail = asyncHandler(async (req, res) => {
 export const updatePassword = asyncHandler(async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.user.id).select("+password_hash");
+
+    if (!user) {
+      return errorResponse(res, {
+        code: HTTP_STATUS.NOT_FOUND,
+        message: "User not found",
+      });
+    }
 
     // Check current password
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
     if (!isMatch) {
       return errorResponse(res, {
         code: HTTP_STATUS.UNAUTHORIZED,
@@ -300,7 +308,7 @@ export const updatePassword = asyncHandler(async (req, res) => {
     }
 
     // Update password
-    user.password = newPassword;
+    user.password_hash = await bcrypt.hash(newPassword, 10);
     await user.save();
 
     return successResponse(res, {
@@ -314,3 +322,7 @@ export const updatePassword = asyncHandler(async (req, res) => {
     });
   }
 });
+
+// @desc    Get user profile
+// @route   GET /api/auth/profile
+// ... existing code ...

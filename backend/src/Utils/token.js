@@ -1,7 +1,11 @@
 import jwt from "jsonwebtoken";
 import User from "../Models/User.js";
-import { JWT_SECRET, JWT_EXPIRE } from "../Configs/config.js";
-import { errorResponse, successResponse, HTTP_STATUS } from "./responses.js";
+import {
+  JWT_SECRET,
+  JWT_EXPIRE,
+  JWT_COOKIE_EXPIRE,
+  NODE_ENV,
+} from "../Configs/config.js";
 
 export const generateToken = (id) => {
   return jwt.sign({ id }, JWT_SECRET, {
@@ -30,13 +34,22 @@ export const refreshToken = async (req, res) => {
 
     const newToken = generateToken(user._id);
 
+    const cookieExpire = parseInt(JWT_COOKIE_EXPIRE) || 8; // Default to 8 days if not set
     res.cookie("token", newToken, {
       httpOnly: true,
-      expires: new Date(Date.now() + JWT_EXPIRE * 24 * 60 * 60 * 1000),
+      expires: new Date(Date.now() + cookieExpire * 60 * 60 * 1000),
+      secure: NODE_ENV === "production",
+      sameSite: "strict",
     });
 
     return newToken;
   } catch (error) {
-    throw new Error("Invalid token");
+    if (error instanceof jwt.TokenExpiredError) {
+      throw new Error("Token expired");
+    }
+    if (error instanceof jwt.JsonWebTokenError) {
+      throw new Error("Invalid token");
+    }
+    throw error;
   }
 };

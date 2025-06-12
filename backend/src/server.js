@@ -11,7 +11,6 @@ import logger from "./Utils/logger.js";
 import dbConnect from "./Configs/db.js";
 import { NODE_ENV, PORT, FRONTEND_URL } from "./Configs/config.js";
 import { apiLimiter, authLimiter, uploadLimiter } from "./Utils/rateLimiter.js";
-import { sanitizeInput } from "./Middleware/inputSanitizer.js";
 import authRoutes from "./Routes/authRoutes.js";
 import adminRoutes from "./Routes/adminRoutes.js";
 import analyticsRoutes from "./Routes/analyticsRoutes.js";
@@ -51,7 +50,6 @@ app.use("/api/upload", uploadLimiter);
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(cookieParser());
-app.use(sanitizeInput);
 app.use(compression()); // Compress responses
 
 // Logging

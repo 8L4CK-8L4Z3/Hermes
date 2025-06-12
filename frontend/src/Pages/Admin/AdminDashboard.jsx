@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useContext } from "react";
-import { AuthContext, NavigationContext } from "@/App";
+import { AuthContext   } from "@/Context/Auth";
+import { NavigationContext } from "@/Context/Navigate";
 import UserActivityChart from "@/Components/charts/UserActivityChart";
 import UserDistributionChart from "@/Components/charts/UserDistributionChart";
 

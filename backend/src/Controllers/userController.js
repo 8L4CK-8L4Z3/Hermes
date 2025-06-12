@@ -8,6 +8,11 @@ import {
 
 const NAMESPACE = "UserController";
 
+export const getMe = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.id).select("-password_hash");
+  return successPatterns.retrieved(res, { data: user });
+});
+
 /**
  * @desc    Get user profile
  * @route   GET /api/users/profile/:id

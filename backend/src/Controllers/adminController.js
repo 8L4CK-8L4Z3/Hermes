@@ -146,6 +146,12 @@ export const banUser = asyncHandler(async (req, res) => {
     });
   }
 
+  if (user.isBanned) {
+    return errorPatterns.conflict(res, {
+      message: "User is already banned",
+    });
+  }
+
   user.isBanned = true;
   user.banReason = reason;
   await user.save();
@@ -175,6 +181,12 @@ export const unbanUser = asyncHandler(async (req, res) => {
 
   if (!user) {
     return errorPatterns.notFound(res, { message: "User not found" });
+  }
+
+  if (!user.isBanned) {
+    return errorPatterns.conflict(res, {
+      message: "User is not banned",
+    });
   }
 
   user.isBanned = false;
@@ -239,52 +251,109 @@ export const getModerationLogs = asyncHandler(async (req, res) => {
  * @access  Private (Admin)
  */
 export const getAnalytics = asyncHandler(async (req, res) => {
-  const { startDate, endDate } = req.query;
-  const start = startDate
-    ? new Date(startDate)
-    : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  const end = endDate ? new Date(endDate) : new Date();
+  try {
+    // Default to last 30 days if no dates provided
+    const defaultEndDate = new Date();
+    const defaultStartDate = new Date(
+      defaultEndDate.getTime() - 30 * 24 * 60 * 60 * 1000
+    );
 
-  logger.logInfo(NAMESPACE, "Fetching platform analytics");
+    // Get dates from request body or use defaults
+    const startDate = req.body.startDate
+      ? new Date(req.body.startDate)
+      : defaultStartDate;
+    const endDate = req.body.endDate
+      ? new Date(req.body.endDate)
+      : defaultEndDate;
 
-  const analytics = await Analytics.find({
-    date: {
-      $gte: start,
-      $lte: end,
-    },
-  }).sort({ date: 1 });
+    // Validate dates
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      logger.logError(NAMESPACE, "Invalid date format provided");
+      return errorPatterns.badRequest(res, {
+        message: "Invalid date format provided",
+      });
+    }
 
-  const aggregatedData = {
-    userGrowth: analytics.map((day) => ({
-      date: day.date,
-      newUsers: day.metrics.newUsers,
-      activeUsers: day.metrics.activeUsers,
-    })),
-    contentCreation: analytics.map((day) => ({
-      date: day.date,
-      newTrips: day.metrics.newTrips,
-      newReviews: day.metrics.newReviews,
-      newPosts: day.metrics.newPosts,
-    })),
-    engagement: analytics.map((day) => ({
-      date: day.date,
-      totalLikes: day.metrics.totalLikes,
-      totalComments: day.metrics.totalComments,
-    })),
-    popularDestinations: analytics
-      .flatMap((day) => day.popularDestinations)
-      .sort((a, b) => b.views - a.views)
-      .slice(0, 10),
-    popularPlaces: analytics
-      .flatMap((day) => day.popularPlaces)
-      .sort((a, b) => b.views - a.views)
-      .slice(0, 10),
-  };
+    logger.logInfo(
+      NAMESPACE,
+      `Fetching platform analytics from ${startDate.toISOString()} to ${endDate.toISOString()}`
+    );
 
-  return successPatterns.retrieved(res, {
-    data: aggregatedData,
-    meta: { startDate: start, endDate: end },
-  });
+    const analytics = await Analytics.find({
+      date: {
+        $gte: startDate,
+        $lte: endDate,
+      },
+    }).sort({ date: 1 });
+
+    logger.logInfo(NAMESPACE, `Found ${analytics.length} analytics records`);
+
+    // Handle case where no analytics data exists
+    if (!analytics || analytics.length === 0) {
+      logger.logInfo(
+        NAMESPACE,
+        "No analytics data found for the specified period"
+      );
+      return successPatterns.retrieved(res, {
+        data: {
+          userGrowth: [],
+          contentCreation: [],
+          engagement: [],
+          popularDestinations: [],
+          popularPlaces: [],
+        },
+        meta: {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          recordsFound: 0,
+        },
+      });
+    }
+
+    const aggregatedData = {
+      userGrowth: analytics.map((day) => ({
+        date: day.date,
+        newUsers: day.metrics?.newUsers || 0,
+        activeUsers: day.metrics?.activeUsers || 0,
+      })),
+      contentCreation: analytics.map((day) => ({
+        date: day.date,
+        newTrips: day.metrics?.newTrips || 0,
+        newReviews: day.metrics?.newReviews || 0,
+        newPosts: day.metrics?.newPosts || 0,
+      })),
+      engagement: analytics.map((day) => ({
+        date: day.date,
+        totalLikes: day.metrics?.totalLikes || 0,
+        totalComments: day.metrics?.totalComments || 0,
+      })),
+      popularDestinations: analytics
+        .flatMap((day) => day.popularDestinations || [])
+        .filter((dest) => dest && dest.destination_id) // Filter out null/undefined/invalid entries
+        .sort((a, b) => (b.views || 0) - (a.views || 0))
+        .slice(0, 10),
+      popularPlaces: analytics
+        .flatMap((day) => day.popularPlaces || [])
+        .filter((place) => place && place.place_id) // Filter out null/undefined/invalid entries
+        .sort((a, b) => (b.views || 0) - (a.views || 0))
+        .slice(0, 10),
+    };
+
+    logger.logInfo(NAMESPACE, "Successfully aggregated analytics data");
+
+    return successPatterns.retrieved(res, {
+      data: aggregatedData,
+      meta: {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        recordsFound: analytics.length,
+      },
+    });
+  } catch (error) {
+    logger.logError(NAMESPACE, `Error in getAnalytics: ${error.message}`);
+    logger.logError(NAMESPACE, error.stack);
+    throw error;
+  }
 });
 
 /**
@@ -304,24 +373,126 @@ export const getReportedContent = asyncHandler(async (req, res) => {
   let query = { status };
   if (contentType) query.target_type = contentType;
 
-  const reports = await ModerationLog.find(query)
-    .populate("moderator_id", "username")
-    .populate("target_id")
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
+  try {
+    // First get the reports with moderator info
+    const reports = await ModerationLog.find(query)
+      .populate("moderator_id", "username email")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
-  const total = await ModerationLog.countDocuments(query);
+    // Then populate the target content based on type
+    const populatedReports = await Promise.all(
+      reports.map(async (report) => {
+        try {
+          let targetModel;
+          let userField;
+          switch (report.target_type) {
+            case "review":
+              targetModel = Review;
+              userField = "user_id";
+              break;
+            case "post":
+              targetModel = Post;
+              userField = "user_id";
+              break;
+            case "comment":
+              targetModel = Comment;
+              userField = "user_id";
+              break;
+            case "user":
+              // For user type, we don't need to populate user info since the target is the user
+              const user = await User.findById(report.target_id)
+                .select("username email photo")
+                .lean();
+              if (!user) {
+                return {
+                  ...report,
+                  target_content_status: "deleted",
+                };
+              }
+              return {
+                ...report,
+                target_content: user,
+                target_content_status: "active",
+              };
+            default:
+              return {
+                ...report,
+                target_content_status: "error",
+                error: "Invalid target type",
+              };
+          }
 
-  return successPatterns.retrieved(res, {
-    data: reports,
-    meta: {
-      page,
-      limit,
-      total,
-      pages: Math.ceil(total / limit),
-    },
-  });
+          if (targetModel) {
+            const targetContent = await targetModel
+              .findById(report.target_id)
+              .populate(userField, "username email photo")
+              .lean();
+
+            if (!targetContent) {
+              return {
+                ...report,
+                target_content_status: "deleted",
+              };
+            }
+
+            return {
+              ...report,
+              target_content: targetContent,
+              target_content_status: "active",
+            };
+          }
+
+          return report;
+        } catch (error) {
+          logger.logError(
+            NAMESPACE,
+            `Error populating target content for report ${report._id}:`,
+            error
+          );
+          return {
+            ...report,
+            target_content_status: "error",
+            error: "Failed to load target content",
+          };
+        }
+      })
+    );
+
+    const total = await ModerationLog.countDocuments(query);
+    const totalPages = Math.ceil(total / limit);
+
+    // Validate page number
+    if (page > totalPages && total > 0) {
+      return successPatterns.retrieved(res, {
+        data: [],
+        meta: {
+          page,
+          limit,
+          total,
+          pages: totalPages,
+        },
+      });
+    }
+
+    return successPatterns.retrieved(res, {
+      data: populatedReports,
+      meta: {
+        page,
+        limit,
+        total,
+        pages: totalPages,
+      },
+    });
+  } catch (error) {
+    logger.logError(NAMESPACE, "Error fetching reported content:", error);
+    return errorPatterns.serverError(res, {
+      message: "Error fetching reported content",
+      details: error.message,
+    });
+  }
 });
 
 /**
@@ -331,41 +502,128 @@ export const getReportedContent = asyncHandler(async (req, res) => {
  */
 export const moderateContent = asyncHandler(async (req, res) => {
   const { action, reason } = req.body;
-  const report = await ModerationLog.findById(req.params.id).populate(
-    "target_id"
+
+  logger.logInfo(
+    NAMESPACE,
+    `Moderating content with ID: ${req.params.id}, action: ${action}`
   );
 
-  if (!report) {
-    return errorPatterns.notFound(res, { message: "Report not found" });
-  }
+  try {
+    // Find the report without population first
+    const report = await ModerationLog.findById(req.params.id);
 
-  report.status = "resolved";
-  report.resolution = {
-    action,
-    reason,
-    moderator_id: req.user._id,
-    date: new Date(),
-  };
-
-  // Handle content based on action
-  if (action === "remove") {
-    switch (report.target_type) {
-      case "review":
-        await Review.findByIdAndDelete(report.target_id);
-        break;
-      case "post":
-        await Post.findByIdAndDelete(report.target_id);
-        break;
-      case "comment":
-        await Comment.findByIdAndDelete(report.target_id);
-        break;
+    if (!report) {
+      return errorPatterns.notFound(res, { message: "Report not found" });
     }
+
+    logger.logInfo(
+      NAMESPACE,
+      `Found report with target_type: ${report.target_type}, target_id: ${report.target_id}`
+    );
+
+    if (report.status === "resolved") {
+      return errorPatterns.conflict(res, {
+        message: "Report is already resolved",
+      });
+    }
+
+    // Update report status and resolution
+    report.status = "resolved";
+    report.resolution = {
+      action,
+      note: reason, // Using reason as the resolution note
+      moderator_id: req.user._id,
+      date: new Date(),
+    };
+
+    // Handle content based on action
+    if (action === "remove") {
+      let Model;
+      switch (report.target_type) {
+        case "review":
+          Model = Review;
+          break;
+        case "post":
+          Model = Post;
+          break;
+        case "comment":
+          Model = Comment;
+          break;
+        default:
+          return errorPatterns.validationError(res, {
+            message: "Invalid target type",
+            error: { target_type: report.target_type },
+          });
+      }
+
+      logger.logInfo(
+        NAMESPACE,
+        `Attempting to delete ${report.target_type} with ID: ${report.target_id}`
+      );
+
+      try {
+        const contentExists = await Model.findById(report.target_id);
+        if (contentExists) {
+          await Model.findByIdAndDelete(report.target_id);
+          logger.logInfo(
+            NAMESPACE,
+            `Successfully deleted ${report.target_type} with ID: ${report.target_id}`
+          );
+        } else {
+          logger.logInfo(
+            NAMESPACE,
+            `${report.target_type} with ID: ${report.target_id} already deleted`
+          );
+        }
+      } catch (deleteError) {
+        logger.logError(
+          NAMESPACE,
+          `Error deleting content: ${deleteError.message}`
+        );
+        logger.logError(NAMESPACE, `Stack trace: ${deleteError.stack}`);
+        return errorPatterns.internalError(res, {
+          message: "Error deleting reported content",
+          error: {
+            message: deleteError.message,
+            details: {
+              target_type: report.target_type,
+              target_id: report.target_id,
+            },
+          },
+        });
+      }
+    }
+
+    // Save the report changes
+    try {
+      await report.save();
+      logger.logInfo(
+        NAMESPACE,
+        `Successfully moderated content: ${report._id}`
+      );
+      return successPatterns.updated(res, {
+        message: "Content moderated successfully",
+        data: report,
+      });
+    } catch (saveError) {
+      logger.logError(NAMESPACE, `Error saving report: ${saveError.message}`);
+      logger.logError(NAMESPACE, `Stack trace: ${saveError.stack}`);
+      return errorPatterns.internalError(res, {
+        message: "Error saving moderation changes",
+        error: {
+          message: saveError.message,
+        },
+      });
+    }
+  } catch (error) {
+    logger.logError(NAMESPACE, `Error in moderation process: ${error.message}`);
+    logger.logError(NAMESPACE, `Stack trace: ${error.stack}`);
+    return errorPatterns.internalError(res, {
+      message: "Error moderating content",
+      error: {
+        message: error.message,
+        details: error.stack,
+      },
+    });
   }
-
-  await report.save();
-
-  logger.logInfo(NAMESPACE, `Moderated content: ${report._id}`);
-  return successPatterns.updated(res, {
-    message: "Content moderated successfully",
-  });
 });

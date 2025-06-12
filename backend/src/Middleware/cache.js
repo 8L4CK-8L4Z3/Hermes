@@ -11,11 +11,49 @@ redis.on("error", (err) => {
 const DEFAULT_EXPIRATION = 3600;
 
 /**
+ * Parse duration string into seconds
+ * @param {string|number} duration - Duration string (e.g., '5m', '1h') or number of seconds
+ * @returns {number} Duration in seconds
+ */
+const parseDuration = (duration) => {
+  if (typeof duration === "number") return duration;
+
+  const match = duration.toString().match(/^(\d+)(s|m|h|d)$/);
+  if (!match) return NaN;
+
+  const value = parseInt(match[1]);
+  const unit = match[2];
+
+  switch (unit) {
+    case "s":
+      return value;
+    case "m":
+      return value * 60;
+    case "h":
+      return value * 3600;
+    case "d":
+      return value * 86400;
+    default:
+      return NaN;
+  }
+};
+
+/**
  * Cache middleware factory
- * @param {number} duration - Cache duration in seconds
+ * @param {string|number} duration - Cache duration (e.g., '5m', '1h') or seconds
  * @param {function} keyGenerator - Optional function to generate cache key
  */
 export const cache = (duration = DEFAULT_EXPIRATION, keyGenerator) => {
+  // Parse and validate duration
+  let cacheDuration = parseDuration(duration);
+  if (isNaN(cacheDuration) || cacheDuration <= 0) {
+    logger.logWarn(
+      NAMESPACE,
+      `Invalid cache duration provided: ${duration}, using default: ${DEFAULT_EXPIRATION}`
+    );
+    cacheDuration = DEFAULT_EXPIRATION;
+  }
+
   return async (req, res, next) => {
     // Skip caching for non-GET requests
     if (req.method !== "GET") {
@@ -50,9 +88,13 @@ export const cache = (duration = DEFAULT_EXPIRATION, keyGenerator) => {
       res.json = function (body) {
         // Only cache successful responses
         if (res.statusCode >= 200 && res.statusCode < 300) {
+          logger.logDebug(
+            NAMESPACE,
+            `Attempting to cache with duration: ${cacheDuration} (type: ${typeof cacheDuration})`
+          );
           // Store the response in cache
           redis
-            .setex(key, duration, JSON.stringify(body))
+            .setex(key, cacheDuration, JSON.stringify(body))
             .then(() => {
               logger.logDebug(
                 NAMESPACE,
@@ -80,59 +122,4 @@ export const cache = (duration = DEFAULT_EXPIRATION, keyGenerator) => {
   };
 };
 
-/**
- * Clear cache by pattern
- * @param {string} pattern - Pattern to match cache keys
- */
-export const clearCache = async (pattern) => {
-  try {
-    logger.logDebug(
-      NAMESPACE,
-      `Attempting to clear cache with pattern: ${pattern}`
-    );
-
-    let cursor = "0";
-    const keys = [];
-    do {
-      const [newCursor, foundKeys] = await redis.scan(
-        cursor,
-        "MATCH",
-        pattern,
-        "COUNT",
-        100
-      );
-      cursor = newCursor;
-      if (foundKeys.length > 0) {
-        keys.push(...foundKeys);
-      }
-    } while (cursor !== "0");
-
-    if (keys.length > 0) {
-      await redis.del(keys);
-      logger.logInfo(
-        NAMESPACE,
-        `Successfully cleared ${keys.length} cache entries with pattern: ${pattern}`
-      );
-    } else {
-      logger.logDebug(
-        NAMESPACE,
-        `No cache entries found for pattern: ${pattern}`
-      );
-    }
-  } catch (error) {
-    logger.logError(
-      NAMESPACE,
-      `Failed to clear cache with pattern: ${pattern}`,
-      error
-    );
-  }
-};
-
-// Common cache durations
-export const CACHE_DURATIONS = {
-  MINUTE_5: 300,
-  MINUTE_15: 900,
-  HOUR_1: 3600,
-  HOUR_6: 21600,
-  DAY_1: 86400,
-};
+// ... existing code ...

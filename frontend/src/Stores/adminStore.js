@@ -1,0 +1,122 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "@/Utils/api";
+
+// Queries
+export const useAdminStats = () => {
+  return useQuery({
+    queryKey: ["admin", "stats"],
+    queryFn: async () => {
+      const { data } = await api.get("/admin/stats");
+      return data;
+    },
+  });
+};
+
+export const useAllUsers = (page = 1, limit = 10) => {
+  return useQuery({
+    queryKey: ["admin", "users", { page, limit }],
+    queryFn: async () => {
+      const { data } = await api.get("/admin/users", {
+        params: { page, limit },
+      });
+      return data;
+    },
+  });
+};
+
+export const useModerationLogs = (page = 1, limit = 10) => {
+  return useQuery({
+    queryKey: ["admin", "moderation-logs", { page, limit }],
+    queryFn: async () => {
+      const { data } = await api.get("/admin/moderation-logs", {
+        params: { page, limit },
+      });
+      return data;
+    },
+  });
+};
+
+export const useAdminAnalytics = () => {
+  return useQuery({
+    queryKey: ["admin", "analytics"],
+    queryFn: async () => {
+      const { data } = await api.post("/admin/analytics");
+      return data;
+    },
+  });
+};
+
+export const useReportedContent = (page = 1, limit = 10) => {
+  return useQuery({
+    queryKey: ["admin", "reported-content", { page, limit }],
+    queryFn: async () => {
+      const { data } = await api.get("/admin/reported-content", {
+        params: { page, limit },
+      });
+      return data;
+    },
+  });
+};
+
+// Mutations
+export const useUpdateUserRole = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ userId, role }) => {
+      const { data } = await api.put(`/admin/users/${userId}/role`, { role });
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(["admin", "users"]);
+      queryClient.invalidateQueries(["user", data.id]);
+    },
+  });
+};
+
+export const useBanUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userId) => {
+      const { data } = await api.put(`/admin/users/${userId}/ban`);
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(["admin", "users"]);
+      queryClient.invalidateQueries(["user", data.id]);
+    },
+  });
+};
+
+export const useUnbanUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userId) => {
+      const { data } = await api.put(`/admin/users/${userId}/unban`);
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(["admin", "users"]);
+      queryClient.invalidateQueries(["user", data.id]);
+    },
+  });
+};
+
+export const useModerateReportedContent = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ contentId, action }) => {
+      const { data } = await api.put(`/admin/reported-content/${contentId}`, {
+        action,
+      });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["admin", "reported-content"]);
+      queryClient.invalidateQueries(["moderation", "reports"]);
+    },
+  });
+};

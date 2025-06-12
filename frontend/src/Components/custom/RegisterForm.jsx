@@ -1,7 +1,8 @@
 "use client"
 
 import { useContext } from "react"
-import { AuthContext, NavigationContext } from "@/App"
+import { AuthContext } from "@/Context/Auth"
+import { NavigationContext } from "@/Context/Navigate"
 
 export const RegisterForm = () => {
   const { login } = useContext(AuthContext)

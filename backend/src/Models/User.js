@@ -39,6 +39,14 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isBanned: {
+      type: Boolean,
+      default: false,
+    },
+    banReason: {
+      type: String,
+      default: null,
+    },
     lastLogin: {
       type: Date,
       default: Date.now,
@@ -68,8 +76,6 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
-
-
 
 const User = mongoose.model("User", userSchema);
 

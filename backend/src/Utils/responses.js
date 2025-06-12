@@ -68,7 +68,7 @@ export const successResponse = (
  */
 export const errorResponse = (
   res,
-  { code, message, error = null, meta = {} }
+  { code, message, error = null, meta = {}, errors = null }
 ) => {
   const response = formatResponse({
     success: false,
@@ -78,6 +78,7 @@ export const errorResponse = (
       code: code.toString(),
       message,
       ...(error && { details: error }),
+      ...(errors && { errors }),
     },
     meta,
   });

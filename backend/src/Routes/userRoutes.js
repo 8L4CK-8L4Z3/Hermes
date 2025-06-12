@@ -13,6 +13,7 @@ import {
   updateUserStats,
   getUserPreferences,
   verifyUser,
+  getMe,
 } from "../Controllers/userController.js";
 import { protect, isAdmin } from "../Middleware/auth.js";
 import { idParamValidator } from "../Middleware/validators.js";
@@ -27,6 +28,7 @@ router.get("/:id/stats", idParamValidator, getUserStats);
 router.get("/:id/activity", idParamValidator, getUserActivity);
 
 // Protected routes
+router.get("/me", protect, getMe);
 router.put("/profile", protect, updateProfile);
 router.delete("/profile", protect, deleteAccount);
 router.put("/preferences", protect, updatePreferences);

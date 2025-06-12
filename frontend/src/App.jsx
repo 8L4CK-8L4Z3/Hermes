@@ -1,5 +1,7 @@
 "use client";
-import { useState, createContext } from "react";
+import { useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
 import Header from "@/Components/Header";
 import Footer from "@/Components/Footer";
 
@@ -23,100 +25,163 @@ import ContentModeration from "@/Pages/Admin/ContentModeration";
 import DestinationManagement from "@/Pages/Admin/DestinationManagement";
 import Analytics from "@/Pages/Admin/Analytics";
 
-// Create auth context with default values
-export const AuthContext = createContext({
-  isLoggedIn: false,
-  login: () => {},
-  logout: () => {},
-});
-
-// Create navigation context with default values
-export const NavigationContext = createContext({
-  currentPage: "home",
-  navigate: () => {},
-  pageParams: {},
-});
+// Import contexts
+import { AuthContext } from "@/Context/Auth";
+import { NavigationContext } from "@/Context/Navigate";
+import { QueryClientProvider } from "@tanstack/react-query";
+import queryClient from "@/Utils/queryClient";
 
 function App() {
-  // Simple auth state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentPage, setCurrentPage] = useState("home");
-  const [pageParams, setPageParams] = useState({});
 
   const login = () => setIsLoggedIn(true);
   const logout = () => setIsLoggedIn(false);
 
-  const navigate = (page, params = {}) => {
-    setCurrentPage(page);
-    setPageParams(params);
-    window.scrollTo(0, 0);
-  };
-
-  const renderCurrentPage = () => {
-    switch (currentPage) {
-      case "home":
-        return <LandingPage />;
-      case "profile":
-        return <ProfilePage />;
-      case "plan-trip":
-        return <TripPlanningPage />;
-      case "destination":
-        return <DestinationPage />;
-      case "place":
-        return <PlacePage />;
-      case "search":
-        return <SearchResultsPage />;
-      case "feed":
-        return <SocialFeedPage />;
-      case "trip":
-        return <TripVisualizationPage />;
-      case "notifications":
-        return <NotificationsPage />;
-      case "login":
-        return <LoginPage />;
-      case "register":
-        return <RegisterPage />;
-      case "admin":
-        return <AdminDashboard />;
-      case "admin-users":
-        return <UserManagement />;
-      case "admin-moderation":
-        return <ContentModeration />;
-      case "admin-destinations":
-        return <DestinationManagement />;
-      case "admin-analytics":
-        return <Analytics />;
-      default:
-        return <LandingPage />;
-    }
-  };
-
-  // Create context values
+  // Create auth context value
   const authContextValue = {
     isLoggedIn,
     login,
     logout,
   };
 
-  const navigationContextValue = {
-    currentPage,
-    navigate,
-    pageParams,
+  // Protected Route component
+  const ProtectedRoute = ({ children }) => {
+    if (!isLoggedIn) {
+      return <Navigate to="/login" />;
+    }
+    return children;
   };
 
-  // Don't show header and footer on login and register pages
-  const showHeaderFooter = !["login", "register"].includes(currentPage);
+  // Admin Route component
+  const AdminRoute = ({ children }) => {
+    if (!isLoggedIn ) {
+      return <Navigate to="/login" />;
+    }
+    // Add additional admin check here if needed
+    return children;
+  };
 
   return (
-    <AuthContext.Provider value={authContextValue}>
-      <NavigationContext.Provider value={navigationContextValue}>
-        <div className="min-h-screen flex flex-col">
-          {showHeaderFooter && <Header />}
-          <main className="flex-1">{renderCurrentPage()}</main>
-          {showHeaderFooter && <Footer />}
+    <QueryClientProvider client={queryClient}>
+      <AuthContext.Provider value={authContextValue}>
+        <BrowserRouter>
+          <div className="min-h-screen flex flex-col">
+          {/* Don't show header and footer on login and register pages */}
+          <Routes>
+            <Route
+              path="*"
+              element={
+                <>
+                  <Header />
+                  <main className="flex-1">
+                    <Routes>
+                      <Route path="/" element={<LandingPage />} />
+                      <Route
+                        path="/profile"
+                        element={
+                          <ProtectedRoute>
+                            <ProfilePage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/plan-trip"
+                        element={
+                          <ProtectedRoute>
+                            <TripPlanningPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/destination/:id"
+                        element={<DestinationPage />}
+                      />
+                      <Route path="/place/:id" element={<PlacePage />} />
+                      <Route path="/search" element={<SearchResultsPage />} />
+                      <Route
+                        path="/feed"
+                        element={
+                          <ProtectedRoute>
+                            <SocialFeedPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/trip/:id"
+                        element={
+                          <ProtectedRoute>
+                            <TripVisualizationPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/notifications"
+                        element={
+                          <ProtectedRoute>
+                            <NotificationsPage />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      {/* Admin Routes */}
+                      <Route
+                        path="/admin"
+                        element={
+                          <AdminRoute>
+                            <AdminDashboard />
+                          </AdminRoute>
+                        }
+                      />
+                      <Route
+                        path="/admin/users"
+                        element={
+                          <AdminRoute>
+                            <UserManagement />
+                          </AdminRoute>
+                        }
+                      />
+                      <Route
+                        path="/admin/moderation"
+                        element={
+                          <AdminRoute>
+                            <ContentModeration />
+                          </AdminRoute>
+                        }
+                      />
+                      <Route
+                        path="/admin/destinations"
+                        element={
+                          <AdminRoute>
+                            <DestinationManagement />
+                          </AdminRoute>
+                        }
+                      />
+                      <Route
+                        path="/admin/analytics"
+                        element={
+                          <AdminRoute>
+                            <Analytics />
+                          </AdminRoute>
+                        }
+                      />
+
+                      {/* Catch-all route */}
+                      <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                  </main>
+                  <Footer />
+                </>
+              }
+            />
+
+            {/* Auth routes without header/footer */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+          </Routes>
         </div>
-      </NavigationContext.Provider>
+      </BrowserRouter>
     </AuthContext.Provider>
+    </QueryClientProvider>
   );
 }
 

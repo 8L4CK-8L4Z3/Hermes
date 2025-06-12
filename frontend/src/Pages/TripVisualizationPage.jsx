@@ -1,6 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import rome from "@/Assets/PHImg/Rome.jpg"
+import paris from "@/Assets/PHImg/Paris.jpg"
+import barcelona from "@/Assets/PHImg/Barcelona.jpg"
 
 const TripVisualizationPage = () => {
   const [isOwner] = useState(true) // Mock ownership check
@@ -24,7 +27,7 @@ const TripVisualizationPage = () => {
         name: "Rome, Italy",
         arrivalDate: "2024-06-15",
         departureDate: "2024-06-20",
-        photo: "/images/rome.jpg",
+        photo: rome,
         activities: [
           {
             id: 1,
@@ -60,7 +63,7 @@ const TripVisualizationPage = () => {
         name: "Paris, France",
         arrivalDate: "2024-06-20",
         departureDate: "2024-06-25",
-        photo: "/images/newyork.jpg",
+        photo: paris,
         activities: [
           {
             id: 4,
@@ -87,7 +90,7 @@ const TripVisualizationPage = () => {
         name: "Barcelona, Spain",
         arrivalDate: "2024-06-25",
         departureDate: "2024-06-30",
-        photo: "/images/sightseeing.jpg",
+        photo: barcelona,
         activities: [
           {
             id: 6,
