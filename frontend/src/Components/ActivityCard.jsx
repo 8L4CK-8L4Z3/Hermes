@@ -1,9 +1,30 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
+import PropTypes from "prop-types";
+import { getImageUrl } from "@/Utils/imageUpload";
 
 const ActivityCard = ({ image, name, alt }) => {
-  const [isHovered, setIsHovered] = useState(false)
+  const [isHovered, setIsHovered] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [isImageLoading, setIsImageLoading] = useState(true);
+
+  const handleImageError = () => {
+    setImageError(true);
+    setIsImageLoading(false);
+  };
+
+  const handleImageLoad = () => {
+    setIsImageLoading(false);
+  };
+
+  // Validate required props
+  if (!image || !name) {
+    console.error("ActivityCard: Missing required props (image or name)");
+    return null;
+  }
+
+  const imageUrl = getImageUrl(image);
 
   return (
     <div
@@ -13,16 +34,36 @@ const ActivityCard = ({ image, name, alt }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
+      {isImageLoading && (
+        <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+      )}
       <img
-        src={image || "/placeholder.svg?height=120&width=140"}
-        alt={alt}
-        className="w-full h-28 lg:h-32 object-cover"
+        src={imageError ? "/placeholder.svg?height=120&width=140" : imageUrl}
+        alt={alt || name}
+        className={`w-full h-28 lg:h-32 object-cover ${
+          isImageLoading ? "opacity-0" : "opacity-100"
+        } transition-opacity duration-200`}
+        onError={handleImageError}
+        onLoad={handleImageLoad}
+        loading="lazy"
       />
       <div className="absolute bottom-2 lg:bottom-3 left-2 lg:left-3">
-        <span className="text-white text-sm lg:text-base font-semibold drop-shadow-md">{name}</span>
+        <span className="text-white text-sm lg:text-base font-semibold drop-shadow-md">
+          {name}
+        </span>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ActivityCard
+ActivityCard.propTypes = {
+  image: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  alt: PropTypes.string,
+};
+
+ActivityCard.defaultProps = {
+  alt: "",
+};
+
+export default ActivityCard;

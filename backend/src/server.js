@@ -26,6 +26,8 @@ import destinationRoutes from "./Routes/destinationRoutes.js";
 import searchRoutes from "./Routes/searchRoutes.js";
 import tripRoutes from "./Routes/tripRoutes.js";
 import userRoutes from "./Routes/userRoutes.js";
+import activityRoutes from "./Routes/activityRoutes.js";
+import uploadRoutes from "./Routes/uploadRoutes.js";
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -76,6 +78,8 @@ app.use("/api/destinations", destinationRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/trips", tripRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/activities", activityRoutes);
+app.use("/api/upload", uploadRoutes);
 
 if (dbConnect()) {
   logger.logInfo("Server", "Database connected");
