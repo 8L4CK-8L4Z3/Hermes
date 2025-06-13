@@ -1,6 +1,16 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import api from "@/Utils/api";
 
+// Helper function to check if user is authenticated
+export const checkAuth = async () => {
+  try {
+    await api.get("/users/me");
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 // Queries
 export const useCurrentUser = () => {
   return useQuery({
@@ -16,21 +26,16 @@ export const useRefreshToken = () => {
   return useMutation({
     mutationFn: async () => {
       const { data } = await api.post("/auth/refresh-token");
-      if (data.token) {
-        localStorage.setItem("token", "Bearer " + data.token);
-      }
       return data;
     },
   });
 };
+
 // Mutations
 export const useLogin = () => {
   return useMutation({
     mutationFn: async (credentials) => {
       const { data } = await api.post("/auth/login", credentials);
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
       return data;
     },
   });
@@ -49,7 +54,6 @@ export const useLogout = () => {
   return useMutation({
     mutationFn: async () => {
       const { data } = await api.post("/auth/logout");
-      localStorage.removeItem("token");
       return data;
     },
   });
@@ -83,6 +87,7 @@ export const useVerifyEmail = () => {
     },
   });
 };
+
 export const useUpdatePassword = () => {
   return useMutation({
     mutationFn: async (passwords) => {

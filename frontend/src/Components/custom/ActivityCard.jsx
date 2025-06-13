@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import PropTypes from "prop-types";
+import { useNavigate } from "react-router-dom";
 import { getImageUrl } from "@/Utils/imageUpload";
 
 const ActivityCard = ({ image, name, alt }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
+  const navigate = useNavigate();
 
   const handleImageError = () => {
     setImageError(true);
@@ -33,6 +35,7 @@ const ActivityCard = ({ image, name, alt }) => {
       }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={() => navigate("/register")}
     >
       {isImageLoading && (
         <div className="absolute inset-0 bg-gray-200 animate-pulse" />

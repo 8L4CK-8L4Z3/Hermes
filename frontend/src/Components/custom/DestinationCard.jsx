@@ -1,9 +1,12 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { getImageUrl } from "@/Utils/imageUpload"
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { getImageUrl } from "@/Utils/imageUpload";
+
 const DestinationCard = ({ image, name, alt }) => {
-  const [isHovered, setIsHovered] = useState(false)
+  const [isHovered, setIsHovered] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <div
@@ -12,6 +15,7 @@ const DestinationCard = ({ image, name, alt }) => {
       }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={() => navigate("/register")}
     >
       <img
         src={getImageUrl(image)}
@@ -24,7 +28,7 @@ const DestinationCard = ({ image, name, alt }) => {
         </span>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default DestinationCard
+export default DestinationCard;

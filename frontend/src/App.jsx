@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { checkAuth } from "@/Stores/authStore";
 
 import Header from "@/Components/custom/Header";
 import Footer from "@/Components/custom/Footer";
@@ -33,6 +34,19 @@ import queryClient from "@/Utils/queryClient";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const isAuthenticated = await checkAuth();
+        setIsLoggedIn(isAuthenticated);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    checkAuthStatus();
+  }, []);
 
   const login = () => setIsLoggedIn(true);
   const logout = () => setIsLoggedIn(false);
@@ -46,6 +60,9 @@ function App() {
 
   // Protected Route component
   const ProtectedRoute = ({ children }) => {
+    if (isLoading) {
+      return <div>Loading...</div>;
+    }
     if (!isLoggedIn) {
       return <Navigate to="/login" />;
     }
@@ -54,12 +71,19 @@ function App() {
 
   // Admin Route component
   const AdminRoute = ({ children }) => {
+    if (isLoading) {
+      return <div>Loading...</div>;
+    }
     if (!isLoggedIn) {
       return <Navigate to="/login" />;
     }
     // Add additional admin check here if needed
     return children;
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>

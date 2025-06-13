@@ -1,30 +1,57 @@
-"use client"
+"use client";
 
-import { useContext } from "react"
-import { NavigationContext } from "@/Context/Navigate"
-import Logo from "@/Assets/Logo.svg"
+import { useContext } from "react";
+import { NavigationContext } from "@/Context/Navigate";
+import Logo from "@/Assets/Logo.svg";
 const Footer = () => {
-  const { navigate } = useContext(NavigationContext)
+  const { navigate } = useContext(NavigationContext);
 
   const footerSections = [
     {
       title: "Destinations",
       links: [
-        { name: "Europe", action: () => navigate("search", { region: "europe" }) },
+        {
+          name: "Europe",
+          action: () => navigate("search", { region: "europe" }),
+        },
         { name: "Asia", action: () => navigate("search", { region: "asia" }) },
-        { name: "Americas", action: () => navigate("search", { region: "americas" }) },
-        { name: "Africa", action: () => navigate("search", { region: "africa" }) },
-        { name: "Oceania", action: () => navigate("search", { region: "oceania" }) },
+        {
+          name: "Americas",
+          action: () => navigate("search", { region: "americas" }),
+        },
+        {
+          name: "Africa",
+          action: () => navigate("search", { region: "africa" }),
+        },
+        {
+          name: "Oceania",
+          action: () => navigate("search", { region: "oceania" }),
+        },
       ],
     },
     {
       title: "Activities",
       links: [
-        { name: "Adventure", action: () => navigate("search", { activity: "adventure" }) },
-        { name: "Cultural", action: () => navigate("search", { activity: "cultural" }) },
-        { name: "Relaxation", action: () => navigate("search", { activity: "relaxation" }) },
-        { name: "Food & Drink", action: () => navigate("search", { activity: "food" }) },
-        { name: "Wildlife", action: () => navigate("search", { activity: "wildlife" }) },
+        {
+          name: "Adventure",
+          action: () => navigate("search", { activity: "adventure" }),
+        },
+        {
+          name: "Cultural",
+          action: () => navigate("search", { activity: "cultural" }),
+        },
+        {
+          name: "Relaxation",
+          action: () => navigate("search", { activity: "relaxation" }),
+        },
+        {
+          name: "Food & Drink",
+          action: () => navigate("search", { activity: "food" }),
+        },
+        {
+          name: "Wildlife",
+          action: () => navigate("search", { activity: "wildlife" }),
+        },
       ],
     },
     {
@@ -47,7 +74,7 @@ const Footer = () => {
         { name: "Partnerships", action: () => {} },
       ],
     },
-  ]
+  ];
 
   const socialLinks = [
     {
@@ -86,7 +113,7 @@ const Footer = () => {
         </svg>
       ),
     },
-  ]
+  ];
 
   return (
     <footer className="bg-gray-900 text-white">
@@ -95,12 +122,20 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Brand Section */}
           <div className="lg:col-span-1">
-            <button onClick={() => navigate("home")} className="flex items-center space-x-3 mb-4">
-              <img src={Logo} alt="Hermes Logo" className="w-8 h-8 filter invert" />
+            <button
+              onClick={() => navigate("home")}
+              className="flex items-center space-x-3 mb-4"
+            >
+              <img
+                src={Logo}
+                alt="Hermes Logo"
+                className="w-8 h-8 filter invert"
+              />
               <span className="text-xl font-medium">Hermes</span>
             </button>
             <p className="text-gray-400 text-sm leading-relaxed mb-6">
-              Discover amazing destinations, plan unforgettable trips, and create memories that last a lifetime.
+              Discover amazing destinations, plan unforgettable trips, and
+              create memories that last a lifetime.
             </p>
             <div className="flex space-x-4">
               {socialLinks.map((social) => (
@@ -138,40 +173,26 @@ const Footer = () => {
           ))}
         </div>
 
-        {/* Newsletter Section */}
-        <div className="border-t border-gray-800 mt-12 pt-8">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold mb-2">Stay updated with travel tips</h3>
-              <p className="text-gray-400 text-sm">
-                Get the latest travel guides, destination insights, and exclusive deals delivered to your inbox.
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 lg:w-64 px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent"
-              />
-              <button className="bg-gray-700 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-gray-600 transition-all duration-200 whitespace-nowrap">
-                Subscribe
-              </button>
-            </div>
-          </div>
-        </div>
-
         {/* Bottom Footer */}
         <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-gray-400 text-sm">© 2024 Hermes. All rights reserved.</p>
+          <p className="text-gray-400 text-sm">
+            © 2024 Hermes. All rights reserved.
+          </p>
           <div className="flex items-center space-x-6 text-sm">
-            <button className="text-gray-400 hover:text-white transition-colors duration-200">Privacy Policy</button>
-            <button className="text-gray-400 hover:text-white transition-colors duration-200">Terms of Service</button>
-            <button className="text-gray-400 hover:text-white transition-colors duration-200">Cookie Policy</button>
+            <button className="text-gray-400 hover:text-white transition-colors duration-200">
+              Privacy Policy
+            </button>
+            <button className="text-gray-400 hover:text-white transition-colors duration-200">
+              Terms of Service
+            </button>
+            <button className="text-gray-400 hover:text-white transition-colors duration-200">
+              Cookie Policy
+            </button>
           </div>
         </div>
       </div>
     </footer>
-  )
-}
+  );
+};
 
-export default Footer
+export default Footer;

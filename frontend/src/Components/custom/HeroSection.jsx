@@ -1,9 +1,12 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import hero from "@/Assets/Hero.png"
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import hero from "@/Assets/Hero.png";
+
 const HeroSection = () => {
-  const [isHovered, setIsHovered] = useState(false)
+  const [isHovered, setIsHovered] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <section className="mb-16 lg:mb-20 pt-8 lg:pt-12">
@@ -15,7 +18,8 @@ const HeroSection = () => {
             the world
           </h1>
           <p className="text-base lg:text-lg text-gray-600 mb-8 leading-relaxed max-w-md mx-auto lg:mx-0">
-            Discover new destinations, plan your next trip, and share your travel experiences.
+            Discover new destinations, plan your next trip, and share your
+            travel experiences.
           </p>
           <button
             className={`bg-white border border-gray-200 text-gray-900 px-6 lg:px-8 py-3 lg:py-4 rounded-xl text-sm lg:text-base font-medium cursor-pointer transition-all duration-200 shadow-soft hover:bg-gray-50 hover:shadow-medium ${
@@ -23,6 +27,7 @@ const HeroSection = () => {
             }`}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
+            onClick={() => navigate("/register")}
           >
             Get Started
           </button>
@@ -36,7 +41,7 @@ const HeroSection = () => {
         </div>
       </div>
     </section>
-  )
-}
+  );
+};
 
-export default HeroSection
+export default HeroSection;

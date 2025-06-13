@@ -1,11 +1,17 @@
+import { useNavigate } from "react-router-dom";
 import Testimonial from "@/Components/custom/Testimonial";
 
 const PlanYourTrip = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="flex flex-col gap-8">
       <h2 className="text-3xl font-medium text-gray-900">Plan Your Trip</h2>
 
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-soft">
+      <div
+        className="bg-white border border-gray-200 rounded-2xl p-6 shadow-soft cursor-pointer hover:shadow-medium transition-shadow duration-200"
+        onClick={() => navigate("/register")}
+      >
         <div className="mb-2">
           <div className="text-lg font-medium text-gray-900 mb-2">
             Start-to-finish trip planning
