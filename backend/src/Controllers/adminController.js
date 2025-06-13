@@ -24,10 +24,34 @@ export const getStats = asyncHandler(async (req, res) => {
   const today = new Date();
   const lastMonth = new Date(today.setMonth(today.getMonth() - 1));
 
+  // Get inactive threshold from query params or default to 30 days
+  const inactiveThreshold = req.query.inactiveThreshold
+    ? new Date(req.query.inactiveThreshold)
+    : new Date(today.setDate(today.getDate() - 30));
+
+  // Count inactive users (no login or activity for 30 days)
+  const inactiveUsers = await User.countDocuments({
+    $and: [
+      { lastLogin: { $lt: inactiveThreshold } },
+      {
+        $or: [
+          { "stats.tripsCount": 0 },
+          { "stats.reviewsCount": 0 },
+          { "stats.followersCount": 0 },
+          { "stats.followingCount": 0 },
+        ],
+      },
+    ],
+  });
+
   const stats = {
     users: {
       total: await User.countDocuments(),
       new: await User.countDocuments({ createdAt: { $gte: lastMonth } }),
+      active: await User.countDocuments({
+        lastLogin: { $gte: inactiveThreshold },
+      }),
+      inactive: inactiveUsers,
       verified: await User.countDocuments({ isVerified: true }),
     },
     content: {

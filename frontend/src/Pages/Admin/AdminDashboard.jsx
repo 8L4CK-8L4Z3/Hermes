@@ -1,104 +1,125 @@
 "use client";
 
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 import UserActivityChart from "@/Components/charts/UserActivityChart";
 import UserDistributionChart from "@/Components/charts/UserDistributionChart";
+import {
+  useAdminStats,
+  useAdminAnalytics,
+  useModerationLogs,
+} from "@/Stores/adminStore";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  // const { isLoggedIn, user } = useAuth();
 
-  // if (!isLoggedIn || !user?.isAdmin) {
-  //   navigate("/");
-  //   return null;
-  // }
+  // Fetch real data using the hooks
+  const {
+    data: statsData,
+    isLoading: statsLoading,
+    error: statsError,
+  } = useAdminStats();
+  const {
+    data: analyticsData,
+    isLoading: analyticsLoading,
+    error: analyticsError,
+  } = useAdminAnalytics(7); // Last 7 days of analytics
+  const {
+    data: moderationData,
+    isLoading: moderationLoading,
+    error: moderationError,
+  } = useModerationLogs(1, 4); // Fetch first 4 moderation logs for recent activity
+
+  // TODO: Add proper loading states with skeletons
+  if (statsLoading || analyticsLoading || moderationLoading) {
+    return <div>Loading...</div>;
+  }
+
+  // TODO: Add proper error handling UI
+  if (statsError || analyticsError || moderationError) {
+    return <div>Error loading dashboard data</div>;
+  }
 
   const stats = {
-    totalUsers: 12847,
-    activeUsers: 8934,
-    totalTrips: 5672,
-    totalReviews: 23891,
-    totalDestinations: 156,
-    totalPlaces: 2847,
-    pendingReviews: 23,
-    flaggedContent: 7,
+    // User stats with fallbacks that make sense for a new system
+    totalUsers: statsData?.data?.users?.total || 0,
+    activeUsers: statsData?.data?.users?.active || 0,
+    inactiveUsers: statsData?.data?.users?.inactive || 0,
+    newUsers: statsData?.data?.users?.new || 0,
+    verifiedUsers: statsData?.data?.users?.verified || 0,
+
+    // Content stats
+    totalReviews: statsData?.data?.content?.reviews || 0,
+    totalPosts: statsData?.data?.content?.posts || 0,
+    totalComments: statsData?.data?.content?.comments || 0,
+
+    // Moderation stats
+    pendingReports: statsData?.data?.moderation?.pendingReports || 0,
+    resolvedReports: statsData?.data?.moderation?.resolvedReports || 0,
   };
 
-  const recentActivity = [
-    {
-      id: 1,
-      type: "user_registration",
-      user: "Sarah Johnson",
-      action: "New user registered",
-      timestamp: "2024-01-15T10:30:00Z",
-    },
-    {
-      id: 2,
-      type: "review_flagged",
-      user: "Marco Rossi",
-      action: "Review flagged for inappropriate content",
-      timestamp: "2024-01-15T09:45:00Z",
-    },
-    {
-      id: 3,
-      type: "destination_added",
-      user: "Admin",
-      action: "New destination added: Santorini, Greece",
-      timestamp: "2024-01-15T08:20:00Z",
-    },
-    {
-      id: 4,
-      type: "user_verified",
-      user: "Emily Chen",
-      action: "User account verified",
-      timestamp: "2024-01-15T07:15:00Z",
-    },
-  ];
+  // Calculate percentages for active/inactive users
+  const activePercentage =
+    stats.totalUsers > 0
+      ? ((stats.activeUsers / stats.totalUsers) * 100).toFixed(1)
+      : 0;
 
+  const inactivePercentage =
+    stats.totalUsers > 0
+      ? ((stats.inactiveUsers / stats.totalUsers) * 100).toFixed(1)
+      : 0;
+
+  // Transform moderation logs into recent activity format
+  const recentActivity =
+    moderationData?.data?.map((log) => ({
+      id: log._id,
+      type: log.action,
+      user: log.moderator_id?.username || "System",
+      action: `${log.action.replace(/_/g, " ")} - ${log.target_type}`,
+      timestamp: log.createdAt,
+    })) || [];
+
+  // Admin cards data - some data from backend, some are static navigation items
   const adminCards = [
     {
       title: "User Management",
       description: "Manage user accounts, roles, and permissions",
       icon: "👥",
-      page: "admin-users",
+      path: "/admin/users",
       stats: `${stats.totalUsers} total users`,
     },
     {
       title: "Content Moderation",
       description: "Review and moderate user-generated content",
       icon: "🛡️",
-      page: "admin-moderation",
-      stats: `${stats.pendingReviews} pending reviews`,
+      path: "/admin/moderation",
+      stats: `${stats.pendingReports} pending reports`,
     },
     {
       title: "Destination Management",
       description: "Manage destinations, places, and activities",
       icon: "🌍",
-      page: "admin-destinations",
-      stats: `${stats.totalDestinations} destinations`,
+      path: "/admin/destinations",
+      stats: `${statsData?.data?.content?.destinations || 0} destinations`,
     },
     {
       title: "Analytics",
       description: "View usage statistics and reports",
       icon: "📊",
-      page: "admin-analytics",
+      path: "/admin/analytics",
       stats: "Real-time insights",
     },
   ];
 
-  // Sample data for user activity chart
-  const userActivityData = [
-    { date: "2024-01-09", users: 1234, trips: 89, reviews: 156 },
-    { date: "2024-01-10", users: 1456, trips: 102, reviews: 178 },
-    { date: "2024-01-11", users: 1678, trips: 95, reviews: 134 },
-    { date: "2024-01-12", users: 1543, trips: 87, reviews: 145 },
-    { date: "2024-01-13", users: 1789, trips: 112, reviews: 189 },
-    { date: "2024-01-14", users: 1654, trips: 98, reviews: 167 },
-    { date: "2024-01-15", users: 1876, trips: 125, reviews: 203 },
-  ];
+  // Transform analytics data for the charts
+  const userActivityData =
+    analyticsData?.data?.userGrowth?.map((day) => ({
+      date: day.date,
+      users: day.newUsers,
+      trips: day.newTrips,
+      reviews: day.newReviews,
+    })) || [];
 
-  const StatCard = ({ title, value, change, icon }) => (
+  const StatCard = ({ title, value, change, icon, description }) => (
     <div className="bg-white rounded-xl p-6 shadow-soft">
       <div className="flex items-center justify-between mb-4">
         <div className="text-2xl">{icon}</div>
@@ -117,6 +138,9 @@ const AdminDashboard = () => {
         {value.toLocaleString()}
       </div>
       <div className="text-sm text-gray-600">{title}</div>
+      {description && (
+        <div className="text-xs text-gray-500 mt-1">{description}</div>
+      )}
     </div>
   );
 
@@ -138,26 +162,30 @@ const AdminDashboard = () => {
           <StatCard
             title="Total Users"
             value={stats.totalUsers}
-            change={12}
+            change={stats.newUsers}
             icon="👥"
+            description={`${stats.verifiedUsers} verified users`}
           />
           <StatCard
             title="Active Users"
             value={stats.activeUsers}
-            change={8}
+            change={Number(activePercentage)}
             icon="🟢"
+            description="Active in last 30 days"
           />
           <StatCard
-            title="Total Trips"
-            value={stats.totalTrips}
-            change={15}
-            icon="✈️"
+            title="Inactive Users"
+            value={stats.inactiveUsers}
+            change={Number(inactivePercentage)}
+            icon="⚪"
+            description="No activity in 30+ days"
           />
           <StatCard
-            title="Total Reviews"
-            value={stats.totalReviews}
-            change={-2}
-            icon="⭐"
+            title="Content Reports"
+            value={stats.pendingReports}
+            change={stats.resolvedReports}
+            icon="🚨"
+            description={`${stats.resolvedReports} reports resolved`}
           />
         </div>
 
@@ -172,7 +200,7 @@ const AdminDashboard = () => {
               {adminCards.map((card) => (
                 <button
                   key={card.title}
-                  onClick={() => navigate(card.page)}
+                  onClick={() => navigate(card.path)}
                   className="bg-white rounded-xl p-6 shadow-soft hover:shadow-medium transition-shadow duration-200 group text-left"
                 >
                   <div className="text-3xl mb-4">{card.icon}</div>
@@ -211,11 +239,11 @@ const AdminDashboard = () => {
                   >
                     <div
                       className={`w-2 h-2 rounded-full mt-2 ${
-                        activity.type === "user_registration"
-                          ? "bg-green-500"
-                          : activity.type === "review_flagged"
+                        activity.type.includes("ban")
                           ? "bg-red-500"
-                          : activity.type === "destination_added"
+                          : activity.type.includes("unban")
+                          ? "bg-green-500"
+                          : activity.type.includes("moderate")
                           ? "bg-blue-500"
                           : "bg-yellow-500"
                       }`}
@@ -235,7 +263,7 @@ const AdminDashboard = () => {
                 ))}
               </div>
               <button
-                onClick={() => navigate("admin-activity")}
+                onClick={() => navigate("/admin/moderation")}
                 className="block text-center text-sm text-gray-600 hover:text-gray-900 mt-4 pt-4 border-t border-gray-100 w-full"
               >
                 View all activity →
@@ -263,27 +291,36 @@ const AdminDashboard = () => {
             Quick Actions
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-left">
+            <button
+              onClick={() => navigate("/admin/moderation")}
+              className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-left"
+            >
               <span className="text-xl">🚨</span>
               <div>
                 <div className="font-medium text-gray-900">
                   Review Flagged Content
                 </div>
                 <div className="text-sm text-gray-600">
-                  {stats.flaggedContent} items pending
+                  {stats.pendingReports} items pending
                 </div>
               </div>
             </button>
-            <button className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-left">
+            <button
+              onClick={() => navigate("/admin/moderation")}
+              className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-left"
+            >
               <span className="text-xl">✅</span>
               <div>
-                <div className="font-medium text-gray-900">Approve Reviews</div>
+                <div className="font-medium text-gray-900">Approve Reports</div>
                 <div className="text-sm text-gray-600">
-                  {stats.pendingReviews} reviews pending
+                  {stats.resolvedReports} reports resolved
                 </div>
               </div>
             </button>
-            <button className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-left">
+            <button
+              onClick={() => navigate("/admin/users")}
+              className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-left"
+            >
               <span className="text-xl">📧</span>
               <div>
                 <div className="font-medium text-gray-900">

@@ -6,7 +6,14 @@ export const useAdminStats = () => {
   return useQuery({
     queryKey: ["admin", "stats"],
     queryFn: async () => {
-      const { data } = await api.get("/admin/stats");
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now.setDate(now.getDate() - 30));
+
+      const { data } = await api.get("/admin/stats", {
+        params: {
+          inactiveThreshold: thirtyDaysAgo.toISOString(),
+        },
+      });
       return data;
     },
   });
@@ -36,11 +43,18 @@ export const useModerationLogs = (page = 1, limit = 10) => {
   });
 };
 
-export const useAdminAnalytics = () => {
+export const useAdminAnalytics = (days = 30) => {
   return useQuery({
-    queryKey: ["admin", "analytics"],
+    queryKey: ["admin", "analytics", days],
     queryFn: async () => {
-      const { data } = await api.post("/admin/analytics");
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      const { data } = await api.post("/admin/analytics", {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+      });
       return data;
     },
   });
