@@ -3,11 +3,136 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useCreateTrip } from "@/Stores/tripStore";
+import { usePopularDestinations } from "@/Stores/destinationStore";
+import { usePopularActivities } from "@/Stores/activityStore";
+import { getImageUrl } from "@/Utils/imageUpload";
+
+const DestinationCard = ({ dest, onAdd, isAdded }) => {
+  const [isImageLoading, setIsImageLoading] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleImageLoad = () => {
+    setIsImageLoading(false);
+  };
+
+  return (
+    <div
+      className={`border border-gray-200 rounded-lg overflow-hidden hover:shadow-medium transition-all duration-200 ${
+        isHovered ? "transform -translate-y-0.5" : ""
+      }`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="relative aspect-w-16 aspect-h-9">
+        {isImageLoading && (
+          <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+        )}
+        <img
+          src={getImageUrl(dest.images) || "/placeholder.svg"}
+          alt={dest.name || "Destination"}
+          className={`w-full h-32 object-cover ${
+            isImageLoading ? "opacity-0" : "opacity-100"
+          } transition-opacity duration-200`}
+          onLoad={handleImageLoad}
+          loading="lazy"
+          crossOrigin="anonymous"
+        />
+      </div>
+      <div className="p-4">
+        <div className="flex flex-col">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="font-medium text-gray-900">
+              {dest.name || "Unnamed Destination"}
+            </h4>
+            <button
+              onClick={() => onAdd(dest)}
+              disabled={isAdded}
+              className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                isAdded
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-gray-900 text-white hover:bg-gray-800"
+              }`}
+            >
+              {isAdded ? "Added" : "Add"}
+            </button>
+          </div>
+          <p className="text-sm text-gray-600">{dest.location}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ActivityCard = ({ activity, onToggle, isSelected }) => {
+  const [isImageLoading, setIsImageLoading] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleImageLoad = () => {
+    setIsImageLoading(false);
+  };
+
+  return (
+    <div
+      className={`border border-gray-200 rounded-lg overflow-hidden hover:shadow-medium transition-all duration-200 ${
+        isHovered ? "transform -translate-y-0.5" : ""
+      }`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="relative aspect-w-16 aspect-h-9">
+        {isImageLoading && (
+          <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+        )}
+        <img
+          src={getImageUrl(activity.image) || "/placeholder.svg"}
+          alt={activity.name || "Activity"}
+          className={`w-full h-32 object-cover ${
+            isImageLoading ? "opacity-0" : "opacity-100"
+          } transition-opacity duration-200`}
+          onLoad={handleImageLoad}
+          loading="lazy"
+          crossOrigin="anonymous"
+        />
+      </div>
+      <div className="p-4">
+        <div className="flex flex-col">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h4 className="font-medium text-gray-900">
+                {activity.name || "Unnamed Activity"}
+              </h4>
+              <p className="text-sm text-gray-600">
+                {activity.popularity ? `${activity.popularity}% Popular` : ""}
+              </p>
+            </div>
+            <button
+              onClick={() => onToggle(activity)}
+              className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                isSelected
+                  ? "bg-gray-900 text-white"
+                  : "bg-gray-100 text-gray-900 hover:bg-gray-200"
+              }`}
+            >
+              {isSelected ? "Selected" : "Select"}
+            </button>
+          </div>
+          {activity.description && (
+            <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+              {activity.description}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const TripPlanningPage = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn } = useAuth();
   const [activeStep, setActiveStep] = useState(1);
+  const [error, setError] = useState(null);
   const [tripData, setTripData] = useState({
     title: "",
     description: "",
@@ -17,19 +142,22 @@ const TripPlanningPage = () => {
     activities: [],
     budget: "",
     visibility: "private",
+    searchQuery: "",
   });
+
+  // Fetch popular destinations and activities
+  const { data: popularDestinations, isLoading: isLoadingDestinations } =
+    usePopularDestinations(1, 10);
+  const { data: popularActivities, isLoading: isLoadingActivities } =
+    usePopularActivities(8);
+
+  // Mutations for trip operations
+  const createTrip = useCreateTrip();
 
   if (!isLoggedIn) {
     navigate("/login");
     return null;
   }
-
-  const mockDestinations = [
-    { id: 1, name: "Paris, France", photo: "/images/rome.jpg" },
-    { id: 2, name: "Tokyo, Japan", photo: "/images/japan.jpg" },
-    { id: 3, name: "New York, USA", photo: "/images/newyork.jpg" },
-    { id: 4, name: "Rome, Italy", photo: "/images/rome.jpg" },
-  ];
 
   const steps = [
     { id: 1, title: "Trip Details", icon: "📝" },
@@ -43,7 +171,7 @@ const TripPlanningPage = () => {
   };
 
   const addDestination = (destination) => {
-    if (!tripData.destinations.find((d) => d.id === destination.id)) {
+    if (!tripData.destinations.find((d) => d._id === destination._id)) {
       setTripData((prev) => ({
         ...prev,
         destinations: [...prev.destinations, destination],
@@ -54,8 +182,55 @@ const TripPlanningPage = () => {
   const removeDestination = (destinationId) => {
     setTripData((prev) => ({
       ...prev,
-      destinations: prev.destinations.filter((d) => d.id !== destinationId),
+      destinations: prev.destinations.filter((d) => d._id !== destinationId),
     }));
+  };
+
+  const handleSaveTrip = async () => {
+    try {
+      setError(null);
+
+      // Validate required fields
+      if (!tripData.title) {
+        setError("Please enter a trip title");
+        return;
+      }
+      if (!tripData.startDate || !tripData.endDate) {
+        setError("Please select both start and end dates");
+        return;
+      }
+      if (tripData.destinations.length === 0) {
+        setError("Please select at least one destination");
+        return;
+      }
+
+      // Create the trip with destinations included
+      const newTrip = await createTrip.mutateAsync({
+        title: tripData.title,
+        description: tripData.description,
+        start_date: tripData.startDate,
+        end_date: tripData.endDate,
+        budget: tripData.budget,
+        visibility: tripData.visibility,
+        activities: tripData.activities,
+        destinations: tripData.destinations.map((dest) => dest._id), // Include destination IDs
+      });
+
+      navigate(`/trips/${newTrip.id}`);
+    } catch (error) {
+      console.error("Error saving trip:", error);
+      // Handle validation errors specifically
+      if (error.response?.data?.error?.errors) {
+        const errors = error.response.data.error.errors;
+        const errorMessages = errors.map((err) => err.msg).join(", ");
+        setError(errorMessages);
+      } else {
+        setError(
+          error.response?.data?.message ||
+            "Failed to save trip. Please try again."
+        );
+      }
+    }
   };
 
   return (
@@ -211,6 +386,49 @@ const TripPlanningPage = () => {
                 />
               </div>
 
+              {/* Available Destinations */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  Popular Destinations
+                </h3>
+                {isLoadingDestinations ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {[1, 2, 3, 4].map((index) => (
+                      <div key={index} className="animate-pulse">
+                        <div className="bg-gray-200 h-32 rounded-t-lg"></div>
+                        <div className="p-4 border border-gray-200 border-t-0 rounded-b-lg">
+                          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : popularDestinations?.data ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {popularDestinations.data
+                      .filter((item) =>
+                        item?.destination_id?.name
+                          ?.toLowerCase()
+                          .includes(tripData.searchQuery?.toLowerCase() || "")
+                      )
+                      .map((item) => (
+                        <DestinationCard
+                          key={item.destination_id._id}
+                          dest={item.destination_id}
+                          onAdd={addDestination}
+                          isAdded={tripData.destinations.find(
+                            (d) => d._id === item.destination_id._id
+                          )}
+                        />
+                      ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600">No destinations available</p>
+                  </div>
+                )}
+              </div>
+
               {/* Selected Destinations */}
               {tripData.destinations.length > 0 && (
                 <div>
@@ -220,19 +438,24 @@ const TripPlanningPage = () => {
                   <div className="space-y-3">
                     {tripData.destinations.map((dest, index) => (
                       <div
-                        key={dest.id}
+                        key={dest._id}
                         className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
                       >
                         <div className="flex items-center gap-3">
                           <span className="w-6 h-6 bg-gray-900 text-white rounded-full flex items-center justify-center text-sm font-medium">
                             {index + 1}
                           </span>
-                          <span className="font-medium text-gray-900">
-                            {dest.name}
-                          </span>
+                          <div>
+                            <span className="font-medium text-gray-900">
+                              {dest.name || "Unnamed Destination"}
+                            </span>
+                            <p className="text-sm text-gray-600">
+                              {dest.location}
+                            </p>
+                          </div>
                         </div>
                         <button
-                          onClick={() => removeDestination(dest.id)}
+                          onClick={() => removeDestination(dest._id)}
                           className="text-red-600 hover:text-red-800 transition-colors duration-200"
                         >
                           Remove
@@ -242,59 +465,6 @@ const TripPlanningPage = () => {
                   </div>
                 </div>
               )}
-
-              {/* Available Destinations */}
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Popular Destinations
-                </h3>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {mockDestinations
-                    .filter((dest) =>
-                      dest.name
-                        .toLowerCase()
-                        .includes(tripData.searchQuery.toLowerCase())
-                    )
-                    .map((dest) => (
-                      <div
-                        key={dest.id}
-                        className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-medium transition-shadow duration-200"
-                      >
-                        <img
-                          src={dest.photo || "/placeholder.svg"}
-                          alt={dest.name}
-                          className="w-full h-32 object-cover"
-                        />
-                        <div className="p-4">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-medium text-gray-900">
-                              {dest.name}
-                            </h4>
-                            <button
-                              onClick={() => addDestination(dest)}
-                              disabled={tripData.destinations.find(
-                                (d) => d.id === dest.id
-                              )}
-                              className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                                tripData.destinations.find(
-                                  (d) => d.id === dest.id
-                                )
-                                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                  : "bg-gray-900 text-white hover:bg-gray-800"
-                              }`}
-                            >
-                              {tripData.destinations.find(
-                                (d) => d.id === dest.id
-                              )
-                                ? "Added"
-                                : "Add"}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
             </div>
           )}
 
@@ -303,12 +473,46 @@ const TripPlanningPage = () => {
               <h2 className="text-xl font-semibold text-gray-900 mb-6">
                 Activities & Interests
               </h2>
-              <div className="text-center py-12">
-                <div className="text-gray-400 mb-4 text-4xl">🎯</div>
-                <p className="text-gray-600">
-                  Activity selection interface would be implemented here
-                </p>
-              </div>
+              {isLoadingActivities ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[1, 2, 3, 4].map((index) => (
+                    <div key={index} className="animate-pulse">
+                      <div className="bg-gray-200 h-32 rounded-t-lg"></div>
+                      <div className="p-4 border border-gray-200 border-t-0 rounded-b-lg">
+                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : popularActivities?.data ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {popularActivities.data.map((activity) => (
+                    <ActivityCard
+                      key={activity._id}
+                      activity={activity}
+                      onToggle={(activity) => {
+                        setTripData((prev) => ({
+                          ...prev,
+                          activities: prev.activities.includes(activity._id)
+                            ? prev.activities.filter(
+                                (id) => id !== activity._id
+                              )
+                            : [...prev.activities, activity._id],
+                        }));
+                      }}
+                      isSelected={tripData.activities.includes(activity._id)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 mb-4 text-4xl">🎯</div>
+                  <p className="text-gray-600">
+                    No activities available at the moment
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -346,12 +550,18 @@ const TripPlanningPage = () => {
                     Destinations ({tripData.destinations.length})
                   </h3>
                   {tripData.destinations.map((dest, index) => (
-                    <p key={dest.id}>
-                      {index + 1}. {dest.name}
+                    <p key={dest._id}>
+                      {index + 1}. {dest.name || "Unnamed Destination"}
                     </p>
                   ))}
                 </div>
               </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600">{error}</p>
             </div>
           )}
 
@@ -378,10 +588,11 @@ const TripPlanningPage = () => {
               </button>
             ) : (
               <button
-                onClick={() => navigate("profile")}
-                className="px-6 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200"
+                onClick={handleSaveTrip}
+                disabled={createTrip.isLoading}
+                className="px-6 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                Save Trip
+                {createTrip.isLoading ? "Saving..." : "Save Trip"}
               </button>
             )}
           </div>

@@ -49,6 +49,7 @@ export const Header = () => {
     { name: "Explore", page: "/search" },
     { name: "My Trips", page: "/profile" },
     { name: "Feed", page: "/feed" },
+    { name: "Plan Trip", page: "/plan-trip" },
   ];
 
   // Admin navigation items
@@ -60,12 +61,18 @@ export const Header = () => {
     { name: "Analytics", page: "/admin/analytics" },
   ];
 
-  // Determine which nav items to show based on actual user role
-  const navItems = isLoggedIn
-    ? userData?.isAdmin
-      ? adminNavItems
-      : loggedInNavItems
-    : basicNavItems;
+  // Determine which nav items to show based on user role
+  const getNavItems = () => {
+    if (!isLoggedIn) return basicNavItems;
+
+    if (userData?.isAdmin) {
+      return [...loggedInNavItems, ...adminNavItems];
+    }
+
+    return [...loggedInNavItems];
+  };
+
+  const navItems = getNavItems();
 
   // Helper function to handle navigation
   const handleNavigation = (item) => {
