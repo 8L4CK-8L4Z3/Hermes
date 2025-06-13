@@ -8,7 +8,17 @@ const destinationSchema = z.object({
     .max(100, "Destination name must be between 2 and 100 characters"),
   description: z.string().trim().min(1, "Description is required"),
   location: z.string().trim().min(1, "Location is required"),
-  photo: z.string().url("Photo must be a valid URL").optional(),
+  images: z
+    .array(
+      z.object({
+        url: z.string().optional(),
+        caption: z.string().optional(),
+        is_primary: z.boolean().optional(),
+        uploaded_at: z.date().optional(),
+      })
+    )
+    .optional()
+    .default([]),
 });
 
 export default destinationSchema;

@@ -68,6 +68,18 @@ export const useDestinationPlaces = (destinationId, page = 1, limit = 10) => {
   });
 };
 
+export const useAllDestinations = (page = 1, limit = 10) => {
+  return useQuery({
+    queryKey: ["destinations", "all", { page, limit }],
+    queryFn: async () => {
+      const { data } = await api.get("/destinations/search", {
+        params: { page, limit },
+      });
+      return data;
+    },
+  });
+};
+
 // Mutations (Admin only)
 export const useCreateDestination = () => {
   const queryClient = useQueryClient();
