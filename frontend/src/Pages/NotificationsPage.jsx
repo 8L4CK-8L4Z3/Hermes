@@ -3,148 +3,66 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  useNotifications,
+  useNotificationsByType,
+  useMarkAsRead,
+  useMarkAllAsRead,
+  useDeleteNotification,
+  useUnreadCount,
+} from "../Stores/notificationStore";
 
 const NotificationsPage = () => {
   const navigate = useNavigate();
   const { isLoggedIn } = useAuth();
   const [filter, setFilter] = useState("all");
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: "trip",
-      title: "Trip Reminder",
-      message:
-        "Your trip to Tokyo starts in 3 days! Don't forget to check your itinerary.",
-      timestamp: "2024-01-15T10:30:00Z",
-      read: false,
-      icon: "✈️",
-      color: "bg-blue-100 text-blue-800",
-    },
-    {
-      id: 2,
-      type: "social",
-      title: "New Follower",
-      message: "Sarah Johnson started following you.",
-      timestamp: "2024-01-15T09:15:00Z",
-      read: false,
-      icon: "👤",
-      color: "bg-green-100 text-green-800",
-    },
-    {
-      id: 3,
-      type: "review",
-      title: "Review Request",
-      message: "How was your stay at Grand Hotel Tokyo? Share your experience!",
-      timestamp: "2024-01-14T18:45:00Z",
-      read: true,
-      icon: "⭐",
-      color: "bg-yellow-100 text-yellow-800",
-    },
-    {
-      id: 4,
-      type: "booking",
-      title: "Booking Confirmed",
-      message: "Your hotel reservation at Sakura Inn has been confirmed.",
-      timestamp: "2024-01-14T14:20:00Z",
-      read: true,
-      icon: "🏨",
-      color: "bg-purple-100 text-purple-800",
-    },
-    {
-      id: 5,
-      type: "system",
-      title: "Account Security",
-      message: "Your password was successfully updated.",
-      timestamp: "2024-01-13T16:30:00Z",
-      read: true,
-      icon: "🔒",
-      color: "bg-gray-100 text-gray-800",
-    },
-    {
-      id: 6,
-      type: "promotion",
-      title: "Special Offer",
-      message: "Get 20% off your next booking! Limited time offer.",
-      timestamp: "2024-01-13T12:00:00Z",
-      read: false,
-      icon: "🎉",
-      color: "bg-red-100 text-red-800",
-    },
-    {
-      id: 7,
-      type: "social",
-      title: "Photo Liked",
-      message: "Mike Chen liked your photo from Kyoto Temple.",
-      timestamp: "2024-01-12T20:15:00Z",
-      read: true,
-      icon: "❤️",
-      color: "bg-pink-100 text-pink-800",
-    },
-    {
-      id: 8,
-      type: "trip",
-      title: "Weather Alert",
-      message: "Rain expected in your destination. Pack accordingly!",
-      timestamp: "2024-01-12T08:00:00Z",
-      read: true,
-      icon: "🌧️",
-      color: "bg-blue-100 text-blue-800",
-    },
-  ]);
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
+  // Fetch notifications based on filter
+  const {
+    data: notificationsData,
+    isLoading,
+    error,
+  } = filter === "all"
+    ? useNotifications(page, limit)
+    : useNotificationsByType(filter, page, limit);
+
+  // Get unread count
+  const { data: unreadCountData } = useUnreadCount();
+
+  // Mutations
+  const markAsReadMutation = useMarkAsRead();
+  const markAllAsReadMutation = useMarkAllAsRead();
+  const deleteNotificationMutation = useDeleteNotification();
+
+  const notifications = notificationsData?.data || [];
+  const totalPages = notificationsData?.meta?.pages || 1;
+  const unreadCount = unreadCountData?.data?.count || 0;
 
   const filterOptions = [
-    { value: "all", label: "All Notifications", count: notifications.length },
     {
-      value: "unread",
-      label: "Unread",
-      count: notifications.filter((n) => !n.read).length,
+      value: "all",
+      label: "All Notifications",
+      count: notificationsData?.meta?.total || 0,
     },
-    {
-      value: "trip",
-      label: "Trips",
-      count: notifications.filter((n) => n.type === "trip").length,
-    },
-    {
-      value: "social",
-      label: "Social",
-      count: notifications.filter((n) => n.type === "social").length,
-    },
-    {
-      value: "booking",
-      label: "Bookings",
-      count: notifications.filter((n) => n.type === "booking").length,
-    },
-    {
-      value: "system",
-      label: "System",
-      count: notifications.filter((n) => n.type === "system").length,
-    },
+    { value: "unread", label: "Unread", count: unreadCount },
+    { value: "trip", label: "Trips" },
+    { value: "social", label: "Social" },
+    { value: "booking", label: "Bookings" },
+    { value: "system", label: "System" },
   ];
 
-  const filteredNotifications = notifications.filter((notification) => {
-    if (filter === "all") return true;
-    if (filter === "unread") return !notification.read;
-    return notification.type === filter;
-  });
-
-  const markAsRead = (id) => {
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.id === id ? { ...notification, read: true } : notification
-      )
-    );
+  const handleMarkAsRead = (id) => {
+    markAsReadMutation.mutate(id);
   };
 
-  const markAllAsRead = () => {
-    setNotifications((prev) =>
-      prev.map((notification) => ({ ...notification, read: true }))
-    );
+  const handleMarkAllAsRead = () => {
+    markAllAsReadMutation.mutate();
   };
 
-  const deleteNotification = (id) => {
-    setNotifications((prev) =>
-      prev.filter((notification) => notification.id !== id)
-    );
+  const handleDeleteNotification = (id) => {
+    deleteNotificationMutation.mutate(id);
   };
 
   const formatTimestamp = (timestamp) => {
@@ -158,9 +76,43 @@ const NotificationsPage = () => {
     return date.toLocaleDateString();
   };
 
+  // Get notification icon and color based on type
+  const getNotificationStyle = (type) => {
+    const styles = {
+      trip: { icon: "✈️", color: "bg-blue-100 text-blue-800" },
+      social: { icon: "👤", color: "bg-green-100 text-green-800" },
+      review: { icon: "⭐", color: "bg-yellow-100 text-yellow-800" },
+      booking: { icon: "🏨", color: "bg-purple-100 text-purple-800" },
+      system: { icon: "🔒", color: "bg-gray-100 text-gray-800" },
+      default: { icon: "📢", color: "bg-gray-100 text-gray-800" },
+    };
+    return styles[type] || styles.default;
+  };
+
   if (!isLoggedIn) {
     navigate("/login");
     return null;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading notifications...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center text-red-600">
+          <p>Error loading notifications. Please try again later.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -172,8 +124,9 @@ const NotificationsPage = () => {
             <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
             <div className="flex gap-3">
               <button
-                onClick={markAllAsRead}
+                onClick={handleMarkAllAsRead}
                 className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                disabled={markAllAsReadMutation.isLoading}
               >
                 Mark all as read
               </button>
@@ -191,7 +144,10 @@ const NotificationsPage = () => {
             {filterOptions.map((option) => (
               <button
                 key={option.value}
-                onClick={() => setFilter(option.value)}
+                onClick={() => {
+                  setFilter(option.value);
+                  setPage(1);
+                }}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   filter === option.value
                     ? "bg-blue-600 text-white"
@@ -217,7 +173,7 @@ const NotificationsPage = () => {
 
         {/* Notifications List */}
         <div className="space-y-4">
-          {filteredNotifications.length === 0 ? (
+          {notifications.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">📭</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
@@ -230,74 +186,85 @@ const NotificationsPage = () => {
               </p>
             </div>
           ) : (
-            filteredNotifications.map((notification) => (
-              <div
-                key={notification.id}
-                className={`bg-white rounded-lg shadow-sm border p-6 transition-all hover:shadow-md ${
-                  !notification.read ? "border-l-4 border-l-blue-500" : ""
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-4 flex-1">
-                    <div className={`p-2 rounded-full ${notification.color}`}>
-                      <span className="text-lg">{notification.icon}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-gray-900">
-                          {notification.title}
-                        </h3>
-                        {!notification.read && (
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        )}
+            notifications.map((notification) => {
+              const style = getNotificationStyle(notification.type);
+              return (
+                <div
+                  key={notification._id}
+                  className={`bg-white rounded-lg shadow-sm border p-6 transition-all hover:shadow-md ${
+                    !notification.is_read ? "border-l-4 border-l-blue-500" : ""
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start space-x-4 flex-1">
+                      <div className={`p-2 rounded-full ${style.color}`}>
+                        <span className="text-lg">{style.icon}</span>
                       </div>
-                      <p className="text-gray-600 mb-2">
-                        {notification.message}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {formatTimestamp(notification.timestamp)}
-                      </p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-gray-900">
+                            {notification.data.title || notification.type}
+                          </h3>
+                          {!notification.is_read && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          )}
+                        </div>
+                        <p className="text-gray-600 mb-2">
+                          {notification.data.message}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {formatTimestamp(notification.createdAt)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-2 ml-4">
-                    {!notification.read && (
+                    <div className="flex items-center gap-2 ml-4">
+                      {!notification.is_read && (
+                        <button
+                          onClick={() => handleMarkAsRead(notification._id)}
+                          className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                          disabled={markAsReadMutation.isLoading}
+                        >
+                          Mark as read
+                        </button>
+                      )}
                       <button
-                        onClick={() => markAsRead(notification.id)}
-                        className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                        onClick={() =>
+                          handleDeleteNotification(notification._id)
+                        }
+                        className="text-gray-400 hover:text-red-500 transition-colors"
+                        disabled={deleteNotificationMutation.isLoading}
                       >
-                        Mark as read
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
                       </button>
-                    )}
-                    <button
-                      onClick={() => deleteNotification(notification.id)}
-                      className="text-gray-400 hover:text-red-500 transition-colors"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
-        {/* Load More Button */}
-        {filteredNotifications.length > 0 && (
+        {/* Pagination */}
+        {notifications.length > 0 && totalPages > 1 && (
           <div className="text-center mt-8">
-            <button className="text-blue-600 hover:text-blue-700 font-medium">
+            <button
+              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={page >= totalPages}
+              className="text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               Load more notifications
             </button>
           </div>

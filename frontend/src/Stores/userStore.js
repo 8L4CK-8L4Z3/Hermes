@@ -6,9 +6,37 @@ export const useUserProfile = (userId) => {
   return useQuery({
     queryKey: ["user", userId],
     queryFn: async () => {
-      const { data } = await api.get(`/users/profile/${userId}`);
+      const { data } = await api.get(`/users/profile/${userId}`, {
+        params: {
+          include: [
+            "stats",
+            "preferences",
+            "isAdmin",
+            "isMod",
+            "isVerified",
+            "lastLogin",
+          ],
+        },
+      });
       return data;
     },
+    select: (data) => ({
+      ...data,
+      stats: data.stats || {
+        tripsCount: 0,
+        reviewsCount: 0,
+        followersCount: 0,
+        followingCount: 0,
+      },
+      preferences: data.preferences || {
+        language: "en",
+        notifications: {
+          email: true,
+          push: true,
+        },
+      },
+    }),
+    staleTime: 1000 * 60 * 5,
   });
 };
 
@@ -33,22 +61,41 @@ export const useUserFollowing = (userId) => {
 };
 
 export const useUserStats = (userId) => {
+  const { data: profile } = useUserProfile(userId);
+
   return useQuery({
     queryKey: ["userStats", userId],
     queryFn: async () => {
+      if (profile?.stats) {
+        return profile.stats;
+      }
       const { data } = await api.get(`/users/${userId}/stats`);
-      return data;
+      return (
+        data || {
+          tripsCount: 0,
+          reviewsCount: 0,
+          followersCount: 0,
+          followingCount: 0,
+        }
+      );
     },
+    enabled: !profile?.stats,
   });
 };
 
 export const useUserActivity = (userId) => {
+  const { data: profile } = useUserProfile(userId);
+
   return useQuery({
     queryKey: ["userActivity", userId],
     queryFn: async () => {
+      if (profile?.activity) {
+        return profile.activity;
+      }
       const { data } = await api.get(`/users/${userId}/activity`);
       return data;
     },
+    enabled: !profile?.activity,
   });
 };
 
@@ -68,7 +115,20 @@ export const useUpdateProfile = () => {
 
   return useMutation({
     mutationFn: async (profileData) => {
-      const { data } = await api.put("/users/profile", profileData);
+      // Only allow updating fields that are in the User model
+      const allowedFields = {
+        username: profileData.username,
+        email: profileData.email,
+        bio: profileData.bio,
+        ...(profileData.preferences && {
+          preferences: {
+            language: profileData.preferences.language,
+            notifications: profileData.preferences.notifications,
+          },
+        }),
+      };
+
+      const { data } = await api.put("/users/profile", allowedFields);
       return data;
     },
     onSuccess: (data) => {
@@ -98,11 +158,21 @@ export const useUpdatePreferences = () => {
 
   return useMutation({
     mutationFn: async (preferences) => {
-      const { data } = await api.put("/users/preferences", preferences);
+      // Match the User model preferences structure
+      const validPreferences = {
+        language: preferences.language || "en",
+        notifications: {
+          email: preferences.notifications?.email ?? true,
+          push: preferences.notifications?.push ?? true,
+        },
+      };
+
+      const { data } = await api.put("/users/preferences", validPreferences);
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["currentUser"]);
+      queryClient.invalidateQueries(["userPreferences"]);
     },
   });
 };
@@ -152,12 +222,18 @@ export const useUpdateUserStats = () => {
 };
 
 export const useUserPreferences = () => {
+  const { data: profile } = useCurrentUser();
+
   return useQuery({
     queryKey: ["userPreferences"],
     queryFn: async () => {
+      if (profile?.preferences) {
+        return profile.preferences;
+      }
       const { data } = await api.get("/users/preferences");
       return data;
     },
+    enabled: !profile?.preferences,
   });
 };
 

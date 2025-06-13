@@ -83,6 +83,14 @@ function AppContent() {
                     }
                   />
                   <Route
+                    path="/profile/:userId"
+                    element={
+                      <ProtectedRoute>
+                        <ProfilePage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
                     path="/plan-trip"
                     element={
                       <ProtectedRoute>

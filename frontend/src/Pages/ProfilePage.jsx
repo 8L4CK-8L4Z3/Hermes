@@ -1,66 +1,88 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
+import { useFollowers, useFollowing } from "@/Stores/followStore";
+import { checkAuth } from "@/Stores/authStore";
 
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState("trips");
-  const [isFollowing, setIsFollowing] = useState(false);
+  const [authState, setAuthState] = useState({ isLoading: true, user: null });
   const navigate = useNavigate();
-  const { isLoggedIn, user } = useAuth();
 
-  if (!isLoggedIn) {
-    navigate("/login");
+  // Check auth and get user data on mount
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const { isAuthenticated, user } = await checkAuth();
+        setAuthState({ isLoading: false, user });
+
+        if (!isAuthenticated) {
+          navigate("/login");
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error);
+        setAuthState({ isLoading: false, user: null });
+        navigate("/login");
+      }
+    };
+
+    initAuth();
+  }, [navigate]);
+
+  // Fetch followers/following data with pagination only when we have user data
+  const { data: followersData } = useFollowers(
+    authState.user?.data?._id,
+    1,
+    10,
+    {
+      enabled: !!authState.user?.data?._id,
+      retry: false,
+    }
+  );
+
+  const { data: followingData } = useFollowing(
+    authState.user?.data?._id,
+    1,
+    10,
+    {
+      enabled: !!authState.user?.data?._id,
+      retry: false,
+    }
+  );
+
+  // Show loading state while checking auth
+  if (authState.isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[80vh]">
+        Loading...
+      </div>
+    );
+  }
+
+  // Return null if not authenticated (will redirect)
+  if (!authState.user) {
     return null;
   }
 
+  const userData = authState.user.data;
+
   const tabs = [
-    { id: "trips", label: "Trips", count: 12 },
-    { id: "reviews", label: "Reviews", count: 28 },
-    { id: "followers", label: "Followers", count: 156 },
-    { id: "following", label: "Following", count: 89 },
-  ];
-
-  const mockTrips = [
+    { id: "trips", label: "Trips", count: userData.stats?.tripsCount || 0 },
     {
-      id: 1,
-      title: "European Adventure",
-      destinations: ["Paris", "Rome", "Barcelona"],
-      startDate: "2024-06-15",
-      endDate: "2024-06-30",
-      status: "completed",
-      isPublic: true,
-      photo: "/images/rome.jpg",
+      id: "reviews",
+      label: "Reviews",
+      count: userData.stats?.reviewsCount || 0,
     },
     {
-      id: 2,
-      title: "Japan Discovery",
-      destinations: ["Tokyo", "Kyoto", "Osaka"],
-      startDate: "2024-09-10",
-      endDate: "2024-09-25",
-      status: "planned",
-      isPublic: true,
-      photo: "/images/japan.jpg",
-    },
-  ];
-
-  const mockReviews = [
-    {
-      id: 1,
-      placeName: "Colosseum",
-      rating: 5,
-      comment: "Absolutely breathtaking! A must-visit when in Rome.",
-      visitDate: "2024-06-20",
-      photos: ["/images/sightseeing.jpg"],
+      id: "followers",
+      label: "Followers",
+      count: userData.stats?.followersCount || 0,
     },
     {
-      id: 2,
-      placeName: "Central Park",
-      rating: 4,
-      comment: "Beautiful park in the heart of NYC. Perfect for morning jogs.",
-      visitDate: "2024-05-15",
-      photos: ["/images/newyork.jpg"],
+      id: "following",
+      label: "Following",
+      count: userData.stats?.followingCount || 0,
     },
   ];
 
@@ -70,41 +92,38 @@ const ProfilePage = () => {
         {/* Profile Header */}
         <div className="bg-white rounded-2xl p-6 lg:p-8 shadow-soft mb-8">
           <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-            <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-full bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center text-white text-2xl lg:text-3xl font-semibold">
-              JD
+            <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-full overflow-hidden">
+              {userData.image && userData.image !== "default.jpg" ? (
+                <img
+                  src={userData.image}
+                  alt={userData.username || "Profile"}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center text-white text-2xl lg:text-3xl font-semibold">
+                  {(userData.username || "U")?.charAt(0)?.toUpperCase()}
+                </div>
+              )}
             </div>
 
             <div className="flex-1">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div>
                   <h1 className="text-2xl lg:text-3xl font-semibold text-gray-900 mb-2">
-                    John Doe
+                    {userData.username || "Loading..."}
                   </h1>
                   <p className="text-gray-600 mb-3">
-                    Passionate traveler exploring the world one destination at a
-                    time ✈️
+                    {userData.bio || "No bio yet"}
                   </p>
                   <div className="flex items-center gap-4 text-sm text-gray-500">
-                    <span>📍 New York, USA</span>
-                    <span>📅 Joined March 2023</span>
-                    <span>✅ Verified</span>
+                    <span>
+                      📅 Joined{" "}
+                      {new Date(userData.createdAt).toLocaleDateString()}
+                    </span>
+                    {userData.isVerified && <span>✅ Verified</span>}
+                    {userData.isAdmin && <span>👑 Admin</span>}
+                    {userData.isMod && <span>🛡️ Moderator</span>}
                   </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setIsFollowing(!isFollowing)}
-                    className={`px-6 py-2 rounded-lg font-medium transition-colors duration-200 ${
-                      isFollowing
-                        ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                        : "bg-gray-900 text-white hover:bg-gray-800"
-                    }`}
-                  >
-                    {isFollowing ? "Following" : "Follow"}
-                  </button>
-                  <button className="px-6 py-2 border border-gray-200 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200">
-                    Message
-                  </button>
                 </div>
               </div>
             </div>
@@ -149,96 +168,86 @@ const ProfilePage = () => {
           </div>
 
           <div className="p-6">
-            {activeTab === "trips" && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {mockTrips.map((trip) => (
+            {activeTab === "followers" && (
+              <div className="space-y-4">
+                {followersData?.data?.map((follower) => (
                   <div
-                    key={trip.id}
-                    className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-medium transition-shadow duration-200 cursor-pointer"
-                    onClick={() => navigate("trip", { id: trip.id })}
+                    key={follower._id}
+                    className="flex items-center justify-between p-4 border border-gray-200 rounded-xl"
                   >
-                    <img
-                      src={trip.photo || "/placeholder.svg"}
-                      alt={trip.title}
-                      className="w-full h-48 object-cover"
-                    />
-                    <div className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold text-gray-900">
-                          {trip.title}
-                        </h3>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            trip.status === "completed"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-blue-100 text-blue-800"
-                          }`}
-                        >
-                          {trip.status}
-                        </span>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full overflow-hidden">
+                        {follower.image && follower.image !== "default.jpg" ? (
+                          <img
+                            src={follower.image}
+                            alt={follower.username}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center text-white font-semibold">
+                            {follower.username.charAt(0).toUpperCase()}
+                          </div>
+                        )}
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">
-                        {trip.destinations.join(" → ")}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {trip.startDate} to {trip.endDate}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {activeTab === "reviews" && (
-              <div className="space-y-6">
-                {mockReviews.map((review) => (
-                  <div
-                    key={review.id}
-                    className="border border-gray-200 rounded-xl p-4"
-                  >
-                    <div className="flex items-start justify-between mb-3">
                       <div>
                         <h3 className="font-semibold text-gray-900">
-                          {review.placeName}
+                          {follower.username}
                         </h3>
-                        <div className="flex items-center gap-1 mt-1">
-                          {[...Array(5)].map((_, i) => (
-                            <span
-                              key={i}
-                              className={`text-sm ${
-                                i < review.rating
-                                  ? "text-yellow-400"
-                                  : "text-gray-300"
-                              }`}
-                            >
-                              ⭐
-                            </span>
-                          ))}
-                        </div>
+                        <p className="text-sm text-gray-600">
+                          {follower.bio || "No bio"}
+                        </p>
                       </div>
-                      <span className="text-xs text-gray-500">
-                        {review.visitDate}
-                      </span>
                     </div>
-                    <p className="text-gray-700 mb-3">{review.comment}</p>
-                    {review.photos && (
-                      <img
-                        src={review.photos[0] || "/placeholder.svg"}
-                        alt="Review"
-                        className="w-full h-32 object-cover rounded-lg"
-                      />
-                    )}
                   </div>
                 ))}
               </div>
             )}
 
-            {(activeTab === "followers" || activeTab === "following") && (
+            {activeTab === "following" && (
+              <div className="space-y-4">
+                {followingData?.data?.map((following) => (
+                  <div
+                    key={following._id}
+                    className="flex items-center justify-between p-4 border border-gray-200 rounded-xl"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full overflow-hidden">
+                        {following.image &&
+                        following.image !== "default.jpg" ? (
+                          <img
+                            src={following.image}
+                            alt={following.username}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center text-white font-semibold">
+                            {following.username.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">
+                          {following.username}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {following.bio || "No bio"}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-sm text-gray-500">Following</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {(activeTab === "trips" || activeTab === "reviews") && (
               <div className="text-center py-12">
-                <div className="text-gray-400 mb-4">👥</div>
+                <div className="text-gray-400 mb-4">
+                  {activeTab === "trips" ? "✈️" : "⭐"}
+                </div>
                 <p className="text-gray-600">
-                  {activeTab === "followers" ? "Followers" : "Following"} list
-                  would be displayed here
+                  {activeTab === "trips" ? "Trips" : "Reviews"} will be
+                  implemented when we have the corresponding stores
                 </p>
               </div>
             )}

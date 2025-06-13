@@ -1,13 +1,50 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "@/Utils/api";
 
-// Helper function to check if user is authenticated
+// Helper function to check if user is authenticated and get user data
 export const checkAuth = async () => {
   try {
-    await api.get("/users/me");
-    return true;
-  } catch {
-    return false;
+    const { data } = await api.get("/users/me", {
+      params: {
+        include: [
+          "preferences",
+          "stats",
+          "isAdmin",
+          "isMod",
+          "isVerified",
+          "lastLogin",
+        ],
+      },
+    });
+
+    return {
+      isAuthenticated: true,
+      user: {
+        ...data,
+        stats: data.stats || {
+          tripsCount: 0,
+          reviewsCount: 0,
+          followersCount: 0,
+          followingCount: 0,
+        },
+        preferences: data.preferences || {
+          language: "en",
+          notifications: {
+            email: true,
+            push: true,
+          },
+        },
+        isAdmin: Boolean(data.isAdmin),
+        isMod: Boolean(data.isMod),
+        isVerified: Boolean(data.isVerified),
+        lastLogin: data.lastLogin || new Date().toISOString(),
+      },
+    };
+  } catch (error) {
+    if (error.response?.status === 401) {
+      return { isAuthenticated: false, user: null };
+    }
+    throw error;
   }
 };
 
@@ -16,41 +53,43 @@ export const useCurrentUser = () => {
   return useQuery({
     queryKey: ["currentUser"],
     queryFn: async () => {
-      try {
-        const { data } = await api.get("/users/me");
-        return data;
-      } catch (error) {
-        if (error.response?.status === 401) {
-          return null;
-        }
-        throw error;
-      }
+      const { user } = await checkAuth();
+      return user;
     },
-    // Disable automatic retries completely
     retry: false,
-    // Disable automatic refetching
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    staleTime: Infinity,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    staleTime: 1000 * 60 * 5,
+    cacheTime: 1000 * 60 * 30,
   });
 };
 
 export const useRefreshToken = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async () => {
       const { data } = await api.post("/auth/refresh-token");
       return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["currentUser"]);
     },
   });
 };
 
 // Mutations
 export const useLogin = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (credentials) => {
       const { data } = await api.post("/auth/login", credentials);
       return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["currentUser"]);
     },
   });
 };
@@ -65,10 +104,15 @@ export const useRegister = () => {
 };
 
 export const useLogout = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async () => {
       const { data } = await api.post("/auth/logout");
       return data;
+    },
+    onSuccess: () => {
+      queryClient.clear();
     },
   });
 };
