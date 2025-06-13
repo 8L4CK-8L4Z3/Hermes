@@ -20,17 +20,33 @@ const placeSchema = new mongoose.Schema(
       type: String,
       required: [true, "Description is required"],
     },
-    photo: {
-      type: String,
-      default: "default.jpg",
-    },
+    images: [
+      {
+        url: {
+          type: String,
+          required: true,
+        },
+        caption: {
+          type: String,
+          default: "",
+        },
+        uploaded_at: {
+          type: Date,
+          default: Date.now,
+        },
+        is_primary: {
+          type: Boolean,
+          default: false,
+        },
+      },
+    ],
     average_rating: {
       type: Number,
       default: 0,
     },
     price_range: {
       type: String,
-      enum: ['$', '$$', '$$$', '$$$$']
+      enum: ["$", "$$", "$$$", "$$$$"],
     },
     opening_hours: {
       type: String,

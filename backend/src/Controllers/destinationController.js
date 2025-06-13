@@ -177,21 +177,44 @@ export const searchDestinations = asyncHandler(async (req, res) => {
  * @access Public
  */
 export const getPopularDestinations = asyncHandler(async (req, res) => {
-  const { limit = 10 } = req.query;
+  const { limit = 4 } = req.query;
 
   logger.logInfo(NAMESPACE, "Fetching popular destinations");
 
+  // Try to get analytics first
   const analytics = await Analytics.findOne({
     date: new Date().toISOString().split("T")[0],
-  })
-    .populate("popularDestinations.destination_id")
-    .sort({ "popularDestinations.views": -1 })
-    .limit(parseInt(limit));
+  }).populate({
+    path: "popularDestinations.destination_id",
+    select: "name description location images",
+  });
 
-  const popularDestinations = analytics?.popularDestinations || [];
+  if (analytics?.popularDestinations?.length > 0) {
+    // Sort by views and return
+    const sortedDestinations = analytics.popularDestinations
+      .sort((a, b) => b.views - a.views)
+      .slice(0, parseInt(limit));
+
+    return successPatterns.retrieved(res, {
+      data: sortedDestinations,
+    });
+  }
+
+  // If no analytics exist, just return the most recently added destinations
+  const destinations = await Destination.find()
+    .sort({ createdAt: -1 })
+    .limit(parseInt(limit))
+    .select("name description location images");
+
+  // Format the response to match the analytics format
+  const formattedDestinations = destinations.map((dest) => ({
+    destination_id: dest,
+    views: 0,
+    saves: 0,
+  }));
 
   return successPatterns.retrieved(res, {
-    data: popularDestinations,
+    data: formattedDestinations,
   });
 });
 

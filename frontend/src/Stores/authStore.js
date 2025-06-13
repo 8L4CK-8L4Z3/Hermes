@@ -29,7 +29,7 @@ export const useLogin = () => {
     mutationFn: async (credentials) => {
       const { data } = await api.post("/auth/login", credentials);
       if (data.token) {
-        localStorage.setItem("token", "Bearer " + data.token);
+        localStorage.setItem("token", data.token);
       }
       return data;
     },

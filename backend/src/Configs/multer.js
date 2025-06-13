@@ -10,6 +10,8 @@ const createUploadDirs = () => {
     "uploads/trips",
     "uploads/places",
     "uploads/reviews",
+    "uploads/activities",
+    "uploads/destinations",
   ];
 
   dirs.forEach((dir) => {
@@ -36,6 +38,10 @@ const storage = multer.diskStorage({
       uploadDir = "uploads/places";
     } else if (file.fieldname === "review") {
       uploadDir = "uploads/reviews";
+    } else if (file.fieldname === "activity") {
+      uploadDir = "uploads/activities";
+    } else if (file.fieldname === "destination") {
+      uploadDir = "uploads/destinations";
     }
 
     cb(null, uploadDir);
@@ -89,4 +95,20 @@ export const uploadConfig = {
       fileSize: 5 * 1024 * 1024, // 5MB
     },
   }).array("review", 5), // Max 5 images per review
+
+  activity: multer({
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB
+    },
+  }).array("activity", 5), // Max 5 images per activity
+
+  destination: multer({
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB
+    },
+  }).array("destination", 10), // Max 10 images per destination
 };

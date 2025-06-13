@@ -1,21 +1,30 @@
 import express from "express";
-import { uploadImage, getImage } from "../Controllers/uploadController.js";
+import { uploadImage, uploadImages } from "../Controllers/uploadController.js";
+import path from "path";
+import { FRONTEND_URL } from "../Configs/config.js";
 
 const router = express.Router();
 
 // Upload routes
 router.post("/image", uploadImage);
+router.post("/images", uploadImages);
 
-// Use a more specific pattern for image paths
-router.get(
-  "/image/:filename(*)",
-  (req, res, next) => {
-    // Sanitize the filename to prevent directory traversal
-    const filename = req.params.filename.replace(/\.\./g, "");
-    req.params.path = filename;
-    next();
-  },
-  getImage
+// Serve images using Express static middleware with CORS headers
+router.use(
+  "/image",
+  express.static(path.join(process.cwd(), "uploads"), {
+    setHeaders: (res) => {
+      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+      res.setHeader(
+        "Access-Control-Allow-Origin",
+        FRONTEND_URL || "http://localhost:5743"
+      );
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+      res.setHeader("Cache-Control", "public, max-age=31536000"); // 1 year cache
+    },
+  })
 );
 
 export default router;

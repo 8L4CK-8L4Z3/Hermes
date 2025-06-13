@@ -46,6 +46,7 @@ const ActivityCard = ({ image, name, alt }) => {
         onError={handleImageError}
         onLoad={handleImageLoad}
         loading="lazy"
+        crossOrigin="anonymous"
       />
       <div className="absolute bottom-2 lg:bottom-3 left-2 lg:left-3">
         <span className="text-white text-sm lg:text-base font-semibold drop-shadow-md">

@@ -19,7 +19,59 @@ const activitySchema = new mongoose.Schema(
     popularity: {
       type: Number,
       default: 0,
+      min: 0,
+      max: 100,
     },
+    duration: {
+      type: Number, // in hours
+      required: true,
+      min: 0.5,
+    },
+    difficulty: {
+      type: String,
+      enum: ["easy", "moderate", "challenging", "expert"],
+      required: true,
+    },
+    price: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    location: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    category: {
+      type: String,
+      required: true,
+      enum: [
+        "adventure",
+        "culture",
+        "nature",
+        "sports",
+        "photography",
+        "food",
+        "relaxation",
+      ],
+    },
+    maxGroupSize: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    availableSeasons: [
+      {
+        type: String,
+        enum: ["spring", "summer", "fall", "winter"],
+      },
+    ],
+    tags: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
   },
   {
     timestamps: true,

@@ -1,4 +1,4 @@
-import Testimonial from "@/Components/Testimonial"
+import Testimonial from "@/Components/custom/Testimonial";
 
 const PlanYourTrip = () => {
   return (
@@ -7,7 +7,9 @@ const PlanYourTrip = () => {
 
       <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-soft">
         <div className="mb-2">
-          <div className="text-lg font-medium text-gray-900 mb-2">Start-to-finish trip planning</div>
+          <div className="text-lg font-medium text-gray-900 mb-2">
+            Start-to-finish trip planning
+          </div>
           <div className="flex items-center gap-2 text-gray-600 text-sm">
             Learn more
             <span className="text-lg text-gray-400">→</span>
@@ -17,7 +19,7 @@ const PlanYourTrip = () => {
 
       <Testimonial />
     </div>
-  )
-}
+  );
+};
 
-export default PlanYourTrip
+export default PlanYourTrip;

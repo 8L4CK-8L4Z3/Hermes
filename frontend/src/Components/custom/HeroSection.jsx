@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import hero from "@/Assets/PHImg/Hero.png"
+import hero from "@/Assets/Hero.png"
 const HeroSection = () => {
   const [isHovered, setIsHovered] = useState(false)
 

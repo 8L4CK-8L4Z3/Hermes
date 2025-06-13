@@ -8,8 +8,8 @@ export const JWT_EXPIRE = process.env.JWT_EXPIRE || "15m";
 export const JWT_COOKIE_EXPIRE = process.env.JWT_COOKIE_EXPIRE || "7d";
 export const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 export const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-export const PORT = process.env.PORT;
-export const NODE_ENV = process.env.NODE_ENV;
+export const PORT = process.env.PORT || 3000;
+export const NODE_ENV = process.env.NODE_ENV || "development";
 export const FRONTEND_URL = process.env.FRONTEND_URL;
 
 // Email Configuration

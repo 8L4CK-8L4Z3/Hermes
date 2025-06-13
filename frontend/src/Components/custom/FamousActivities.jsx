@@ -1,4 +1,4 @@
-import ActivityCard from "@/Components/ActivityCard";
+import ActivityCard from "@/Components/custom/ActivityCard";
 import { usePopularActivities } from "@/Stores/activityStore";
 
 const FamousActivities = () => {

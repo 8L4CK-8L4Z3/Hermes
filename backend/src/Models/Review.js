@@ -22,7 +22,7 @@ const reviewSchema = new mongoose.Schema(
       type: String,
       required: [true, "Comment is required"],
     },
-    photos: [
+    images: [
       {
         url: String,
         caption: String,

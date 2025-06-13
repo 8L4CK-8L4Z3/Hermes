@@ -1,7 +1,7 @@
-import HeroSection from "@/Components/HeroSection";
-import PopularDestinations from "@/Components/PopularDestinations";
-import PlanYourTrip from "@/Components/PlanYourTrip";
-import FamousActivities from "@/Components/FamousActivities";
+import HeroSection from "@/Components/custom/HeroSection";
+import PopularDestinations from "@/Components/custom/PopularDestinations";
+import PlanYourTrip from "@/Components/custom/PlanYourTrip";
+import FamousActivities from "@/Components/custom/FamousActivities";
 
 const LandingPage = () => {
   return (

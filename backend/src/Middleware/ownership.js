@@ -1,6 +1,7 @@
 import { errorResponse } from "../Utils/responses.js";
 import Trip from "../Models/Trip.js";
 import Destination from "../Models/Destination.js";
+
 export const checkTripOwnership = async (req, res, next) => {
   const trip = await Trip.findById(req.params.tripId);
   if (!trip) return next(new errorResponse("Trip not found", 404));

@@ -25,5 +25,6 @@ export const uploadImage = async (file) => {
  */
 export const getImageUrl = (path) => {
   if (!path) return null;
-  return `${import.meta.env.VITE_API_URL}/${path}`;
+  if (path.startsWith("http")) return path;
+  return `${import.meta.env.VITE_BACKEND_URL}/upload/image/${path}`;
 };

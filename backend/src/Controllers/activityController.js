@@ -87,8 +87,6 @@ export const getActivityById = asyncHandler(async (req, res) => {
 export const createActivity = asyncHandler(async (req, res) => {
   const { name, description, image, category, duration, price } = req.body;
 
-  logger.logInfo(NAMESPACE, `Creating new activity: ${name}`);
-
   if (!name || !description || !image) {
     return errorPatterns.badRequest(res, {
       message: "Name, description, and image are required",
@@ -119,8 +117,6 @@ export const createActivity = asyncHandler(async (req, res) => {
 export const updateActivity = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { name, description, image, category, duration, price } = req.body;
-
-  logger.logInfo(NAMESPACE, `Updating activity with id: ${id}`);
 
   const activity = await Activity.findById(id);
 

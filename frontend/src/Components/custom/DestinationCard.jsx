@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-
+import { getImageUrl } from "@/Utils/imageUpload"
 const DestinationCard = ({ image, name, alt }) => {
   const [isHovered, setIsHovered] = useState(false)
 
@@ -13,9 +13,15 @@ const DestinationCard = ({ image, name, alt }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <img src={image || "/placeholder.svg"} alt={alt} className="w-full h-48 object-cover" />
+      <img
+        src={getImageUrl(image)}
+        alt={alt}
+        className="w-full h-48 object-cover"
+      />
       <div className="absolute bottom-4 left-4">
-        <span className="text-white text-xl font-semibold drop-shadow-lg">{name}</span>
+        <span className="text-white text-xl font-semibold drop-shadow-lg">
+          {name}
+        </span>
       </div>
     </div>
   )

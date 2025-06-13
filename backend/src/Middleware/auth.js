@@ -1,9 +1,11 @@
-import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../Configs/config.js";
 import User from "../Models/User.js";
-import { errorResponse, HTTP_STATUS } from "../Utils/responses.js";
-
-export const protect = async (req, res, next) => {
+import {
+  errorResponse,
+  asyncHandler,
+  HTTP_STATUS,
+} from "../Utils/responses.js";
+import { verifyToken } from "../Utils/token.js";
+export const protect = asyncHandler(async (req, res, next) => {
   try {
     let token;
 
@@ -26,7 +28,7 @@ export const protect = async (req, res, next) => {
 
     try {
       // Verify token
-      const decoded = jwt.verify(token, JWT_SECRET);
+      const decoded = verifyToken(token);
 
       // Get user from token
       const user = await User.findById(decoded.id).select("-password");
@@ -53,7 +55,7 @@ export const protect = async (req, res, next) => {
       error: error.message,
     });
   }
-};
+});
 
 export const isModerator = (req, res, next) => {
   if (!req.user.isMod) {

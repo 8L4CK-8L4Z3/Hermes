@@ -10,7 +10,12 @@ import { fileURLToPath } from "url";
 import logger from "./Utils/logger.js";
 import dbConnect from "./Configs/db.js";
 import { NODE_ENV, PORT, FRONTEND_URL } from "./Configs/config.js";
-import { apiLimiter, authLimiter, uploadLimiter } from "./Utils/rateLimiter.js";
+import {
+  apiLimiter,
+  authLimiter,
+  uploadLimiter,
+} from "./Middleware/rateLimiter.js";
+
 import authRoutes from "./Routes/authRoutes.js";
 import adminRoutes from "./Routes/adminRoutes.js";
 import analyticsRoutes from "./Routes/analyticsRoutes.js";
@@ -29,38 +34,47 @@ import userRoutes from "./Routes/userRoutes.js";
 import activityRoutes from "./Routes/activityRoutes.js";
 import uploadRoutes from "./Routes/uploadRoutes.js";
 
+dbConnect();
+
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Security Middleware
-app.use(helmet()); // Security headers
-app.use(hpp()); // Prevent HTTP Parameter Pollution
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false, // Allow cross-origin resource sharing
+    crossOriginEmbedderPolicy: false, // Allow embedding resources
+  })
+);
+app.use(hpp());
+
+// CORS configuration
 app.use(
   cors({
     origin: FRONTEND_URL || "http://localhost:5743",
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Content-Range", "X-Content-Range"],
   })
 );
 
 // Rate limiting
 app.use("/api", apiLimiter);
 app.use("/api/auth", authLimiter);
-app.use("/api/upload", uploadLimiter);
+app.use("/upload", uploadLimiter);
 
 // Body parser
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(cookieParser());
-app.use(compression()); // Compress responses
+app.use(compression());
 
 // Logging
 if (NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
-
-// Serve static files
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -79,14 +93,27 @@ app.use("/api/search", searchRoutes);
 app.use("/api/trips", tripRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/activities", activityRoutes);
-app.use("/api/upload", uploadRoutes);
 
-if (dbConnect()) {
-  logger.logInfo("Server", "Database connected");
-} else {
-  logger.logError("Server", "Database connection failed");
-}
+// Upload routes (separate from API routes)
+app.use(
+  "/upload",
+  (req, res, next) => {
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    res.setHeader(
+      "Access-Control-Allow-Origin",
+      FRONTEND_URL || "http://localhost:5743"
+    );
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    next();
+  },
+  uploadRoutes
+);
 
 app.listen(PORT, () => {
-  logger.logInfo("Server", `Server is running on port ${PORT}`);
+  logger.logInfo(
+    "Server",
+    `Server is running on link http://localhost:${PORT}`
+  );
 });

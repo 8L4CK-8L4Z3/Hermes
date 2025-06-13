@@ -15,10 +15,26 @@ const destinationSchema = new mongoose.Schema(
       type: String,
       required: [true, "Location is required"],
     },
-    photo: {
-      type: String,
-      default: "default.jpg",
-    },
+    images: [
+      {
+        url: {
+          type: String,
+          required: true,
+        },
+        caption: {
+          type: String,
+          default: "",
+        },
+        uploaded_at: {
+          type: Date,
+          default: Date.now,
+        },
+        is_primary: {
+          type: Boolean,
+          default: false,
+        },
+      },
+    ],
   },
   {
     timestamps: true,

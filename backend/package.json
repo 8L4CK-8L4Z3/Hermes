@@ -6,7 +6,10 @@
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "seed:destinations": "node src/Seeds/destinationSeeder.js",
+    "seed:analytics": "node src/Seeds/analyticsSeeder.js",
+    "seed:all": "node src/Seeds/destinationSeeder.js && node src/Seeds/analyticsSeeder.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

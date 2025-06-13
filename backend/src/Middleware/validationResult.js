@@ -1,11 +1,11 @@
 import { validationResult } from "express-validator";
-import { errorResponse } from "../Utils/responses.js";
+import { errorResponse, HTTP_STATUS } from "../Utils/responses.js";
 
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return errorResponse(res, {
-      code: 400,
+      code: HTTP_STATUS.BAD_REQUEST,
       message: "Validation failed",
       errors: errors.array(),
     });
