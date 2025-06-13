@@ -78,12 +78,28 @@ export const useUpdateUserRole = () => {
 
   return useMutation({
     mutationFn: async ({ userId, role }) => {
-      const { data } = await api.put(`/admin/users/${userId}/role`, { role });
+      const { data } = await api.put(`/admin/users/${userId}/role`, role);
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries(["admin", "users"]);
-      queryClient.invalidateQueries(["user", data.id]);
+      queryClient.invalidateQueries(["user", variables.userId]);
+
+      queryClient.setQueryData(["admin", "users"], (oldData) => {
+        if (!oldData?.data) return oldData;
+
+        return {
+          ...oldData,
+          data: oldData.data.map((user) =>
+            user._id === variables.userId
+              ? { ...user, ...variables.role }
+              : user
+          ),
+        };
+      });
+    },
+    onError: (error) => {
+      throw error;
     },
   });
 };
@@ -96,9 +112,12 @@ export const useBanUser = () => {
       const { data } = await api.put(`/admin/users/${userId}/ban`);
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries(["admin", "users"]);
-      queryClient.invalidateQueries(["user", data.id]);
+      queryClient.invalidateQueries(["user", variables]);
+    },
+    onError: (error) => {
+      throw error;
     },
   });
 };
@@ -111,9 +130,12 @@ export const useUnbanUser = () => {
       const { data } = await api.put(`/admin/users/${userId}/unban`);
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries(["admin", "users"]);
-      queryClient.invalidateQueries(["user", data.id]);
+      queryClient.invalidateQueries(["user", variables]);
+    },
+    onError: (error) => {
+      throw error;
     },
   });
 };

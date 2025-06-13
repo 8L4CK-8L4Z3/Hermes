@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  useAllUsers,
+  useUpdateUserRole,
+  useBanUser,
+  useUnbanUser,
+} from "@/Stores/adminStore";
 // import { useAuth } from "@/hooks/useAuth";
 
 const UserManagement = () => {
@@ -11,107 +17,132 @@ const UserManagement = () => {
   const [filterRole, setFilterRole] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedUsers, setSelectedUsers] = useState([]);
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
+  const { data: usersData, isLoading, error } = useAllUsers(page, limit);
+  const updateUserRole = useUpdateUserRole();
+  const banUser = useBanUser();
+  const unbanUser = useUnbanUser();
 
   // if (!isLoggedIn || !user?.isAdmin) {
   //   navigate("/");
   //   return null;
   // }
 
-  const users = [
-    {
-      id: 1,
-      username: "sarah_johnson",
-      email: "sarah@example.com",
-      isAdmin: false,
-      isMod: false,
-      isVerified: true,
-      lastLogin: "2024-01-15T10:30:00Z",
-      created_at: "2023-03-15T08:00:00Z",
-      status: "active",
-      tripCount: 12,
-      reviewCount: 45,
-      photo: null,
-    },
-    {
-      id: 2,
-      username: "marco_travels",
-      email: "marco@example.com",
-      isAdmin: false,
-      isMod: true,
-      isVerified: true,
-      lastLogin: "2024-01-14T18:45:00Z",
-      created_at: "2023-01-20T12:00:00Z",
-      status: "active",
-      tripCount: 8,
-      reviewCount: 67,
-      photo: null,
-    },
-    {
-      id: 3,
-      username: "emily_adventures",
-      email: "emily@example.com",
-      isAdmin: false,
-      isMod: false,
-      isVerified: false,
-      lastLogin: "2024-01-13T14:20:00Z",
-      created_at: "2023-12-01T09:30:00Z",
-      status: "pending",
-      tripCount: 3,
-      reviewCount: 12,
-      photo: null,
-    },
-    {
-      id: 4,
-      username: "john_explorer",
-      email: "john@example.com",
-      isAdmin: false,
-      isMod: false,
-      isVerified: true,
-      lastLogin: "2024-01-10T16:15:00Z",
-      created_at: "2023-06-10T14:00:00Z",
-      status: "banned",
-      tripCount: 5,
-      reviewCount: 23,
-      photo: null,
-    },
-  ];
+  const handleUserAction = async (userId, action) => {
+    if (!userId) {
+      alert("Error: User ID is missing");
+      return;
+    }
 
-  const handleUserAction = (userId, action) => {
-    console.log(`${action} user ${userId}`);
-    // Handle user actions (ban, unban, verify, etc.)
+    try {
+      const id = userId.toString();
+
+      switch (action) {
+        case "ban":
+          await banUser.mutateAsync(id);
+          break;
+        case "unban":
+          await unbanUser.mutateAsync(id);
+          break;
+        case "makeAdmin":
+          await updateUserRole.mutateAsync({
+            userId: id,
+            role: {
+              isAdmin: true,
+              isMod: false,
+            },
+          });
+          break;
+        case "makeMod":
+          await updateUserRole.mutateAsync({
+            userId: id,
+            role: {
+              isAdmin: false,
+              isMod: true,
+            },
+          });
+          break;
+        case "removeRole":
+          await updateUserRole.mutateAsync({
+            userId: id,
+            role: {
+              isAdmin: false,
+              isMod: false,
+            },
+          });
+          break;
+      }
+    } catch (error) {
+      let errorMessage = "An error occurred";
+
+      if (error.response?.data?.error?.message) {
+        errorMessage = error.response.data.error.message;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      alert(`Failed to ${action}: ${errorMessage}`);
+    }
   };
 
-  const handleBulkAction = (action) => {
-    console.log(`${action} users:`, selectedUsers);
-    setSelectedUsers([]);
+  const handleBulkAction = async (action) => {
+    try {
+      for (const userId of selectedUsers) {
+        await handleUserAction(userId, action);
+      }
+      setSelectedUsers([]);
+    } catch (error) {
+      alert(`Failed to perform bulk action: ${error.message}`);
+    }
   };
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRole =
-      filterRole === "all" ||
-      (filterRole === "admin" && user.isAdmin) ||
-      (filterRole === "mod" && user.isMod) ||
-      (filterRole === "user" && !user.isAdmin && !user.isMod);
-    const matchesStatus =
-      filterStatus === "all" || user.status === filterStatus;
+  const filteredUsers =
+    usersData?.data?.filter((user) => {
+      const matchesSearch =
+        user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesRole =
+        filterRole === "all" ||
+        (filterRole === "admin" && user.isAdmin) ||
+        (filterRole === "mod" && user.isMod) ||
+        (filterRole === "user" && !user.isAdmin && !user.isMod);
+      const matchesStatus =
+        filterStatus === "all" || user.status === filterStatus;
 
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+      return matchesSearch && matchesRole && matchesStatus;
+    }) || [];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[80vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[80vh]">
+        <div className="text-red-600">Error loading users: {error.message}</div>
+      </div>
+    );
+  }
 
   const UserRow = ({ user }) => (
     <tr className="border-b border-gray-100 hover:bg-gray-50">
       <td className="px-6 py-4">
         <input
           type="checkbox"
-          checked={selectedUsers.includes(user.id)}
+          checked={selectedUsers.includes(user._id)}
           onChange={(e) => {
             if (e.target.checked) {
-              setSelectedUsers([...selectedUsers, user.id]);
+              setSelectedUsers([...selectedUsers, user._id]);
             } else {
-              setSelectedUsers(selectedUsers.filter((id) => id !== user.id));
+              setSelectedUsers(selectedUsers.filter((id) => id !== user._id));
             }
           }}
           className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
@@ -119,9 +150,17 @@ const UserManagement = () => {
       </td>
       <td className="px-6 py-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-teal-500 rounded-full flex items-center justify-center text-white font-medium">
-            {user.username.charAt(0).toUpperCase()}
-          </div>
+          {user.photo ? (
+            <img
+              src={user.photo}
+              alt={user.username}
+              className="w-10 h-10 rounded-full"
+            />
+          ) : (
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-teal-500 rounded-full flex items-center justify-center text-white font-medium">
+              {user.username.charAt(0).toUpperCase()}
+            </div>
+          )}
           <div>
             <div className="font-medium text-gray-900">{user.username}</div>
             <div className="text-sm text-gray-600">{user.email}</div>
@@ -177,35 +216,45 @@ const UserManagement = () => {
       </td>
       <td className="px-6 py-4">
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => handleUserAction(user.id, "edit")}
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-          >
-            Edit
-          </button>
+          {!user.isAdmin && !user.isMod && (
+            <>
+              <button
+                onClick={() => handleUserAction(user._id, "makeAdmin")}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+              >
+                Make Admin
+              </button>
+              <button
+                onClick={() => handleUserAction(user._id, "makeMod")}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+              >
+                Make Mod
+              </button>
+            </>
+          )}
+          {(user.isAdmin || user.isMod) && (
+            <button
+              onClick={() => handleUserAction(user._id, "removeRole")}
+              className="text-yellow-600 hover:text-yellow-800 text-sm font-medium"
+            >
+              Remove {user.isAdmin ? "Admin" : "Mod"}
+            </button>
+          )}
           {user.status === "active" ? (
             <button
-              onClick={() => handleUserAction(user.id, "ban")}
+              onClick={() => handleUserAction(user._id, "ban")}
               className="text-red-600 hover:text-red-800 text-sm font-medium"
             >
               Ban
             </button>
           ) : user.status === "banned" ? (
             <button
-              onClick={() => handleUserAction(user.id, "unban")}
+              onClick={() => handleUserAction(user._id, "unban")}
               className="text-green-600 hover:text-green-800 text-sm font-medium"
             >
               Unban
             </button>
           ) : null}
-          {!user.isVerified && (
-            <button
-              onClick={() => handleUserAction(user.id, "verify")}
-              className="text-green-600 hover:text-green-800 text-sm font-medium"
-            >
-              Verify
-            </button>
-          )}
         </div>
       </td>
     </tr>
@@ -302,7 +351,7 @@ const UserManagement = () => {
                       onChange={(e) => {
                         if (e.target.checked) {
                           setSelectedUsers(
-                            filteredUsers.map((user) => user.id)
+                            filteredUsers.map((user) => user._id)
                           );
                         } else {
                           setSelectedUsers([]);
@@ -336,7 +385,7 @@ const UserManagement = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredUsers.map((user) => (
-                  <UserRow key={user.id} user={user} />
+                  <UserRow key={user._id} user={user} />
                 ))}
               </tbody>
             </table>
@@ -358,19 +407,32 @@ const UserManagement = () => {
         {/* Pagination */}
         <div className="flex items-center justify-between mt-6">
           <div className="text-sm text-gray-600">
-            Showing {filteredUsers.length} of {users.length} users
+            Showing {filteredUsers.length} of {usersData?.total || 0} users
           </div>
           <div className="flex items-center gap-2">
-            <button className="px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className={`px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium ${
+                page === 1
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-gray-700 hover:bg-gray-50"
+              } transition-colors duration-200`}
+            >
               Previous
             </button>
             <button className="px-3 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium">
-              1
+              {page}
             </button>
-            <button className="px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200">
-              2
-            </button>
-            <button className="px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+            <button
+              onClick={() => setPage((p) => p + 1)}
+              disabled={!usersData?.hasNextPage}
+              className={`px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium ${
+                !usersData?.hasNextPage
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-gray-700 hover:bg-gray-50"
+              } transition-colors duration-200`}
+            >
               Next
             </button>
           </div>
