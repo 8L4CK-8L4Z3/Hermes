@@ -15,8 +15,6 @@ const UserManagement = () => {
   // const { isLoggedIn, user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState("all");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [selectedUsers, setSelectedUsers] = useState([]);
   const [page, setPage] = useState(1);
   const limit = 10;
 
@@ -89,17 +87,6 @@ const UserManagement = () => {
     }
   };
 
-  const handleBulkAction = async (action) => {
-    try {
-      for (const userId of selectedUsers) {
-        await handleUserAction(userId, action);
-      }
-      setSelectedUsers([]);
-    } catch (error) {
-      alert(`Failed to perform bulk action: ${error.message}`);
-    }
-  };
-
   const filteredUsers =
     usersData?.data?.filter((user) => {
       const matchesSearch =
@@ -110,10 +97,8 @@ const UserManagement = () => {
         (filterRole === "admin" && user.isAdmin) ||
         (filterRole === "mod" && user.isMod) ||
         (filterRole === "user" && !user.isAdmin && !user.isMod);
-      const matchesStatus =
-        filterStatus === "all" || user.status === filterStatus;
 
-      return matchesSearch && matchesRole && matchesStatus;
+      return matchesSearch && matchesRole;
     }) || [];
 
   if (isLoading) {
@@ -134,20 +119,6 @@ const UserManagement = () => {
 
   const UserRow = ({ user }) => (
     <tr className="border-b border-gray-100 hover:bg-gray-50">
-      <td className="px-6 py-4">
-        <input
-          type="checkbox"
-          checked={selectedUsers.includes(user._id)}
-          onChange={(e) => {
-            if (e.target.checked) {
-              setSelectedUsers([...selectedUsers, user._id]);
-            } else {
-              setSelectedUsers(selectedUsers.filter((id) => id !== user._id));
-            }
-          }}
-          className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
-        />
-      </td>
       <td className="px-6 py-4">
         <div className="flex items-center gap-3">
           {user.photo ? (
@@ -185,19 +156,6 @@ const UserManagement = () => {
             </span>
           )}
         </div>
-      </td>
-      <td className="px-6 py-4">
-        <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${
-            user.status === "active"
-              ? "bg-green-100 text-green-800"
-              : user.status === "pending"
-              ? "bg-yellow-100 text-yellow-800"
-              : "bg-red-100 text-red-800"
-          }`}
-        >
-          {user.status}
-        </span>
       </td>
       <td className="px-6 py-4">
         <div className="flex items-center gap-1">
@@ -295,44 +253,7 @@ const UserManagement = () => {
               <option value="mod">Moderator</option>
               <option value="user">User</option>
             </select>
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="pending">Pending</option>
-              <option value="banned">Banned</option>
-            </select>
           </div>
-
-          {/* Bulk Actions */}
-          {selectedUsers.length > 0 && (
-            <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-200">
-              <span className="text-sm text-gray-600">
-                {selectedUsers.length} users selected
-              </span>
-              <button
-                onClick={() => handleBulkAction("verify")}
-                className="px-3 py-1 bg-green-100 text-green-800 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors duration-200"
-              >
-                Verify Selected
-              </button>
-              <button
-                onClick={() => handleBulkAction("ban")}
-                className="px-3 py-1 bg-red-100 text-red-800 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors duration-200"
-              >
-                Ban Selected
-              </button>
-              <button
-                onClick={() => setSelectedUsers([])}
-                className="px-3 py-1 bg-gray-100 text-gray-800 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors duration-200"
-              >
-                Clear Selection
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Users Table */}
@@ -341,33 +262,11 @@ const UserManagement = () => {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left">
-                    <input
-                      type="checkbox"
-                      checked={
-                        selectedUsers.length === filteredUsers.length &&
-                        filteredUsers.length > 0
-                      }
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedUsers(
-                            filteredUsers.map((user) => user._id)
-                          );
-                        } else {
-                          setSelectedUsers([]);
-                        }
-                      }}
-                      className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
-                    />
-                  </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     User
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Role
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Verified

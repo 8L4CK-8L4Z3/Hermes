@@ -285,14 +285,31 @@ const DestinationManagement = () => {
         </span>
       </td>
       <td className="px-6 py-4">
-        <div className="flex items-center gap-1">
-          <span className="text-yellow-400">⭐</span>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-1">
+            <span className="text-yellow-400">⭐</span>
+            <span className="text-sm font-medium">
+              {place.average_rating?.toFixed(1) || "N/A"}
+            </span>
+          </div>
+          <span className="text-xs text-gray-500">{place.address}</span>
+        </div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="flex flex-col gap-1">
           <span className="text-sm font-medium">
-            {place.average_rating || 0}
+            {place.price_range || "N/A"}
+          </span>
+          <span className="text-xs text-gray-500">{place.opening_hours}</span>
+        </div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="flex flex-col gap-1">
+          <span className="text-sm text-gray-600 line-clamp-2">
+            {place.description}
           </span>
         </div>
       </td>
-      <td className="px-6 py-4 text-sm text-gray-600">{place.price_range}</td>
       <td className="px-6 py-4">
         <span
           className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -305,7 +322,7 @@ const DestinationManagement = () => {
         </span>
       </td>
       <td className="px-6 py-4 text-sm text-gray-600">
-        {new Date(place.created_at).toLocaleDateString()}
+        {new Date(place.createdAt).toLocaleDateString()}
       </td>
       <td className="px-6 py-4">
         <div className="flex items-center gap-2">
@@ -412,10 +429,13 @@ const DestinationManagement = () => {
                       Type
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Rating
+                      Rating & Address
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Price
+                      Price & Hours
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Description
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status

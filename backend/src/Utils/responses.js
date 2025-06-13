@@ -1,14 +1,3 @@
-/**
- * Standard response formatter for all API responses
- * @param {Object} options - Response options
- * @param {boolean} options.success - Whether the request was successful
- * @param {number} options.code - HTTP status code
- * @param {string} options.message - Response message
- * @param {any} [options.data] - Response data
- * @param {Object} [options.meta] - Additional metadata
- * @param {Object} [options.error] - Error details if any
- * @returns {Object} Formatted response object
- */
 const formatResponse = ({
   success,
   code,
