@@ -1,250 +1,301 @@
 "use client";
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
+import {
+  useReportedContent,
+  useModerateReportedContent,
+} from "@/Stores/adminStore";
 // import { useAuth } from "@/hooks/useAuth";
 
 const ContentModeration = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   // const { isLoggedIn, user } = useAuth();
   const [activeTab, setActiveTab] = useState("reviews");
   const [filterStatus, setFilterStatus] = useState("pending");
+  const [page, setPage] = useState(1);
+  const [moderationReason, setModerationReason] = useState("");
+  const [selectedContent, setSelectedContent] = useState(null);
+  const [error, setError] = useState("");
+  const limit = 10;
+
+  const { data: reportedContent, isLoading } = useReportedContent(
+    page,
+    limit,
+    filterStatus
+  );
+  const moderateContentMutation = useModerateReportedContent();
 
   // if (!isLoggedIn || !user?.isAdmin) {
   //   navigate("/");
   //   return null;
   // }
 
-  const reviews = [
-    {
-      id: 1,
-      user: { name: "Sarah Johnson", username: "@sarahj" },
-      place: "Colosseum",
-      rating: 5,
-      comment:
-        "Absolutely incredible! The history and architecture are breathtaking. Definitely worth the visit and the skip-the-line tickets are a must!",
-      photos: ["/images/sightseeing.jpg"],
-      status: "pending",
-      flagReason: null,
-      created_at: "2024-01-15T10:30:00Z",
-      reportCount: 0,
-    },
-    {
-      id: 2,
-      user: { name: "Marco Rossi", username: "@marco_travels" },
-      place: "Central Park",
-      rating: 1,
-      comment:
-        "This place is terrible! Worst experience ever. Don't waste your money here. The staff was rude and unprofessional.",
-      photos: [],
-      status: "flagged",
-      flagReason: "Inappropriate language",
-      created_at: "2024-01-14T18:45:00Z",
-      reportCount: 3,
-    },
-    {
-      id: 3,
-      user: { name: "Emily Chen", username: "@emily_adventures" },
-      place: "Eiffel Tower",
-      rating: 4,
-      comment:
-        "Beautiful landmark! Great views from the top. Can get crowded during peak hours but still worth visiting.",
-      photos: ["/images/newyork.jpg"],
-      status: "approved",
-      flagReason: null,
-      created_at: "2024-01-13T14:20:00Z",
-      reportCount: 0,
-    },
-  ];
-
-  const posts = [
-    {
-      id: 1,
-      user: { name: "John Doe", username: "@johndoe" },
-      content:
-        "Just had an amazing trip to Rome! The food was incredible and the people were so friendly. Can't wait to go back!",
-      media: ["/images/rome.jpg"],
-      status: "pending",
-      flagReason: null,
-      created_at: "2024-01-15T12:00:00Z",
-      reportCount: 0,
-    },
-    {
-      id: 2,
-      user: { name: "Jane Smith", username: "@janesmith" },
-      content:
-        "This is spam content with inappropriate links and promotional material that violates our community guidelines.",
-      media: [],
-      status: "flagged",
-      flagReason: "Spam content",
-      created_at: "2024-01-14T16:30:00Z",
-      reportCount: 5,
-    },
-  ];
-
-  const handleContentAction = (contentId, action, type) => {
-    console.log(`${action} ${type} ${contentId}`);
-    // Handle content moderation actions
-  };
-
+  // TODO: Photos moderation is not yet implemented in the backend
   const tabs = [
     {
       id: "reviews",
       label: "Reviews",
-      count: reviews.filter((r) => r.status === "pending").length,
+      count:
+        reportedContent?.data?.filter(
+          (item) => item.type === "review" && item.status === "pending"
+        )?.length || 0,
     },
     {
       id: "posts",
       label: "Posts",
-      count: posts.filter((p) => p.status === "pending").length,
+      count:
+        reportedContent?.data?.filter(
+          (item) => item.type === "post" && item.status === "pending"
+        )?.length || 0,
     },
-    { id: "photos", label: "Photos", count: 3 },
+    { id: "photos", label: "Photos", count: 0 },
   ];
 
-  const ContentCard = ({ content, type }) => (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 mb-4">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-teal-500 rounded-full flex items-center justify-center text-white font-medium">
-            {content.user.name.charAt(0)}
+  const validateReason = (reason) => {
+    if (!reason.trim()) {
+      return "Reason is required";
+    }
+    if (reason.length > 500) {
+      return "Reason must be less than 500 characters";
+    }
+    return null;
+  };
+
+  const handleContentAction = async (contentId, action) => {
+    // Reset any previous errors
+    setError("");
+
+    // Validate reason
+    const validationError = validateReason(moderationReason);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    try {
+      const reason = moderationReason.trim();
+      await moderateContentMutation.mutateAsync({
+        contentId,
+        action,
+        reason,
+      });
+      setModerationReason("");
+      setSelectedContent(null);
+    } catch (error) {
+      console.error("Error moderating content:", error);
+      if (error.response?.data?.error?.errors) {
+        // Handle validation errors from backend
+        const errors = error.response.data.error.errors;
+        setError(errors.map((err) => err.msg).join(", "));
+      } else if (error.response?.data?.message) {
+        // Handle general error message from backend
+        setError(error.response.data.message);
+      } else {
+        // Handle unexpected errors
+        setError("An unexpected error occurred. Please try again.");
+      }
+    }
+  };
+
+  const ModerationDialog = ({ content, onClose }) => {
+    if (!content) return null;
+
+    return (
+      <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
+        <div className="bg-white rounded-xl p-6 max-w-lg w-full mx-4 shadow-xl">
+          <h3 className="text-lg font-medium mb-4">Moderate Content</h3>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Reason for moderation
+              <span className="text-red-500 ml-1">*</span>
+              <span className="text-gray-500 text-xs ml-2">
+                (Max 500 characters)
+              </span>
+            </label>
+            <textarea
+              value={moderationReason}
+              onChange={(e) => {
+                setModerationReason(e.target.value);
+                setError(""); // Clear error when user starts typing
+              }}
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                error ? "border-red-500" : "border-gray-300"
+              }`}
+              rows="3"
+              placeholder="Enter the reason for this moderation action..."
+            />
+            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+            <p className="mt-1 text-sm text-gray-500">
+              {moderationReason.length}/500 characters
+            </p>
           </div>
-          <div>
-            <h4 className="font-medium text-gray-900">{content.user.name}</h4>
-            <p className="text-sm text-gray-600">{content.user.username}</p>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => handleContentAction(content._id, "ignore")}
+              className="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200"
+              disabled={moderateContentMutation.isLoading}
+            >
+              {moderateContentMutation.isLoading
+                ? "Processing..."
+                : "Ignore Report"}
+            </button>
+            <button
+              onClick={() => handleContentAction(content._id, "remove")}
+              className="px-4 py-2 bg-red-100 text-red-800 rounded-lg hover:bg-red-200"
+              disabled={moderateContentMutation.isLoading}
+            >
+              {moderateContentMutation.isLoading
+                ? "Processing..."
+                : "Remove Content"}
+            </button>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${
-              content.status === "pending"
-                ? "bg-yellow-100 text-yellow-800"
-                : content.status === "flagged"
-                ? "bg-red-100 text-red-800"
-                : "bg-green-100 text-green-800"
-            }`}
-          >
-            {content.status}
-          </span>
-          {content.reportCount > 0 && (
-            <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
-              {content.reportCount} reports
-            </span>
-          )}
         </div>
       </div>
-
-      {type === "review" && (
-        <div className="mb-3">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="font-medium text-gray-900">
-              Place: {content.place}
-            </span>
-            <div className="flex items-center gap-1">
-              {[...Array(5)].map((_, i) => (
-                <span
-                  key={i}
-                  className={`text-sm ${
-                    i < content.rating ? "text-yellow-400" : "text-gray-300"
-                  }`}
-                >
-                  ⭐
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      <p className="text-gray-800 mb-4">{content.comment || content.content}</p>
-
-      {content.photos && content.photos.length > 0 && (
-        <div className="mb-4">
-          <img
-            src={content.photos[0] || "/placeholder.svg"}
-            alt="Content"
-            className="w-full h-32 object-cover rounded-lg"
-          />
-        </div>
-      )}
-
-      {content.media && content.media.length > 0 && (
-        <div className="mb-4">
-          <img
-            src={content.media[0] || "/placeholder.svg"}
-            alt="Post media"
-            className="w-full h-32 object-cover rounded-lg"
-          />
-        </div>
-      )}
-
-      {content.flagReason && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-800">
-            <strong>Flag Reason:</strong> {content.flagReason}
-          </p>
-        </div>
-      )}
-
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-500">
-          {new Date(content.created_at).toLocaleString()}
-        </div>
-        <div className="flex items-center gap-2">
-          {content.status === "pending" && (
-            <>
-              <button
-                onClick={() => handleContentAction(content.id, "approve", type)}
-                className="px-3 py-1 bg-green-100 text-green-800 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors duration-200"
-              >
-                Approve
-              </button>
-              <button
-                onClick={() => handleContentAction(content.id, "reject", type)}
-                className="px-3 py-1 bg-red-100 text-red-800 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors duration-200"
-              >
-                Reject
-              </button>
-            </>
-          )}
-          {content.status === "flagged" && (
-            <>
-              <button
-                onClick={() => handleContentAction(content.id, "approve", type)}
-                className="px-3 py-1 bg-green-100 text-green-800 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors duration-200"
-              >
-                Approve
-              </button>
-              <button
-                onClick={() => handleContentAction(content.id, "delete", type)}
-                className="px-3 py-1 bg-red-100 text-red-800 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors duration-200"
-              >
-                Delete
-              </button>
-            </>
-          )}
-          <button
-            onClick={() => handleContentAction(content.id, "view", type)}
-            className="px-3 py-1 bg-gray-100 text-gray-800 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors duration-200"
-          >
-            View Details
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const getFilteredContent = () => {
-    if (activeTab === "reviews") {
-      return reviews.filter(
-        (review) => filterStatus === "all" || review.status === filterStatus
-      );
-    } else if (activeTab === "posts") {
-      return posts.filter(
-        (post) => filterStatus === "all" || post.status === filterStatus
+    if (!reportedContent?.data) return [];
+
+    return reportedContent.data.filter((content) => {
+      // Then filter by content type
+      return activeTab === content.target_type.toLowerCase() + "s";
+    });
+  };
+
+  const ContentCard = ({ content }) => {
+    const targetContent = content.target_content;
+    const type = content.target_type.toLowerCase();
+
+    if (!targetContent || content.target_content_status === "deleted") {
+      return (
+        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-4">
+          <div className="text-center py-4">
+            <p className="text-gray-600">This content has been deleted</p>
+          </div>
+        </div>
       );
     }
-    return [];
+
+    if (content.target_content_status === "error") {
+      return (
+        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-4">
+          <div className="text-center py-4">
+            <p className="text-red-600">
+              Error loading content: {content.error}
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-4">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-teal-500 rounded-full flex items-center justify-center text-white font-medium">
+              {targetContent.user_id?.username?.charAt(0)}
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-900">
+                {targetContent.user_id?.username}
+              </h4>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                content.status === "pending"
+                  ? "bg-yellow-100 text-yellow-800"
+                  : content.status === "flagged"
+                  ? "bg-red-100 text-red-800"
+                  : "bg-green-100 text-green-800"
+              }`}
+            >
+              {content.status}
+            </span>
+          </div>
+        </div>
+
+        {type === "review" && (
+          <div className="mb-3">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-medium text-gray-900">
+                Place: {targetContent.place_id?.name}
+              </span>
+              <div className="flex items-center gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <span
+                    key={i}
+                    className={`text-sm ${
+                      i < targetContent.rating
+                        ? "text-yellow-400"
+                        : "text-gray-300"
+                    }`}
+                  >
+                    ⭐
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <p className="text-gray-800 mb-4">
+          {type === "review" ? targetContent.comment : targetContent.content}
+        </p>
+
+        {targetContent.media && targetContent.media.length > 0 && (
+          <div className="mb-4">
+            <img
+              src={targetContent.media[0] || "/placeholder.svg"}
+              alt="Content media"
+              className="w-full h-32 object-cover rounded-lg"
+            />
+          </div>
+        )}
+
+        {content.reason && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-800">
+              <strong>Report Reason:</strong> {content.reason}
+            </p>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-500">
+            {new Date(content.createdAt).toLocaleString()}
+          </div>
+          <div className="flex items-center gap-2">
+            {content.status === "pending" && (
+              <button
+                onClick={() => setSelectedContent(content)}
+                className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors duration-200"
+              >
+                Take Action
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[80vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-50 min-h-[80vh]">
@@ -297,9 +348,7 @@ const ContentModeration = () => {
               >
                 <option value="all">All Status</option>
                 <option value="pending">Pending</option>
-                <option value="flagged">Flagged</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
+                <option value="resolved">Resolved</option>
               </select>
             </div>
           </div>
@@ -307,18 +356,10 @@ const ContentModeration = () => {
 
         {/* Content List */}
         <div>
-          {activeTab === "reviews" && (
+          {(activeTab === "reviews" || activeTab === "posts") && (
             <div>
-              {getFilteredContent().map((review) => (
-                <ContentCard key={review.id} content={review} type="review" />
-              ))}
-            </div>
-          )}
-
-          {activeTab === "posts" && (
-            <div>
-              {getFilteredContent().map((post) => (
-                <ContentCard key={post.id} content={post} type="post" />
+              {getFilteredContent().map((content) => (
+                <ContentCard key={content._id} content={content} />
               ))}
             </div>
           )}
@@ -330,7 +371,8 @@ const ContentModeration = () => {
                 Photo Moderation
               </h3>
               <p className="text-gray-600">
-                Photo moderation interface would be implemented here
+                TODO: Photo moderation feature is not yet implemented in the
+                backend
               </p>
             </div>
           )}
@@ -346,8 +388,38 @@ const ContentModeration = () => {
               </p>
             </div>
           )}
+
+          {reportedContent?.meta?.pagination && (
+            <div className="mt-6 flex justify-center">
+              <button
+                onClick={() => setPage(page - 1)}
+                disabled={page === 1}
+                className="px-4 py-2 border border-gray-200 rounded-lg mr-2 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span className="px-4 py-2">
+                Page {page} of {reportedContent.meta.pagination.totalPages}
+              </span>
+              <button
+                onClick={() => setPage(page + 1)}
+                disabled={page === reportedContent.meta.pagination.totalPages}
+                className="px-4 py-2 border border-gray-200 rounded-lg ml-2 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
+
+      <ModerationDialog
+        content={selectedContent}
+        onClose={() => {
+          setSelectedContent(null);
+          setModerationReason("");
+        }}
+      />
     </div>
   );
 };

@@ -389,12 +389,19 @@ export const getReportedContent = asyncHandler(async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
-  const status = req.query.status || "pending";
+  const status = req.query.status;
   const contentType = req.query.contentType;
 
   logger.logInfo(NAMESPACE, "Fetching reported content");
 
-  let query = { status };
+  let query = {};
+  if (status) {
+    if (status === "resolved") {
+      query.status = "resolved";
+    } else if (status === "pending") {
+      query.status = "pending";
+    }
+  }
   if (contentType) query.target_type = contentType;
 
   try {

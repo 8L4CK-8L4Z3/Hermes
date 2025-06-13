@@ -60,12 +60,20 @@ export const useAdminAnalytics = (days = 30) => {
   });
 };
 
-export const useReportedContent = (page = 1, limit = 10) => {
+export const useReportedContent = (
+  page = 1,
+  limit = 10,
+  status = "pending"
+) => {
   return useQuery({
-    queryKey: ["admin", "reported-content", { page, limit }],
+    queryKey: ["admin", "reported-content", { page, limit, status }],
     queryFn: async () => {
+      const params = { page, limit };
+      if (status !== "all") {
+        params.status = status;
+      }
       const { data } = await api.get("/admin/reported-content", {
-        params: { page, limit },
+        params,
       });
       return data;
     },
@@ -144,9 +152,10 @@ export const useModerateReportedContent = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ contentId, action }) => {
+    mutationFn: async ({ contentId, action, reason }) => {
       const { data } = await api.put(`/admin/reported-content/${contentId}`, {
         action,
+        reason,
       });
       return data;
     },
