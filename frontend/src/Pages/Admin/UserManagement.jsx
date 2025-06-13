@@ -1,34 +1,21 @@
-"use client"
+"use client";
 
-import { useState, useContext } from "react"
-import { AuthContext } from "@/Context/Auth"
-import { NavigationContext } from "@/Context/Navigate"
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+// import { useAuth } from "@/hooks/useAuth";
 
 const UserManagement = () => {
-  const { navigate } = useContext(NavigationContext)
-  const { isLoggedIn } = useContext(AuthContext)
-  const [isAdmin] = useState(true)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [filterRole, setFilterRole] = useState("all")
-  const [filterStatus, setFilterStatus] = useState("all")
-  const [selectedUsers, setSelectedUsers] = useState([])
+  const navigate = useNavigate();
+  // const { isLoggedIn, user } = useAuth();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterRole, setFilterRole] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [selectedUsers, setSelectedUsers] = useState([]);
 
-  if (!isLoggedIn || !isAdmin) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center p-8">
-          <h1 className="text-2xl font-semibold mb-4">Access Denied</h1>
-          <p className="text-gray-600 mb-6">You need admin privileges to access this page.</p>
-          <button
-            onClick={() => navigate("home")}
-            className="bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200"
-          >
-            Return to Home
-          </button>
-        </div>
-      </div>
-    )
-  }
+  // if (!isLoggedIn || !user?.isAdmin) {
+  //   navigate("/");
+  //   return null;
+  // }
 
   const users = [
     {
@@ -87,31 +74,32 @@ const UserManagement = () => {
       reviewCount: 23,
       photo: null,
     },
-  ]
+  ];
 
   const handleUserAction = (userId, action) => {
-    console.log(`${action} user ${userId}`)
+    console.log(`${action} user ${userId}`);
     // Handle user actions (ban, unban, verify, etc.)
-  }
+  };
 
   const handleBulkAction = (action) => {
-    console.log(`${action} users:`, selectedUsers)
-    setSelectedUsers([])
-  }
+    console.log(`${action} users:`, selectedUsers);
+    setSelectedUsers([]);
+  };
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
       user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase())
+      user.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRole =
       filterRole === "all" ||
       (filterRole === "admin" && user.isAdmin) ||
       (filterRole === "mod" && user.isMod) ||
-      (filterRole === "user" && !user.isAdmin && !user.isMod)
-    const matchesStatus = filterStatus === "all" || user.status === filterStatus
+      (filterRole === "user" && !user.isAdmin && !user.isMod);
+    const matchesStatus =
+      filterStatus === "all" || user.status === filterStatus;
 
-    return matchesSearch && matchesRole && matchesStatus
-  })
+    return matchesSearch && matchesRole && matchesStatus;
+  });
 
   const UserRow = ({ user }) => (
     <tr className="border-b border-gray-100 hover:bg-gray-50">
@@ -121,9 +109,9 @@ const UserManagement = () => {
           checked={selectedUsers.includes(user.id)}
           onChange={(e) => {
             if (e.target.checked) {
-              setSelectedUsers([...selectedUsers, user.id])
+              setSelectedUsers([...selectedUsers, user.id]);
             } else {
-              setSelectedUsers(selectedUsers.filter((id) => id !== user.id))
+              setSelectedUsers(selectedUsers.filter((id) => id !== user.id));
             }
           }}
           className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
@@ -143,13 +131,19 @@ const UserManagement = () => {
       <td className="px-6 py-4">
         <div className="flex gap-1">
           {user.isAdmin && (
-            <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">Admin</span>
+            <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+              Admin
+            </span>
           )}
           {user.isMod && (
-            <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">Mod</span>
+            <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+              Mod
+            </span>
           )}
           {!user.isAdmin && !user.isMod && (
-            <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">User</span>
+            <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
+              User
+            </span>
           )}
         </div>
       </td>
@@ -159,8 +153,8 @@ const UserManagement = () => {
             user.status === "active"
               ? "bg-green-100 text-green-800"
               : user.status === "pending"
-                ? "bg-yellow-100 text-yellow-800"
-                : "bg-red-100 text-red-800"
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-red-100 text-red-800"
           }`}
         >
           {user.status}
@@ -168,10 +162,16 @@ const UserManagement = () => {
       </td>
       <td className="px-6 py-4">
         <div className="flex items-center gap-1">
-          {user.isVerified ? <span className="text-green-500">✅</span> : <span className="text-gray-400">❌</span>}
+          {user.isVerified ? (
+            <span className="text-green-500">✅</span>
+          ) : (
+            <span className="text-gray-400">❌</span>
+          )}
         </div>
       </td>
-      <td className="px-6 py-4 text-sm text-gray-600">{new Date(user.lastLogin).toLocaleDateString()}</td>
+      <td className="px-6 py-4 text-sm text-gray-600">
+        {new Date(user.lastLogin).toLocaleDateString()}
+      </td>
       <td className="px-6 py-4 text-sm text-gray-600">
         {user.tripCount} trips, {user.reviewCount} reviews
       </td>
@@ -209,15 +209,19 @@ const UserManagement = () => {
         </div>
       </td>
     </tr>
-  )
+  );
 
   return (
     <div className="bg-gray-50 min-h-[80vh]">
       <div className="max-w-7xl mx-auto px-4 lg:px-5 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-gray-900 mb-2">User Management</h1>
-          <p className="text-gray-600">Manage user accounts, roles, and permissions</p>
+          <h1 className="text-3xl font-semibold text-gray-900 mb-2">
+            User Management
+          </h1>
+          <p className="text-gray-600">
+            Manage user accounts, roles, and permissions
+          </p>
         </div>
 
         {/* Filters and Search */}
@@ -257,7 +261,9 @@ const UserManagement = () => {
           {/* Bulk Actions */}
           {selectedUsers.length > 0 && (
             <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-200">
-              <span className="text-sm text-gray-600">{selectedUsers.length} users selected</span>
+              <span className="text-sm text-gray-600">
+                {selectedUsers.length} users selected
+              </span>
               <button
                 onClick={() => handleBulkAction("verify")}
                 className="px-3 py-1 bg-green-100 text-green-800 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors duration-200"
@@ -289,12 +295,17 @@ const UserManagement = () => {
                   <th className="px-6 py-3 text-left">
                     <input
                       type="checkbox"
-                      checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
+                      checked={
+                        selectedUsers.length === filteredUsers.length &&
+                        filteredUsers.length > 0
+                      }
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedUsers(filteredUsers.map((user) => user.id))
+                          setSelectedUsers(
+                            filteredUsers.map((user) => user.id)
+                          );
                         } else {
-                          setSelectedUsers([])
+                          setSelectedUsers([]);
                         }
                       }}
                       className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
@@ -334,8 +345,12 @@ const UserManagement = () => {
           {filteredUsers.length === 0 && (
             <div className="text-center py-12">
               <div className="text-gray-400 mb-4 text-4xl">👥</div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
-              <p className="text-gray-600">Try adjusting your search or filter criteria</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No users found
+              </h3>
+              <p className="text-gray-600">
+                Try adjusting your search or filter criteria
+              </p>
             </div>
           )}
         </div>
@@ -349,7 +364,9 @@ const UserManagement = () => {
             <button className="px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200">
               Previous
             </button>
-            <button className="px-3 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium">1</button>
+            <button className="px-3 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium">
+              1
+            </button>
             <button className="px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200">
               2
             </button>
@@ -360,7 +377,7 @@ const UserManagement = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default UserManagement
+export default UserManagement;

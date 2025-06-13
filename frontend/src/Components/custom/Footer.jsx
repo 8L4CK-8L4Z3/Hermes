@@ -1,10 +1,10 @@
 "use client";
 
-import { useContext } from "react";
-import { NavigationContext } from "@/Context/Navigate";
+import { useNavigate } from "react-router-dom";
 import Logo from "@/Assets/Logo.svg";
-const Footer = () => {
-  const { navigate } = useContext(NavigationContext);
+
+export const Footer = () => {
+  const navigate = useNavigate();
 
   const footerSections = [
     {

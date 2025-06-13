@@ -12,9 +12,12 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
-      // Just redirect to login on unauthorized
-      window.location.href = "/login";
+    // Don't redirect on /me endpoint 401s
+    if (error.response?.status === 401 && !error.config.url.endsWith("/me")) {
+      // Clear any cached auth state
+      if (window.__queryClient) {
+        window.__queryClient.setQueryData(["currentUser"], null);
+      }
     }
     return Promise.reject(error);
   }

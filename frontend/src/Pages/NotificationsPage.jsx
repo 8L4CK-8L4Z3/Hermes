@@ -1,19 +1,20 @@
-"use client"
+"use client";
 
-import { useState, useContext } from "react"
-import { AuthContext } from "@/Context/Auth"
-import { NavigationContext } from "@/Context/Navigate"
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const NotificationsPage = () => {
-  const { isLoggedIn } = useContext(AuthContext)
-  const { navigate } = useContext(NavigationContext)
-  const [filter, setFilter] = useState("all")
+  const navigate = useNavigate();
+  const { isLoggedIn } = useAuth();
+  const [filter, setFilter] = useState("all");
   const [notifications, setNotifications] = useState([
     {
       id: 1,
       type: "trip",
       title: "Trip Reminder",
-      message: "Your trip to Tokyo starts in 3 days! Don't forget to check your itinerary.",
+      message:
+        "Your trip to Tokyo starts in 3 days! Don't forget to check your itinerary.",
       timestamp: "2024-01-15T10:30:00Z",
       read: false,
       icon: "✈️",
@@ -89,64 +90,77 @@ const NotificationsPage = () => {
       icon: "🌧️",
       color: "bg-blue-100 text-blue-800",
     },
-  ])
+  ]);
 
   const filterOptions = [
     { value: "all", label: "All Notifications", count: notifications.length },
-    { value: "unread", label: "Unread", count: notifications.filter((n) => !n.read).length },
-    { value: "trip", label: "Trips", count: notifications.filter((n) => n.type === "trip").length },
-    { value: "social", label: "Social", count: notifications.filter((n) => n.type === "social").length },
-    { value: "booking", label: "Bookings", count: notifications.filter((n) => n.type === "booking").length },
-    { value: "system", label: "System", count: notifications.filter((n) => n.type === "system").length },
-  ]
+    {
+      value: "unread",
+      label: "Unread",
+      count: notifications.filter((n) => !n.read).length,
+    },
+    {
+      value: "trip",
+      label: "Trips",
+      count: notifications.filter((n) => n.type === "trip").length,
+    },
+    {
+      value: "social",
+      label: "Social",
+      count: notifications.filter((n) => n.type === "social").length,
+    },
+    {
+      value: "booking",
+      label: "Bookings",
+      count: notifications.filter((n) => n.type === "booking").length,
+    },
+    {
+      value: "system",
+      label: "System",
+      count: notifications.filter((n) => n.type === "system").length,
+    },
+  ];
 
   const filteredNotifications = notifications.filter((notification) => {
-    if (filter === "all") return true
-    if (filter === "unread") return !notification.read
-    return notification.type === filter
-  })
+    if (filter === "all") return true;
+    if (filter === "unread") return !notification.read;
+    return notification.type === filter;
+  });
 
   const markAsRead = (id) => {
     setNotifications((prev) =>
-      prev.map((notification) => (notification.id === id ? { ...notification, read: true } : notification)),
-    )
-  }
+      prev.map((notification) =>
+        notification.id === id ? { ...notification, read: true } : notification
+      )
+    );
+  };
 
   const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((notification) => ({ ...notification, read: true })))
-  }
+    setNotifications((prev) =>
+      prev.map((notification) => ({ ...notification, read: true }))
+    );
+  };
 
   const deleteNotification = (id) => {
-    setNotifications((prev) => prev.filter((notification) => notification.id !== id))
-  }
+    setNotifications((prev) =>
+      prev.filter((notification) => notification.id !== id)
+    );
+  };
 
   const formatTimestamp = (timestamp) => {
-    const date = new Date(timestamp)
-    const now = new Date()
-    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60))
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
 
-    if (diffInHours < 1) return "Just now"
-    if (diffInHours < 24) return `${diffInHours}h ago`
-    if (diffInHours < 48) return "Yesterday"
-    return date.toLocaleDateString()
-  }
+    if (diffInHours < 1) return "Just now";
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInHours < 48) return "Yesterday";
+    return date.toLocaleDateString();
+  };
 
   if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Restricted</h1>
-          <p className="text-gray-600 mb-6">Please sign in to view your notifications.</p>
-          <button
-            onClick={() => navigate("home")}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Go to Home
-          </button>
-        </div>
-      </div>
-    )
+    navigate("/login");
+    return null;
   }
 
   return (
@@ -157,10 +171,16 @@ const NotificationsPage = () => {
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
             <div className="flex gap-3">
-              <button onClick={markAllAsRead} className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+              <button
+                onClick={markAllAsRead}
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
                 Mark all as read
               </button>
-              <button onClick={() => navigate("profile")} className="text-sm text-gray-600 hover:text-gray-700">
+              <button
+                onClick={() => navigate("profile")}
+                className="text-sm text-gray-600 hover:text-gray-700"
+              >
                 Settings
               </button>
             </div>
@@ -173,14 +193,18 @@ const NotificationsPage = () => {
                 key={option.value}
                 onClick={() => setFilter(option.value)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  filter === option.value ? "bg-blue-600 text-white" : "bg-white text-gray-600 hover:bg-gray-100"
+                  filter === option.value
+                    ? "bg-blue-600 text-white"
+                    : "bg-white text-gray-600 hover:bg-gray-100"
                 }`}
               >
                 {option.label}
                 {option.count > 0 && (
                   <span
                     className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
-                      filter === option.value ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-600"
+                      filter === option.value
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-200 text-gray-600"
                     }`}
                   >
                     {option.count}
@@ -196,9 +220,13 @@ const NotificationsPage = () => {
           {filteredNotifications.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">📭</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No notifications</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                No notifications
+              </h3>
               <p className="text-gray-600">
-                {filter === "all" ? "You're all caught up! No new notifications." : `No ${filter} notifications found.`}
+                {filter === "all"
+                  ? "You're all caught up! No new notifications."
+                  : `No ${filter} notifications found.`}
               </p>
             </div>
           ) : (
@@ -216,11 +244,19 @@ const NotificationsPage = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-gray-900">{notification.title}</h3>
-                        {!notification.read && <div className="w-2 h-2 bg-blue-500 rounded-full"></div>}
+                        <h3 className="font-semibold text-gray-900">
+                          {notification.title}
+                        </h3>
+                        {!notification.read && (
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        )}
                       </div>
-                      <p className="text-gray-600 mb-2">{notification.message}</p>
-                      <p className="text-sm text-gray-500">{formatTimestamp(notification.timestamp)}</p>
+                      <p className="text-gray-600 mb-2">
+                        {notification.message}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {formatTimestamp(notification.timestamp)}
+                      </p>
                     </div>
                   </div>
 
@@ -237,8 +273,18 @@ const NotificationsPage = () => {
                       onClick={() => deleteNotification(notification.id)}
                       className="text-gray-400 hover:text-red-500 transition-colors"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                     </button>
                   </div>
@@ -251,12 +297,14 @@ const NotificationsPage = () => {
         {/* Load More Button */}
         {filteredNotifications.length > 0 && (
           <div className="text-center mt-8">
-            <button className="text-blue-600 hover:text-blue-700 font-medium">Load more notifications</button>
+            <button className="text-blue-600 hover:text-blue-700 font-medium">
+              Load more notifications
+            </button>
           </div>
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default NotificationsPage
+export default NotificationsPage;

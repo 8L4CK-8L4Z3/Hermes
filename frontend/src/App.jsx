@@ -1,7 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
+
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { checkAuth } from "@/Stores/authStore";
+import { QueryClientProvider } from "@tanstack/react-query";
+import queryClient from "@/Utils/queryClient";
 
 import Header from "@/Components/custom/Header";
 import Footer from "@/Components/custom/Footer";
@@ -26,185 +27,165 @@ import ContentModeration from "@/Pages/Admin/ContentModeration";
 import DestinationManagement from "@/Pages/Admin/DestinationManagement";
 import Analytics from "@/Pages/Admin/Analytics";
 
-// Import contexts
-import { AuthContext } from "@/Context/Auth";
-import { NavigationContext } from "@/Context/Navigate";
-import { QueryClientProvider } from "@tanstack/react-query";
-import queryClient from "@/Utils/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 
-function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+// Protected Route component
+const ProtectedRoute = ({ children }) => {
+  const { isLoggedIn, isLoading } = useAuth();
 
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        const isAuthenticated = await checkAuth();
-        setIsLoggedIn(isAuthenticated);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    checkAuthStatus();
-  }, []);
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  if (!isLoggedIn) {
+    return <Navigate to="/login" />;
+  }
+  return children;
+};
 
-  const login = () => setIsLoggedIn(true);
-  const logout = () => setIsLoggedIn(false);
+// Admin Route component
+const AdminRoute = ({ children }) => {
+  // const { isLoggedIn, isLoading, user } = useAuth();
 
-  // Create auth context value
-  const authContextValue = {
-    isLoggedIn,
-    login,
-    logout,
-  };
+  // if (isLoading) {
+  //   return <div>Loading...</div>;
+  // }
+  // if (!isLoggedIn || !user?.isAdmin) {
+  //   return <Navigate to="/login" />;
+  // }
+  return children;
+};
 
-  // Protected Route component
-  const ProtectedRoute = ({ children }) => {
-    if (isLoading) {
-      return <div>Loading...</div>;
-    }
-    if (!isLoggedIn) {
-      return <Navigate to="/login" />;
-    }
-    return children;
-  };
-
-  // Admin Route component
-  const AdminRoute = ({ children }) => {
-    if (isLoading) {
-      return <div>Loading...</div>;
-    }
-    if (!isLoggedIn) {
-      return <Navigate to="/login" />;
-    }
-    // Add additional admin check here if needed
-    return children;
-  };
+function AppContent() {
+  const { isLoading } = useAuth();
 
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
   return (
+    <div className="min-h-screen flex flex-col">
+      {/* Don't show header and footer on login and register pages */}
+      <Routes>
+        <Route
+          path="*"
+          element={
+            <>
+              <Header />
+              <main className="flex-1">
+                <Routes>
+                  <Route path="/" element={<LandingPage />} />
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <ProfilePage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/plan-trip"
+                    element={
+                      <ProtectedRoute>
+                        <TripPlanningPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/destination/:id"
+                    element={<DestinationPage />}
+                  />
+                  <Route path="/place/:id" element={<PlacePage />} />
+                  <Route path="/search" element={<SearchResultsPage />} />
+                  <Route
+                    path="/feed"
+                    element={
+                      <ProtectedRoute>
+                        <SocialFeedPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/trip/:id"
+                    element={
+                      <ProtectedRoute>
+                        <TripVisualizationPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/notifications"
+                    element={
+                      <ProtectedRoute>
+                        <NotificationsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Admin Routes */}
+                  <Route
+                    path="/admin"
+                    element={
+                      <AdminRoute>
+                        <AdminDashboard />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/users"
+                    element={
+                      <AdminRoute>
+                        <UserManagement />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/moderation"
+                    element={
+                      <AdminRoute>
+                        <ContentModeration />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/destinations"
+                    element={
+                      <AdminRoute>
+                        <DestinationManagement />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/analytics"
+                    element={
+                      <AdminRoute>
+                        <Analytics />
+                      </AdminRoute>
+                    }
+                  />
+
+                  {/* Catch-all route */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </main>
+              <Footer />
+            </>
+          }
+        />
+
+        {/* Auth routes without header/footer */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+      </Routes>
+    </div>
+  );
+}
+
+function App() {
+  return (
     <QueryClientProvider client={queryClient}>
-      <AuthContext.Provider value={authContextValue}>
-        <BrowserRouter>
-          <div className="min-h-screen flex flex-col">
-            {/* Don't show header and footer on login and register pages */}
-            <Routes>
-              <Route
-                path="*"
-                element={
-                  <>
-                    <Header />
-                    <main className="flex-1">
-                      <Routes>
-                        <Route path="/" element={<LandingPage />} />
-                        <Route
-                          path="/profile"
-                          element={
-                            <ProtectedRoute>
-                              <ProfilePage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/plan-trip"
-                          element={
-                            <ProtectedRoute>
-                              <TripPlanningPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/destination/:id"
-                          element={<DestinationPage />}
-                        />
-                        <Route path="/place/:id" element={<PlacePage />} />
-                        <Route path="/search" element={<SearchResultsPage />} />
-                        <Route
-                          path="/feed"
-                          element={
-                            <ProtectedRoute>
-                              <SocialFeedPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/trip/:id"
-                          element={
-                            <ProtectedRoute>
-                              <TripVisualizationPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/notifications"
-                          element={
-                            <ProtectedRoute>
-                              <NotificationsPage />
-                            </ProtectedRoute>
-                          }
-                        />
-
-                        {/* Admin Routes */}
-                        <Route
-                          path="/admin"
-                          element={
-                            <AdminRoute>
-                              <AdminDashboard />
-                            </AdminRoute>
-                          }
-                        />
-                        <Route
-                          path="/admin/users"
-                          element={
-                            <AdminRoute>
-                              <UserManagement />
-                            </AdminRoute>
-                          }
-                        />
-                        <Route
-                          path="/admin/moderation"
-                          element={
-                            <AdminRoute>
-                              <ContentModeration />
-                            </AdminRoute>
-                          }
-                        />
-                        <Route
-                          path="/admin/destinations"
-                          element={
-                            <AdminRoute>
-                              <DestinationManagement />
-                            </AdminRoute>
-                          }
-                        />
-                        <Route
-                          path="/admin/analytics"
-                          element={
-                            <AdminRoute>
-                              <Analytics />
-                            </AdminRoute>
-                          }
-                        />
-
-                        {/* Catch-all route */}
-                        <Route path="*" element={<Navigate to="/" replace />} />
-                      </Routes>
-                    </main>
-                    <Footer />
-                  </>
-                }
-              />
-
-              {/* Auth routes without header/footer */}
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-            </Routes>
-          </div>
-        </BrowserRouter>
-      </AuthContext.Provider>
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
     </QueryClientProvider>
   );
 }

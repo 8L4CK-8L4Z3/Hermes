@@ -1,31 +1,18 @@
-"use client"
+"use client";
 
-import { useState, useContext } from "react"
-import { AuthContext } from "@/Context/Auth"
-import { NavigationContext } from "@/Context/Navigate"
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const SocialFeedPage = () => {
-  const [newPost, setNewPost] = useState("")
-  const [showCreatePost, setShowCreatePost] = useState(false)
-  const { navigate } = useContext(NavigationContext)
-  const { isLoggedIn } = useContext(AuthContext)
+  const [newPost, setNewPost] = useState("");
+  const [showCreatePost, setShowCreatePost] = useState(false);
+  const navigate = useNavigate();
+  const { isLoggedIn, user } = useAuth();
 
-  // Redirect if not logged in
   if (!isLoggedIn) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center p-8">
-          <h1 className="text-2xl font-semibold mb-4">Please sign in to view the social feed</h1>
-          <p className="text-gray-600 mb-6">You need to be logged in to access this feature.</p>
-          <button
-            onClick={() => navigate("home")}
-            className="bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200"
-          >
-            Return to Home
-          </button>
-        </div>
-      </div>
-    )
+    navigate("/login");
+    return null;
   }
 
   const posts = [
@@ -83,20 +70,20 @@ const SocialFeedPage = () => {
       createdAt: "2024-01-13T14:20:00Z",
       isLiked: false,
     },
-  ]
+  ];
 
   const handleLike = (postId) => {
     // Handle like functionality
-    console.log("Liked post:", postId)
-  }
+    console.log("Liked post:", postId);
+  };
 
   const handleCreatePost = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     // Handle post creation
-    console.log("Creating post:", newPost)
-    setNewPost("")
-    setShowCreatePost(false)
-  }
+    console.log("Creating post:", newPost);
+    setNewPost("");
+    setShowCreatePost(false);
+  };
 
   const PostCard = ({ post }) => (
     <div className="bg-white rounded-2xl p-6 shadow-soft">
@@ -135,7 +122,10 @@ const SocialFeedPage = () => {
         {post.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-3">
             {post.tags.map((tag, index) => (
-              <span key={index} className="text-blue-600 hover:text-blue-800 cursor-pointer text-sm">
+              <span
+                key={index}
+                className="text-blue-600 hover:text-blue-800 cursor-pointer text-sm"
+              >
                 {tag}
               </span>
             ))}
@@ -187,7 +177,12 @@ const SocialFeedPage = () => {
           </button>
 
           <button className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors duration-200">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -199,7 +194,12 @@ const SocialFeedPage = () => {
           </button>
 
           <button className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors duration-200">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -212,7 +212,12 @@ const SocialFeedPage = () => {
         </div>
 
         <button className="text-gray-400 hover:text-gray-600 transition-colors duration-200">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -223,15 +228,19 @@ const SocialFeedPage = () => {
         </button>
       </div>
     </div>
-  )
+  );
 
   return (
     <div className="bg-gray-50 min-h-[80vh]">
       <div className="max-w-2xl mx-auto px-4 lg:px-5 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-gray-900 mb-2">Social Feed</h1>
-          <p className="text-gray-600">Discover travel experiences from fellow explorers</p>
+          <h1 className="text-3xl font-semibold text-gray-900 mb-2">
+            Social Feed
+          </h1>
+          <p className="text-gray-600">
+            Discover travel experiences from fellow explorers
+          </p>
         </div>
 
         {/* Create Post */}
@@ -263,7 +272,12 @@ const SocialFeedPage = () => {
                     type="button"
                     className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -277,7 +291,12 @@ const SocialFeedPage = () => {
                     type="button"
                     className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -334,7 +353,7 @@ const SocialFeedPage = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default SocialFeedPage
+export default SocialFeedPage;

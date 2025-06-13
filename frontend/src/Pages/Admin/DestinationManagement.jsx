@@ -1,33 +1,20 @@
-"use client"
+"use client";
 
-import { useState, useContext } from "react"
-import { AuthContext } from "@/Context/Auth"
-import { NavigationContext } from "@/Context/Navigate"
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+// import { useAuth } from "@/hooks/useAuth";
 
 const DestinationManagement = () => {
-  const { navigate } = useContext(NavigationContext)
-  const { isLoggedIn } = useContext(AuthContext)
-  const [isAdmin] = useState(true)
-  const [activeTab, setActiveTab] = useState("destinations")
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
+  const navigate = useNavigate();
+  // const { isLoggedIn, user } = useAuth();
+  const [activeTab, setActiveTab] = useState("destinations");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  if (!isLoggedIn || !isAdmin) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center p-8">
-          <h1 className="text-2xl font-semibold mb-4">Access Denied</h1>
-          <p className="text-gray-600 mb-6">You need admin privileges to access this page.</p>
-          <button
-            onClick={() => navigate("home")}
-            className="bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200"
-          >
-            Return to Home
-          </button>
-        </div>
-      </div>
-    )
-  }
+  // if (!isLoggedIn || !user?.isAdmin) {
+  //   navigate("/");
+  //   return null;
+  // }
 
   const destinations = [
     {
@@ -63,7 +50,7 @@ const DestinationManagement = () => {
       created_at: "2023-03-10T09:15:00Z",
       status: "active",
     },
-  ]
+  ];
 
   const places = [
     {
@@ -108,37 +95,47 @@ const DestinationManagement = () => {
       created_at: "2023-02-25T12:45:00Z",
       status: "active",
     },
-  ]
+  ];
 
   const handleItemAction = (itemId, action, type) => {
-    console.log(`${action} ${type} ${itemId}`)
+    console.log(`${action} ${type} ${itemId}`);
     // Handle destination/place actions
-  }
+  };
 
   const tabs = [
     { id: "destinations", label: "Destinations", count: destinations.length },
     { id: "places", label: "Places", count: places.length },
-  ]
+  ];
 
   const DestinationCard = ({ destination }) => (
     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-medium transition-shadow duration-200">
-      <img src={destination.photo || "/placeholder.svg"} alt={destination.name} className="w-full h-48 object-cover" />
+      <img
+        src={destination.photo || "/placeholder.svg"}
+        alt={destination.name}
+        className="w-full h-48 object-cover"
+      />
       <div className="p-6">
         <div className="flex items-start justify-between mb-3">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">{destination.name}</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+              {destination.name}
+            </h3>
             <p className="text-sm text-gray-600">{destination.location}</p>
           </div>
           <span
             className={`px-2 py-1 rounded-full text-xs font-medium ${
-              destination.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+              destination.status === "active"
+                ? "bg-green-100 text-green-800"
+                : "bg-gray-100 text-gray-800"
             }`}
           >
             {destination.status}
           </span>
         </div>
 
-        <p className="text-gray-700 text-sm mb-4 line-clamp-2">{destination.description}</p>
+        <p className="text-gray-700 text-sm mb-4 line-clamp-2">
+          {destination.description}
+        </p>
 
         <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
           <span>{destination.placesCount} places</span>
@@ -148,19 +145,25 @@ const DestinationManagement = () => {
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => handleItemAction(destination.id, "edit", "destination")}
+            onClick={() =>
+              handleItemAction(destination.id, "edit", "destination")
+            }
             className="flex-1 bg-gray-900 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors duration-200"
           >
             Edit
           </button>
           <button
-            onClick={() => handleItemAction(destination.id, "view", "destination")}
+            onClick={() =>
+              handleItemAction(destination.id, "view", "destination")
+            }
             className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200"
           >
             View
           </button>
           <button
-            onClick={() => handleItemAction(destination.id, "delete", "destination")}
+            onClick={() =>
+              handleItemAction(destination.id, "delete", "destination")
+            }
             className="px-4 py-2 border border-red-200 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors duration-200"
           >
             Delete
@@ -168,13 +171,17 @@ const DestinationManagement = () => {
         </div>
       </div>
     </div>
-  )
+  );
 
   const PlaceRow = ({ place }) => (
     <tr className="border-b border-gray-100 hover:bg-gray-50">
       <td className="px-6 py-4">
         <div className="flex items-center gap-3">
-          <img src={place.photo || "/placeholder.svg"} alt={place.name} className="w-12 h-12 object-cover rounded-lg" />
+          <img
+            src={place.photo || "/placeholder.svg"}
+            alt={place.name}
+            className="w-12 h-12 object-cover rounded-lg"
+          />
           <div>
             <div className="font-medium text-gray-900">{place.name}</div>
             <div className="text-sm text-gray-600">{place.destination}</div>
@@ -182,7 +189,9 @@ const DestinationManagement = () => {
         </div>
       </td>
       <td className="px-6 py-4">
-        <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">{place.type}</span>
+        <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
+          {place.type}
+        </span>
       </td>
       <td className="px-6 py-4">
         <div className="flex items-center gap-1">
@@ -194,13 +203,17 @@ const DestinationManagement = () => {
       <td className="px-6 py-4">
         <span
           className={`px-2 py-1 rounded-full text-xs font-medium ${
-            place.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+            place.status === "active"
+              ? "bg-green-100 text-green-800"
+              : "bg-gray-100 text-gray-800"
           }`}
         >
           {place.status}
         </span>
       </td>
-      <td className="px-6 py-4 text-sm text-gray-600">{new Date(place.created_at).toLocaleDateString()}</td>
+      <td className="px-6 py-4 text-sm text-gray-600">
+        {new Date(place.created_at).toLocaleDateString()}
+      </td>
       <td className="px-6 py-4">
         <div className="flex items-center gap-2">
           <button
@@ -224,19 +237,19 @@ const DestinationManagement = () => {
         </div>
       </td>
     </tr>
-  )
+  );
 
   const filteredDestinations = destinations.filter(
     (dest) =>
       dest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      dest.location.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+      dest.location.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const filteredPlaces = places.filter(
     (place) =>
       place.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      place.destination.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+      place.destination.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="bg-gray-50 min-h-[80vh]">
@@ -244,8 +257,12 @@ const DestinationManagement = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-semibold text-gray-900 mb-2">Destination Management</h1>
-            <p className="text-gray-600">Manage destinations, places, and activities</p>
+            <h1 className="text-3xl font-semibold text-gray-900 mb-2">
+              Destination Management
+            </h1>
+            <p className="text-gray-600">
+              Manage destinations, places, and activities
+            </p>
           </div>
           <button
             onClick={() => setShowAddModal(true)}
@@ -340,8 +357,12 @@ const DestinationManagement = () => {
         {((activeTab === "destinations" && filteredDestinations.length === 0) ||
           (activeTab === "places" && filteredPlaces.length === 0)) && (
           <div className="text-center py-12">
-            <div className="text-gray-400 mb-4 text-4xl">{activeTab === "destinations" ? "🌍" : "📍"}</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No {activeTab} found</h3>
+            <div className="text-gray-400 mb-4 text-4xl">
+              {activeTab === "destinations" ? "🌍" : "📍"}
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No {activeTab} found
+            </h3>
             <p className="text-gray-600">Try adjusting your search criteria</p>
           </div>
         )}
@@ -353,7 +374,9 @@ const DestinationManagement = () => {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Add New {activeTab === "destinations" ? "Destination" : "Place"}
               </h3>
-              <p className="text-gray-600 mb-6">Form for adding new {activeTab} would be implemented here.</p>
+              <p className="text-gray-600 mb-6">
+                Form for adding new {activeTab} would be implemented here.
+              </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowAddModal(false)}
@@ -373,7 +396,7 @@ const DestinationManagement = () => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default DestinationManagement
+export default DestinationManagement;

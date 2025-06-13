@@ -1,18 +1,93 @@
-"use client"
+"use client";
 
-import { useContext } from "react"
-import { AuthContext } from "@/Context/Auth"
-import { NavigationContext } from "@/Context/Navigate"
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useRegister } from "@/Stores/authStore";
 
 export const RegisterForm = () => {
-  const { login } = useContext(AuthContext)
-  const { navigate } = useContext(NavigationContext)
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const register = useRegister();
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    login() // Simulate registration and login
-    navigate("home") // Redirect to home page
-  }
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+    // Clear error when user starts typing
+    if (error) setError("");
+  };
+
+  const validateForm = () => {
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      return false;
+    }
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (!validateForm()) return;
+    setIsLoading(true);
+
+    try {
+      // First register the user
+      const registerResponse = await register.mutateAsync({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      });
+
+      // If registration is successful, attempt to log in
+      if (registerResponse?.data?.user) {
+        const loginResponse = await login({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (loginResponse?.data?.user) {
+          navigate("/dashboard", { replace: true });
+        } else {
+          // If login fails after registration, redirect to login page
+          navigate("/login", {
+            state: { message: "Registration successful! Please log in." },
+          });
+        }
+      }
+    } catch (err) {
+      // Handle different types of errors
+      if (err.response?.status === 409) {
+        setError("Email or username already exists");
+      } else if (err.response?.status === 422) {
+        setError("Invalid input. Please check your information.");
+      } else {
+        setError(
+          err.response?.data?.error?.message ||
+            err.response?.data?.message ||
+            "Registration failed. Please try again."
+        );
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -20,32 +95,29 @@ export const RegisterForm = () => {
         <h1 className="text-3xl font-bold">Create an account</h1>
         <p className="text-gray-500">Enter your information to get started</p>
       </div>
+      {error && (
+        <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md">
+          {error}
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label htmlFor="first-name" className="text-sm font-medium leading-none">
-              First name
-            </label>
-            <input
-              id="first-name"
-              type="text"
-              placeholder="John"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="last-name" className="text-sm font-medium leading-none">
-              Last name
-            </label>
-            <input
-              id="last-name"
-              type="text"
-              placeholder="Doe"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-              required
-            />
-          </div>
+        <div className="space-y-2">
+          <label
+            htmlFor="username"
+            className="text-sm font-medium leading-none"
+          >
+            Username
+          </label>
+          <input
+            id="username"
+            type="text"
+            value={formData.username}
+            onChange={handleChange}
+            placeholder="johndoe"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            required
+            disabled={isLoading}
+          />
         </div>
         <div className="space-y-2">
           <label htmlFor="email" className="text-sm font-medium leading-none">
@@ -54,49 +126,123 @@ export const RegisterForm = () => {
           <input
             id="email"
             type="email"
+            value={formData.email}
+            onChange={handleChange}
             placeholder="name@example.com"
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
             required
+            disabled={isLoading}
           />
         </div>
         <div className="space-y-2">
-          <label htmlFor="password" className="text-sm font-medium leading-none">
+          <label
+            htmlFor="password"
+            className="text-sm font-medium leading-none"
+          >
             Password
           </label>
           <input
             id="password"
             type="password"
+            value={formData.password}
+            onChange={handleChange}
             placeholder="••••••••"
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
             required
+            minLength={6}
+            disabled={isLoading}
+          />
+        </div>
+        <div className="space-y-2">
+          <label
+            htmlFor="confirmPassword"
+            className="text-sm font-medium leading-none"
+          >
+            Confirm Password
+          </label>
+          <input
+            id="confirmPassword"
+            type="password"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            placeholder="••••••••"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            required
+            minLength={6}
+            disabled={isLoading}
           />
         </div>
         <div className="flex items-center space-x-2">
-          <input id="terms" type="checkbox" className="h-4 w-4 rounded border-gray-300" required />
+          <input
+            id="terms"
+            type="checkbox"
+            className="h-4 w-4 rounded border-gray-300"
+            required
+            disabled={isLoading}
+          />
           <label htmlFor="terms" className="text-sm text-gray-500">
             I agree to the{" "}
-            <button type="button" className="text-blue-600 hover:text-blue-500">
+            <button
+              type="button"
+              className="text-blue-600 hover:text-blue-500"
+              disabled={isLoading}
+            >
               Terms of Service
             </button>{" "}
             and{" "}
-            <button type="button" className="text-blue-600 hover:text-blue-500">
+            <button
+              type="button"
+              className="text-blue-600 hover:text-blue-500"
+              disabled={isLoading}
+            >
               Privacy Policy
             </button>
           </label>
         </div>
         <button
           type="submit"
-          className="w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+          className="w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+          disabled={isLoading}
         >
-          Create Account
+          {isLoading ? (
+            <>
+              <svg
+                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              Creating account...
+            </>
+          ) : (
+            "Create Account"
+          )}
         </button>
       </form>
       <div className="text-center text-sm">
         Already have an account?{" "}
-        <button onClick={() => navigate("login")} className="text-blue-600 hover:text-blue-500">
+        <button
+          onClick={() => navigate("/login")}
+          className="text-blue-600 hover:text-blue-500"
+          disabled={isLoading}
+        >
           Sign in
         </button>
       </div>
     </div>
-  )
-}
+  );
+};

@@ -1,31 +1,18 @@
-"use client"
+"use client";
 
-import { useState, useContext } from "react"
-import { AuthContext } from "@/Context/Auth"
-import { NavigationContext } from "@/Context/Navigate"
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const ProfilePage = () => {
-  const [activeTab, setActiveTab] = useState("trips")
-  const [isFollowing, setIsFollowing] = useState(false)
-  const { navigate } = useContext(NavigationContext)
-  const { isLoggedIn } = useContext(AuthContext)
+  const [activeTab, setActiveTab] = useState("trips");
+  const [isFollowing, setIsFollowing] = useState(false);
+  const navigate = useNavigate();
+  const { isLoggedIn, user } = useAuth();
 
-  // Redirect if not logged in
   if (!isLoggedIn) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center p-8">
-          <h1 className="text-2xl font-semibold mb-4">Please sign in to view your profile</h1>
-          <p className="text-gray-600 mb-6">You need to be logged in to access this page.</p>
-          <button
-            onClick={() => navigate("home")}
-            className="bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200"
-          >
-            Return to Home
-          </button>
-        </div>
-      </div>
-    )
+    navigate("/login");
+    return null;
   }
 
   const tabs = [
@@ -33,7 +20,7 @@ const ProfilePage = () => {
     { id: "reviews", label: "Reviews", count: 28 },
     { id: "followers", label: "Followers", count: 156 },
     { id: "following", label: "Following", count: 89 },
-  ]
+  ];
 
   const mockTrips = [
     {
@@ -56,7 +43,7 @@ const ProfilePage = () => {
       isPublic: true,
       photo: "/images/japan.jpg",
     },
-  ]
+  ];
 
   const mockReviews = [
     {
@@ -75,7 +62,7 @@ const ProfilePage = () => {
       visitDate: "2024-05-15",
       photos: ["/images/newyork.jpg"],
     },
-  ]
+  ];
 
   return (
     <div className="bg-gray-50 min-h-[80vh]">
@@ -90,9 +77,12 @@ const ProfilePage = () => {
             <div className="flex-1">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div>
-                  <h1 className="text-2xl lg:text-3xl font-semibold text-gray-900 mb-2">John Doe</h1>
+                  <h1 className="text-2xl lg:text-3xl font-semibold text-gray-900 mb-2">
+                    John Doe
+                  </h1>
                   <p className="text-gray-600 mb-3">
-                    Passionate traveler exploring the world one destination at a time ✈️
+                    Passionate traveler exploring the world one destination at a
+                    time ✈️
                   </p>
                   <div className="flex items-center gap-4 text-sm text-gray-500">
                     <span>📍 New York, USA</span>
@@ -124,9 +114,16 @@ const ProfilePage = () => {
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {tabs.map((tab) => (
-            <div key={tab.id} className="bg-white rounded-xl p-4 text-center shadow-soft">
-              <div className="text-2xl font-bold text-gray-900">{tab.count}</div>
-              <div className="text-sm text-gray-600 capitalize">{tab.label}</div>
+            <div
+              key={tab.id}
+              className="bg-white rounded-xl p-4 text-center shadow-soft"
+            >
+              <div className="text-2xl font-bold text-gray-900">
+                {tab.count}
+              </div>
+              <div className="text-sm text-gray-600 capitalize">
+                {tab.label}
+              </div>
             </div>
           ))}
         </div>
@@ -160,19 +157,29 @@ const ProfilePage = () => {
                     className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-medium transition-shadow duration-200 cursor-pointer"
                     onClick={() => navigate("trip", { id: trip.id })}
                   >
-                    <img src={trip.photo || "/placeholder.svg"} alt={trip.title} className="w-full h-48 object-cover" />
+                    <img
+                      src={trip.photo || "/placeholder.svg"}
+                      alt={trip.title}
+                      className="w-full h-48 object-cover"
+                    />
                     <div className="p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold text-gray-900">{trip.title}</h3>
+                        <h3 className="font-semibold text-gray-900">
+                          {trip.title}
+                        </h3>
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            trip.status === "completed" ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"
+                            trip.status === "completed"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-blue-100 text-blue-800"
                           }`}
                         >
                           {trip.status}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">{trip.destinations.join(" → ")}</p>
+                      <p className="text-sm text-gray-600 mb-2">
+                        {trip.destinations.join(" → ")}
+                      </p>
                       <p className="text-xs text-gray-500">
                         {trip.startDate} to {trip.endDate}
                       </p>
@@ -185,22 +192,33 @@ const ProfilePage = () => {
             {activeTab === "reviews" && (
               <div className="space-y-6">
                 {mockReviews.map((review) => (
-                  <div key={review.id} className="border border-gray-200 rounded-xl p-4">
+                  <div
+                    key={review.id}
+                    className="border border-gray-200 rounded-xl p-4"
+                  >
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <h3 className="font-semibold text-gray-900">{review.placeName}</h3>
+                        <h3 className="font-semibold text-gray-900">
+                          {review.placeName}
+                        </h3>
                         <div className="flex items-center gap-1 mt-1">
                           {[...Array(5)].map((_, i) => (
                             <span
                               key={i}
-                              className={`text-sm ${i < review.rating ? "text-yellow-400" : "text-gray-300"}`}
+                              className={`text-sm ${
+                                i < review.rating
+                                  ? "text-yellow-400"
+                                  : "text-gray-300"
+                              }`}
                             >
                               ⭐
                             </span>
                           ))}
                         </div>
                       </div>
-                      <span className="text-xs text-gray-500">{review.visitDate}</span>
+                      <span className="text-xs text-gray-500">
+                        {review.visitDate}
+                      </span>
                     </div>
                     <p className="text-gray-700 mb-3">{review.comment}</p>
                     {review.photos && (
@@ -219,7 +237,8 @@ const ProfilePage = () => {
               <div className="text-center py-12">
                 <div className="text-gray-400 mb-4">👥</div>
                 <p className="text-gray-600">
-                  {activeTab === "followers" ? "Followers" : "Following"} list would be displayed here
+                  {activeTab === "followers" ? "Followers" : "Following"} list
+                  would be displayed here
                 </p>
               </div>
             )}
@@ -227,7 +246,7 @@ const ProfilePage = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ProfilePage
+export default ProfilePage;

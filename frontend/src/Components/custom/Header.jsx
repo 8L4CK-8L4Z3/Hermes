@@ -1,35 +1,41 @@
 "use client";
 
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "@/Context/Auth";
+import { useAuth } from "@/hooks/useAuth";
+import { useUnreadCount } from "@/Stores/notificationStore";
 import Logo from "@/Components/custom/Logo";
 
-const Header = () => {
+export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const authContext = useContext(AuthContext);
   const navigate = useNavigate();
-  const [isAdmin] = useState(true); // Mock admin check
-  const [unreadCount] = useState(3); // Mock unread notifications count
+  const { isLoggedIn, logout, user } = useAuth();
+  const { data: unreadCountData } = useUnreadCount();
 
-  // Check if context is available
-  if (!authContext) {
-    return (
-      <header className="bg-white/90 backdrop-blur-sm border-b border-gray-50 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 lg:px-5">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-3">
-              <Logo />
-              <span className="text-xl font-medium text-gray-900">Hermes</span>
-            </div>
-            <div className="text-sm text-gray-600">Loading...</div>
-          </div>
-        </div>
-      </header>
-    );
-  }
+  // Extract actual data from the response format
+  const userData = user?.data;
+  const unreadCount = unreadCountData?.data;
 
-  const { isLoggedIn, login, logout } = authContext;
+  // Get user's display name for the avatar
+  const getDisplayInitial = () => {
+    if (userData?.username) return userData.username[0].toUpperCase();
+    if (userData?.email) return userData.email[0].toUpperCase();
+    return "U";
+  };
+
+  // Get user's display name
+  const getDisplayName = () => {
+    if (userData?.username) return userData.username;
+    if (userData?.email) return userData.email;
+    return "User";
+  };
+
+  // Get user's role display
+  const getUserRole = () => {
+    if (userData?.isAdmin) return "Admin";
+    if (userData?.isMod) return "Moderator";
+    return null;
+  };
 
   // Basic navigation items that are always visible
   const basicNavItems = [
@@ -48,19 +54,18 @@ const Header = () => {
   // Admin navigation items
   const adminNavItems = [
     { name: "Dashboard", page: "/admin" },
-    { name: "Users", page: "/admin-users" },
-    { name: "Content", page: "/admin-moderation" },
-    { name: "Destinations", page: "/admin-destinations" },
-    { name: "Analytics", page: "/admin-analytics" },
+    { name: "Users", page: "/admin/users" },
+    { name: "Content", page: "/admin/moderation" },
+    { name: "Destinations", page: "/admin/destinations" },
+    { name: "Analytics", page: "/admin/analytics" },
   ];
 
-  // Determine which nav items to show
-  const navItems =
-    isLoggedIn && isAdmin
+  // Determine which nav items to show based on actual user role
+  const navItems = isLoggedIn
+    ? userData?.isAdmin
       ? adminNavItems
-      : isLoggedIn
-      ? loggedInNavItems
-      : basicNavItems;
+      : loggedInNavItems
+    : basicNavItems;
 
   // Helper function to handle navigation
   const handleNavigation = (item) => {
@@ -80,6 +85,39 @@ const Header = () => {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
+  // Don't show the full header if user is banned
+  if (userData?.isBanned) {
+    return (
+      <header className="bg-white/90 backdrop-blur-sm border-b border-gray-50 sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-4 lg:px-5">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-3">
+              <Logo />
+            </div>
+            <div className="text-sm text-red-600">
+              Account Suspended
+              {userData?.banReason ? `: ${userData.banReason}` : ""}
+            </div>
+            <button
+              onClick={handleLogout}
+              className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors duration-200"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
   return (
     <header className="bg-white/90 backdrop-blur-sm border-b border-gray-50 sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4 lg:px-5">
@@ -91,9 +129,15 @@ const Header = () => {
               className="flex items-center space-x-3"
             >
               <Logo />
-              {isLoggedIn && isAdmin && (
-                <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
-                  Admin
+              {isLoggedIn && getUserRole() && (
+                <span
+                  className={`px-2 py-1 ${
+                    userData?.isAdmin
+                      ? "bg-red-100 text-red-800"
+                      : "bg-blue-100 text-blue-800"
+                  } rounded-full text-xs font-medium`}
+                >
+                  {getUserRole()}
                 </span>
               )}
             </button>
@@ -134,15 +178,15 @@ const Header = () => {
                       d="M15 17h5l-5 5v-5zM11 19H6a2 2 0 01-2-2V7a2 2 0 012-2h5m5 0v6m0 0l3-3m-3 3l-3-3"
                     />
                   </svg>
-                  {unreadCount > 0 && (
+                  {unreadCount?.count > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                      {unreadCount}
+                      {unreadCount.count}
                     </span>
                   )}
                 </button>
 
                 <div className="flex items-center gap-4">
-                  {!isAdmin && (
+                  {!userData?.isAdmin && (
                     <button
                       onClick={() => navigate("/plan-trip")}
                       className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors duration-200"
@@ -151,11 +195,25 @@ const Header = () => {
                     </button>
                   )}
                   <div className="relative group">
-                    <button className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center text-white font-semibold">
-                      {isAdmin ? "A" : "JD"}
+                    <button
+                      className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center text-white font-semibold"
+                      title={getDisplayName()}
+                    >
+                      {getDisplayInitial()}
                     </button>
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-10 hidden group-hover:block">
-                      {!isAdmin && (
+                      <div className="px-4 py-2 text-sm font-medium text-gray-900 border-b border-gray-100">
+                        {getDisplayName()}
+                        {userData?.isVerified && (
+                          <span
+                            className="ml-1 text-blue-500"
+                            title="Verified Account"
+                          >
+                            ✓
+                          </span>
+                        )}
+                      </div>
+                      {!userData?.isAdmin && (
                         <button
                           onClick={() => navigate("/profile")}
                           className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -168,13 +226,13 @@ const Header = () => {
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
                         Notifications
-                        {unreadCount > 0 && (
+                        {unreadCount?.count > 0 && (
                           <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
-                            {unreadCount}
+                            {unreadCount.count}
                           </span>
                         )}
                       </button>
-                      {isAdmin && (
+                      {userData?.isAdmin && (
                         <>
                           <button
                             onClick={() => navigate("/admin")}
@@ -191,9 +249,26 @@ const Header = () => {
                           <div className="border-t border-gray-100 my-1"></div>
                         </>
                       )}
+                      <div className="px-4 py-2 text-xs text-gray-500 border-t border-gray-100">
+                        Stats
+                      </div>
+                      <div className="px-4 py-2 text-xs text-gray-500 grid grid-cols-2 gap-2">
+                        <div>
+                          <div className="font-medium">
+                            {userData?.stats?.tripsCount || 0}
+                          </div>
+                          <div>Trips</div>
+                        </div>
+                        <div>
+                          <div className="font-medium">
+                            {userData?.stats?.reviewsCount || 0}
+                          </div>
+                          <div>Reviews</div>
+                        </div>
+                      </div>
                       <button
-                        onClick={logout}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 mt-2 border-t border-gray-100"
                       >
                         Sign Out
                       </button>
@@ -253,22 +328,30 @@ const Header = () => {
         {isMenuOpen && (
           <div className="md:hidden py-3 border-t border-gray-50">
             <nav className="flex flex-col space-y-3">
+              <div className="px-4 py-2 text-sm font-medium text-gray-900 border-b border-gray-100">
+                {getDisplayName()}
+                {userData?.isVerified && (
+                  <span className="ml-1 text-blue-500" title="Verified Account">
+                    ✓
+                  </span>
+                )}
+              </div>
               {navItems.map((item) => (
                 <button
                   key={item.name}
                   onClick={() => handleNavigation(item)}
-                  className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors duration-200 py-1 text-left"
+                  className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors duration-200 py-1 text-left px-4"
                 >
                   {item.name}
                 </button>
               ))}
-              {isLoggedIn && !isAdmin && (
+              {isLoggedIn && !userData?.isAdmin && (
                 <button
                   onClick={() => {
                     navigate("/plan-trip");
                     setIsMenuOpen(false);
                   }}
-                  className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors duration-200 py-1 text-left"
+                  className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors duration-200 py-1 text-left px-4"
                 >
                   Plan Trip
                 </button>
@@ -279,53 +362,66 @@ const Header = () => {
                     navigate("/notifications");
                     setIsMenuOpen(false);
                   }}
-                  className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors duration-200 py-1 text-left flex items-center"
+                  className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors duration-200 py-1 text-left px-4 flex items-center"
                 >
                   Notifications
-                  {unreadCount > 0 && (
+                  {unreadCount?.count > 0 && (
                     <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
-                      {unreadCount}
+                      {unreadCount.count}
                     </span>
                   )}
                 </button>
               )}
+              {isLoggedIn && (
+                <div className="px-4 py-2 text-xs text-gray-500 grid grid-cols-2 gap-2 border-t border-gray-100">
+                  <div>
+                    <div className="font-medium">
+                      {userData?.stats?.tripsCount || 0}
+                    </div>
+                    <div>Trips</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">
+                      {userData?.stats?.reviewsCount || 0}
+                    </div>
+                    <div>Reviews</div>
+                  </div>
+                </div>
+              )}
               <div className="pt-3 border-t border-gray-50">
                 {isLoggedIn ? (
                   <>
-                    {!isAdmin && (
+                    {!userData?.isAdmin && (
                       <button
                         onClick={() => {
                           navigate("/profile");
                           setIsMenuOpen(false);
                         }}
-                        className="block w-full text-left py-2 text-sm text-gray-700 hover:text-gray-900"
+                        className="block w-full text-left py-2 text-sm text-gray-700 hover:text-gray-900 px-4"
                       >
                         Profile
                       </button>
                     )}
-                    {isAdmin && (
+                    {userData?.isAdmin && (
                       <button
                         onClick={() => {
                           navigate("/");
                           setIsMenuOpen(false);
                         }}
-                        className="block w-full text-left py-2 text-sm text-gray-700 hover:text-gray-900"
+                        className="block w-full text-left py-2 text-sm text-gray-700 hover:text-gray-900 px-4"
                       >
                         Switch to User View
                       </button>
                     )}
                     <button
-                      onClick={() => {
-                        logout();
-                        setIsMenuOpen(false);
-                      }}
-                      className="w-full text-left py-2 text-sm text-gray-700 hover:text-gray-900"
+                      onClick={handleLogout}
+                      className="w-full text-left py-2 text-sm text-gray-700 hover:text-gray-900 px-4"
                     >
                       Sign Out
                     </button>
                   </>
                 ) : (
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-2 px-4">
                     <button
                       onClick={() => {
                         navigate("/login");

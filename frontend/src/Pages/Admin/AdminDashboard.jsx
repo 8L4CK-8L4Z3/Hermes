@@ -1,49 +1,18 @@
 "use client";
 
-import { useState, useContext } from "react";
-import { AuthContext   } from "@/Context/Auth";
-import { NavigationContext } from "@/Context/Navigate";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import UserActivityChart from "@/Components/charts/UserActivityChart";
 import UserDistributionChart from "@/Components/charts/UserDistributionChart";
 
 const AdminDashboard = () => {
-  const authContext = useContext(AuthContext);
-  const navigationContext = useContext(NavigationContext);
-  const [isAdmin] = useState(true); // Mock admin check
+  const navigate = useNavigate();
+  // const { isLoggedIn, user } = useAuth();
 
-  // Check if contexts are available
-  if (!authContext || !navigationContext) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center p-8">
-          <h1 className="text-2xl font-semibold mb-4">Loading...</h1>
-        </div>
-      </div>
-    );
-  }
-
-  const { isLoggedIn } = authContext;
-  const { navigate } = navigationContext;
-
-  // Redirect if not logged in or not admin
-  if (!isLoggedIn || !isAdmin) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center p-8">
-          <h1 className="text-2xl font-semibold mb-4">Access Denied</h1>
-          <p className="text-gray-600 mb-6">
-            You need admin privileges to access this page.
-          </p>
-          <button
-            onClick={() => navigate("home")}
-            className="bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200"
-          >
-            Return to Home
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // if (!isLoggedIn || !user?.isAdmin) {
+  //   navigate("/");
+  //   return null;
+  // }
 
   const stats = {
     totalUsers: 12847,

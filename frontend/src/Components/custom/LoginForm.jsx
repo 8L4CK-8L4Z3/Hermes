@@ -1,47 +1,65 @@
 "use client";
 
-import { useState, useEffect, useContext } from "react";
-import { useNavigate } from "react-router-dom";
-import { useLogin } from "@/Stores/authStore";
-import { AuthContext } from "@/Context/Auth";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 export const LoginForm = () => {
+  const [credentials, setCredentials] = useState({ email: "", password: "" });
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { isLoggedIn, login } = useContext(AuthContext);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const location = useLocation();
+  const { isLoggedIn, login } = useAuth();
   const [error, setError] = useState("");
-
-  const loginMutation = useLogin();
 
   useEffect(() => {
     if (isLoggedIn) {
-      navigate("/feed");
+      // Navigate to the intended page or dashboard
+      const intendedPath = location.state?.from || "/feed";
+      navigate(intendedPath, { replace: true });
     }
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, navigate, location]);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
-    setFormData((prev) => ({
+    setCredentials((prev) => ({
       ...prev,
       [id]: value,
     }));
+    // Clear error when user starts typing
+    if (error) setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
 
     try {
-      await loginMutation.mutateAsync(formData);
-      login(); // Update auth context
-      navigate("/feed");
+      const response = await login(credentials);
+      // Check if the response contains user data
+      if (response?.data?.user) {
+        // Navigate to the intended page or dashboard
+        const intendedPath = location.state?.from || "/feed";
+        navigate(intendedPath, { replace: true });
+      } else {
+        setError("Invalid response from server");
+      }
     } catch (err) {
-      setError(
-        err?.response?.data?.message || "Failed to login. Please try again."
-      );
+      // Handle different types of errors
+      if (err.response?.status === 401) {
+        setError("Invalid email or password");
+      } else if (err.response?.status === 403) {
+        setError("Account is suspended. Please contact support.");
+      } else {
+        setError(
+          err.response?.data?.error?.message ||
+            err.response?.data?.message ||
+            "Failed to login. Please try again."
+        );
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -66,11 +84,12 @@ export const LoginForm = () => {
           <input
             id="email"
             type="email"
-            value={formData.email}
+            value={credentials.email}
             onChange={handleChange}
             placeholder="name@example.com"
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
             required
+            disabled={isLoading}
           />
         </div>
         <div className="space-y-2">
@@ -83,8 +102,9 @@ export const LoginForm = () => {
             </label>
             <button
               type="button"
-              onClick={() => navigate("forgot-password")}
+              onClick={() => navigate("/forgot-password")}
               className="text-sm text-blue-600 hover:text-blue-500"
+              disabled={isLoading}
             >
               Forgot password?
             </button>
@@ -92,27 +112,55 @@ export const LoginForm = () => {
           <input
             id="password"
             type="password"
-            value={formData.password}
+            value={credentials.password}
             onChange={handleChange}
             placeholder="••••••••"
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
             required
             minLength={6}
+            disabled={isLoading}
           />
         </div>
         <button
           type="submit"
-          disabled={loginMutation.isPending}
-          className="w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-70"
+          className="w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+          disabled={isLoading}
         >
-          {loginMutation.isPending ? "Signing in..." : "Sign In"}
+          {isLoading ? (
+            <>
+              <svg
+                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              Signing in...
+            </>
+          ) : (
+            "Sign In"
+          )}
         </button>
       </form>
       <div className="text-center text-sm">
         Don't have an account?{" "}
         <button
-          onClick={() => navigate("register")}
+          onClick={() => navigate("/register")}
           className="text-blue-600 hover:text-blue-500"
+          disabled={isLoading}
         >
           Sign up
         </button>

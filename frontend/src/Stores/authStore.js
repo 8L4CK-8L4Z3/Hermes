@@ -16,9 +16,23 @@ export const useCurrentUser = () => {
   return useQuery({
     queryKey: ["currentUser"],
     queryFn: async () => {
-      const { data } = await api.get("/users/me");
-      return data;
+      try {
+        const { data } = await api.get("/users/me");
+        return data;
+      } catch (error) {
+        if (error.response?.status === 401) {
+          return null;
+        }
+        throw error;
+      }
     },
+    // Disable automatic retries completely
+    retry: false,
+    // Disable automatic refetching
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
   });
 };
 

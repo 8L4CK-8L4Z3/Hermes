@@ -1,32 +1,19 @@
-"use client"
+"use client";
 
-import { useState, useContext } from "react"
-import { AuthContext } from "@/Context/Auth"
-import { NavigationContext } from "@/Context/Navigate"
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+// import { useAuth } from "@/hooks/useAuth";
 
 const ContentModeration = () => {
-  const { navigate } = useContext(NavigationContext)
-  const { isLoggedIn } = useContext(AuthContext)
-  const [isAdmin] = useState(true)
-  const [activeTab, setActiveTab] = useState("reviews")
-  const [filterStatus, setFilterStatus] = useState("pending")
+  const navigate = useNavigate();
+  // const { isLoggedIn, user } = useAuth();
+  const [activeTab, setActiveTab] = useState("reviews");
+  const [filterStatus, setFilterStatus] = useState("pending");
 
-  if (!isLoggedIn || !isAdmin) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center p-8">
-          <h1 className="text-2xl font-semibold mb-4">Access Denied</h1>
-          <p className="text-gray-600 mb-6">You need admin privileges to access this page.</p>
-          <button
-            onClick={() => navigate("home")}
-            className="bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200"
-          >
-            Return to Home
-          </button>
-        </div>
-      </div>
-    )
-  }
+  // if (!isLoggedIn || !user?.isAdmin) {
+  //   navigate("/");
+  //   return null;
+  // }
 
   const reviews = [
     {
@@ -68,7 +55,7 @@ const ContentModeration = () => {
       created_at: "2024-01-13T14:20:00Z",
       reportCount: 0,
     },
-  ]
+  ];
 
   const posts = [
     {
@@ -93,18 +80,26 @@ const ContentModeration = () => {
       created_at: "2024-01-14T16:30:00Z",
       reportCount: 5,
     },
-  ]
+  ];
 
   const handleContentAction = (contentId, action, type) => {
-    console.log(`${action} ${type} ${contentId}`)
+    console.log(`${action} ${type} ${contentId}`);
     // Handle content moderation actions
-  }
+  };
 
   const tabs = [
-    { id: "reviews", label: "Reviews", count: reviews.filter((r) => r.status === "pending").length },
-    { id: "posts", label: "Posts", count: posts.filter((p) => p.status === "pending").length },
+    {
+      id: "reviews",
+      label: "Reviews",
+      count: reviews.filter((r) => r.status === "pending").length,
+    },
+    {
+      id: "posts",
+      label: "Posts",
+      count: posts.filter((p) => p.status === "pending").length,
+    },
     { id: "photos", label: "Photos", count: 3 },
-  ]
+  ];
 
   const ContentCard = ({ content, type }) => (
     <div className="bg-white border border-gray-200 rounded-xl p-6 mb-4">
@@ -124,8 +119,8 @@ const ContentModeration = () => {
               content.status === "pending"
                 ? "bg-yellow-100 text-yellow-800"
                 : content.status === "flagged"
-                  ? "bg-red-100 text-red-800"
-                  : "bg-green-100 text-green-800"
+                ? "bg-red-100 text-red-800"
+                : "bg-green-100 text-green-800"
             }`}
           >
             {content.status}
@@ -141,10 +136,17 @@ const ContentModeration = () => {
       {type === "review" && (
         <div className="mb-3">
           <div className="flex items-center gap-2 mb-2">
-            <span className="font-medium text-gray-900">Place: {content.place}</span>
+            <span className="font-medium text-gray-900">
+              Place: {content.place}
+            </span>
             <div className="flex items-center gap-1">
               {[...Array(5)].map((_, i) => (
-                <span key={i} className={`text-sm ${i < content.rating ? "text-yellow-400" : "text-gray-300"}`}>
+                <span
+                  key={i}
+                  className={`text-sm ${
+                    i < content.rating ? "text-yellow-400" : "text-gray-300"
+                  }`}
+                >
                   ⭐
                 </span>
               ))}
@@ -184,7 +186,9 @@ const ContentModeration = () => {
       )}
 
       <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-500">{new Date(content.created_at).toLocaleString()}</div>
+        <div className="text-sm text-gray-500">
+          {new Date(content.created_at).toLocaleString()}
+        </div>
         <div className="flex items-center gap-2">
           {content.status === "pending" && (
             <>
@@ -227,24 +231,32 @@ const ContentModeration = () => {
         </div>
       </div>
     </div>
-  )
+  );
 
   const getFilteredContent = () => {
     if (activeTab === "reviews") {
-      return reviews.filter((review) => filterStatus === "all" || review.status === filterStatus)
+      return reviews.filter(
+        (review) => filterStatus === "all" || review.status === filterStatus
+      );
     } else if (activeTab === "posts") {
-      return posts.filter((post) => filterStatus === "all" || post.status === filterStatus)
+      return posts.filter(
+        (post) => filterStatus === "all" || post.status === filterStatus
+      );
     }
-    return []
-  }
+    return [];
+  };
 
   return (
     <div className="bg-gray-50 min-h-[80vh]">
       <div className="max-w-6xl mx-auto px-4 lg:px-5 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-gray-900 mb-2">Content Moderation</h1>
-          <p className="text-gray-600">Review and moderate user-generated content</p>
+          <h1 className="text-3xl font-semibold text-gray-900 mb-2">
+            Content Moderation
+          </h1>
+          <p className="text-gray-600">
+            Review and moderate user-generated content
+          </p>
         </div>
 
         {/* Tabs */}
@@ -275,7 +287,9 @@ const ContentModeration = () => {
           {/* Filters */}
           <div className="p-6 border-b border-gray-100">
             <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-gray-700">Filter by status:</label>
+              <label className="text-sm font-medium text-gray-700">
+                Filter by status:
+              </label>
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
@@ -312,22 +326,30 @@ const ContentModeration = () => {
           {activeTab === "photos" && (
             <div className="text-center py-12">
               <div className="text-gray-400 mb-4 text-4xl">📸</div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Photo Moderation</h3>
-              <p className="text-gray-600">Photo moderation interface would be implemented here</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Photo Moderation
+              </h3>
+              <p className="text-gray-600">
+                Photo moderation interface would be implemented here
+              </p>
             </div>
           )}
 
           {getFilteredContent().length === 0 && activeTab !== "photos" && (
             <div className="text-center py-12">
               <div className="text-gray-400 mb-4 text-4xl">📝</div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No content found</h3>
-              <p className="text-gray-600">No {activeTab} match the current filter criteria</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No content found
+              </h3>
+              <p className="text-gray-600">
+                No {activeTab} match the current filter criteria
+              </p>
             </div>
           )}
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ContentModeration
+export default ContentModeration;
