@@ -2,6 +2,8 @@ import User from "../Models/User.js";
 import Destination from "../Models/Destination.js";
 import Place from "../Models/Place.js";
 import Post from "../Models/Post.js";
+import Trip from "../Models/Trip.js";
+import Activity from "../Models/Activity.js";
 import logger from "../Utils/logger.js";
 import {
   successPatterns,
@@ -34,37 +36,58 @@ export const searchAll = asyncHandler(async (req, res) => {
     ],
   };
 
-  const [destinations, places, users, posts] = await Promise.all([
-    Destination.find(searchQuery)
-      .limit(limit)
-      .select("name description location photo"),
-    Place.find(searchQuery)
-      .limit(limit)
-      .populate("destination_id", "name")
-      .select("name description type photo average_rating"),
-    User.find({
-      $or: [
-        { username: { $regex: query, $options: "i" } },
-        { bio: { $regex: query, $options: "i" } },
-      ],
-    })
-      .limit(limit)
-      .select("username photo bio"),
-    Post.find({
-      $and: [
-        {
-          $or: [
-            { content: { $regex: query, $options: "i" } },
-            { tags: { $regex: query, $options: "i" } },
-          ],
-        },
-        { visibility: "public" },
-      ],
-    })
-      .limit(limit)
-      .populate("user_id", "username photo")
-      .select("content media type tags createdAt"),
-  ]);
+  const [destinations, places, users, posts, trips, activities] =
+    await Promise.all([
+      Destination.find(searchQuery)
+        .limit(limit)
+        .select("name description location photo"),
+      Place.find(searchQuery)
+        .limit(limit)
+        .populate("destination_id", "name")
+        .select("name description type photo average_rating"),
+      User.find({
+        $or: [
+          { username: { $regex: query, $options: "i" } },
+          { bio: { $regex: query, $options: "i" } },
+        ],
+      })
+        .limit(limit)
+        .select("username photo bio"),
+      Post.find({
+        $and: [
+          {
+            $or: [
+              { content: { $regex: query, $options: "i" } },
+              { tags: { $regex: query, $options: "i" } },
+            ],
+          },
+          { visibility: "public" },
+        ],
+      })
+        .limit(limit)
+        .populate("user_id", "username photo")
+        .select("content media type tags createdAt"),
+      Trip.find({
+        $or: [
+          { title: { $regex: query, $options: "i" } },
+          { destinations: { $regex: query, $options: "i" } },
+        ],
+        isPublic: true,
+      })
+        .limit(limit)
+        .populate("user_id", "username photo")
+        .select("title destinations start_date end_date status user_id"),
+      Activity.find({
+        $or: [
+          { name: { $regex: query, $options: "i" } },
+          { description: { $regex: query, $options: "i" } },
+          { location: { $regex: query, $options: "i" } },
+          { tags: { $regex: query, $options: "i" } },
+        ],
+      })
+        .limit(limit)
+        .select("name description location category tags image popularity"),
+    ]);
 
   return successPatterns.retrieved(res, {
     data: {
@@ -72,6 +95,8 @@ export const searchAll = asyncHandler(async (req, res) => {
       places,
       users,
       posts,
+      trips,
+      activities,
     },
     meta: {
       query,
@@ -80,6 +105,8 @@ export const searchAll = asyncHandler(async (req, res) => {
         places: places.length,
         users: users.length,
         posts: posts.length,
+        trips: trips.length,
+        activities: activities.length,
       },
     },
   });
@@ -309,6 +336,93 @@ export const getSearchSuggestions = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * @desc    Search trips
+ * @route   GET /api/search/trips
+ * @access  Public
+ */
+export const searchTrips = asyncHandler(async (req, res) => {
+  const { query, page = 1, limit = 10 } = req.query;
+
+  if (!query) {
+    return errorPatterns.validationError(res, {
+      message: "Search query is required",
+    });
+  }
+
+  logger.logInfo(NAMESPACE, `Searching trips with query: ${query}`);
+
+  const searchQuery = {
+    $and: [
+      {
+        $or: [
+          { title: { $regex: query, $options: "i" } },
+          { destinations: { $regex: query, $options: "i" } },
+        ],
+      },
+      { isPublic: true },
+    ],
+  };
+
+  const total = await Trip.countDocuments(searchQuery);
+  const trips = await Trip.find(searchQuery)
+    .populate("user_id", "username photo")
+    .skip((page - 1) * limit)
+    .limit(limit);
+
+  return successPatterns.retrieved(res, {
+    data: trips,
+    meta: {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      total,
+      pages: Math.ceil(total / limit),
+    },
+  });
+});
+
+/**
+ * @desc    Search activities
+ * @route   GET /api/search/activities
+ * @access  Public
+ */
+export const searchActivities = asyncHandler(async (req, res) => {
+  const { query, category, page = 1, limit = 10 } = req.query;
+
+  if (!query) {
+    return errorPatterns.validationError(res, {
+      message: "Search query is required",
+    });
+  }
+
+  logger.logInfo(NAMESPACE, `Searching activities with query: ${query}`);
+
+  const searchQuery = {
+    $or: [
+      { name: { $regex: query, $options: "i" } },
+      { description: { $regex: query, $options: "i" } },
+      { location: { $regex: query, $options: "i" } },
+      { tags: { $regex: query, $options: "i" } },
+    ],
+  };
+  if (category) searchQuery.category = category;
+
+  const total = await Activity.countDocuments(searchQuery);
+  const activities = await Activity.find(searchQuery)
+    .skip((page - 1) * limit)
+    .limit(limit);
+
+  return successPatterns.retrieved(res, {
+    data: activities,
+    meta: {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      total,
+      pages: Math.ceil(total / limit),
+    },
+  });
+});
+
 export default {
   searchAll,
   searchDestinations,
@@ -316,4 +430,6 @@ export default {
   searchUsers,
   searchPosts,
   getSearchSuggestions,
+  searchTrips,
+  searchActivities,
 };

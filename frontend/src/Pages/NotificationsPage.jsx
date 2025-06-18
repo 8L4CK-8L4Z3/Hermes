@@ -11,6 +11,7 @@ import {
   useDeleteNotification,
   useUnreadCount,
 } from "../Stores/notificationStore";
+import { Plane, User, Star, Hotel, Lock, Megaphone, Inbox } from "lucide-react";
 
 const NotificationsPage = () => {
   const navigate = useNavigate();
@@ -79,12 +80,30 @@ const NotificationsPage = () => {
   // Get notification icon and color based on type
   const getNotificationStyle = (type) => {
     const styles = {
-      trip: { icon: "✈️", color: "bg-blue-100 text-blue-800" },
-      social: { icon: "👤", color: "bg-green-100 text-green-800" },
-      review: { icon: "⭐", color: "bg-yellow-100 text-yellow-800" },
-      booking: { icon: "🏨", color: "bg-purple-100 text-purple-800" },
-      system: { icon: "🔒", color: "bg-gray-100 text-gray-800" },
-      default: { icon: "📢", color: "bg-gray-100 text-gray-800" },
+      trip: {
+        icon: <Plane className="w-5 h-5" />,
+        color: "bg-blue-100 text-blue-800",
+      },
+      social: {
+        icon: <User className="w-5 h-5" />,
+        color: "bg-green-100 text-green-800",
+      },
+      review: {
+        icon: <Star className="w-5 h-5" />,
+        color: "bg-yellow-100 text-yellow-800",
+      },
+      booking: {
+        icon: <Hotel className="w-5 h-5" />,
+        color: "bg-purple-100 text-purple-800",
+      },
+      system: {
+        icon: <Lock className="w-5 h-5" />,
+        color: "bg-gray-100 text-gray-800",
+      },
+      default: {
+        icon: <Megaphone className="w-5 h-5" />,
+        color: "bg-gray-100 text-gray-800",
+      },
     };
     return styles[type] || styles.default;
   };
@@ -175,7 +194,9 @@ const NotificationsPage = () => {
         <div className="space-y-4">
           {notifications.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-6xl mb-4">📭</div>
+              <div className="text-6xl mb-4">
+                <Inbox className="w-12 h-12 mx-auto" />
+              </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 No notifications
               </h3>
@@ -198,7 +219,7 @@ const NotificationsPage = () => {
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-4 flex-1">
                       <div className={`p-2 rounded-full ${style.color}`}>
-                        <span className="text-lg">{style.icon}</span>
+                        {style.icon}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">

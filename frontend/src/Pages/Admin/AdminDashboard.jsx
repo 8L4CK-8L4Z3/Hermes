@@ -8,6 +8,7 @@ import {
   useAdminAnalytics,
   useModerationLogs,
 } from "@/Stores/adminStore";
+import { Users, Shield, Globe, BarChart2, Circle, Alarm } from "lucide-react";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -83,28 +84,28 @@ const AdminDashboard = () => {
     {
       title: "User Management",
       description: "Manage user accounts, roles, and permissions",
-      icon: "👥",
+      icon: <Users className="w-8 h-8" />,
       path: "/admin/users",
       stats: `${stats.totalUsers} total users`,
     },
     {
       title: "Content Moderation",
       description: "Review and moderate user-generated content",
-      icon: "🛡️",
+      icon: <Shield className="w-8 h-8" />,
       path: "/admin/moderation",
       stats: `${stats.pendingReports} pending reports`,
     },
     {
       title: "Destination Management",
       description: "Manage destinations, places, and activities",
-      icon: "🌍",
+      icon: <Globe className="w-8 h-8" />,
       path: "/admin/destinations",
       stats: `${statsData?.data?.content?.destinations || 0} destinations`,
     },
     {
       title: "Analytics",
       description: "View usage statistics and reports",
-      icon: "📊",
+      icon: <BarChart2 className="w-8 h-8" />,
       path: "/admin/analytics",
       stats: "Real-time insights",
     },
@@ -163,28 +164,32 @@ const AdminDashboard = () => {
             title="Total Users"
             value={stats.totalUsers}
             change={stats.newUsers}
-            icon="👥"
+            icon={<Users className="w-6 h-6" />}
             description={`${stats.verifiedUsers} verified users`}
           />
           <StatCard
             title="Active Users"
             value={stats.activeUsers}
             change={Number(activePercentage)}
-            icon="🟢"
+            icon={
+              <Circle className="w-6 h-6 text-green-500" fill="currentColor" />
+            }
             description="Active in last 30 days"
           />
           <StatCard
             title="Inactive Users"
             value={stats.inactiveUsers}
             change={Number(inactivePercentage)}
-            icon="⚪"
+            icon={
+              <Circle className="w-6 h-6 text-gray-400" fill="currentColor" />
+            }
             description="No activity in 30+ days"
           />
           <StatCard
             title="Content Reports"
             value={stats.pendingReports}
             change={stats.resolvedReports}
-            icon="🚨"
+            icon={<Alarm className="w-6 h-6 text-red-500" />}
             description={`${stats.resolvedReports} reports resolved`}
           />
         </div>

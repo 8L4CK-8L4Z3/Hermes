@@ -203,7 +203,7 @@ export const Header = () => {
                   )}
                   <div className="relative group">
                     <button
-                      className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center text-white font-semibold"
+                      className="w-10 h-10 rounded-full bg-gradient-to-br from-blueP-500 to-teal-500 flex items-center justify-center text-white font-semibold"
                       title={getDisplayName()}
                     >
                       {getDisplayInitial()}
@@ -246,12 +246,6 @@ export const Header = () => {
                             className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
                             Admin Dashboard
-                          </button>
-                          <button
-                            onClick={() => navigate("/")}
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            Switch to User View
                           </button>
                           <div className="border-t border-gray-100 my-1"></div>
                         </>
@@ -407,17 +401,6 @@ export const Header = () => {
                         className="block w-full text-left py-2 text-sm text-gray-700 hover:text-gray-900 px-4"
                       >
                         Profile
-                      </button>
-                    )}
-                    {userData?.isAdmin && (
-                      <button
-                        onClick={() => {
-                          navigate("/");
-                          setIsMenuOpen(false);
-                        }}
-                        className="block w-full text-left py-2 text-sm text-gray-700 hover:text-gray-900 px-4"
-                      >
-                        Switch to User View
                       </button>
                     )}
                     <button

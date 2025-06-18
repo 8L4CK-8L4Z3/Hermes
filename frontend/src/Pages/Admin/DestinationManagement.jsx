@@ -16,6 +16,8 @@ import {
 } from "@/Stores/placeStore";
 import DestinationForm from "@/Components/Forms/DestinationForm";
 import { getImageUrl } from "@/Utils/imageUpload";
+import { SearchIcon } from "lucide-react";
+
 const DestinationManagement = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("destinations");

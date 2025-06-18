@@ -12,6 +12,7 @@ import {
   useDestinationAnalytics,
   usePlaceAnalytics,
 } from "@/Stores/analyticsStore";
+import { BarChart2, Users, FileText, MessageCircle, Star } from "lucide-react";
 
 const Analytics = () => {
   const [timeRange, setTimeRange] = useState("7d");
@@ -332,7 +333,7 @@ const Analytics = () => {
             title="Overall Engagement"
             value={overallEngagement}
             change={stats.activeUserGrowth}
-            icon="📊"
+            icon={<BarChart2 className="w-6 h-6" />}
             suffix="%"
             description="Combined engagement score"
           />
@@ -340,7 +341,7 @@ const Analytics = () => {
             title="Active Users"
             value={formattedEngagementMetrics.activeUserRate}
             change={stats.activeUserGrowth}
-            icon="👥"
+            icon={<Users className="w-6 h-6" />}
             suffix="%"
             description="Of total users active"
           />
@@ -348,13 +349,13 @@ const Analytics = () => {
             title="Content per User"
             value={formattedEngagementMetrics.contentPerUser}
             change={stats.tripGrowth}
-            icon="📝"
+            icon={<FileText className="w-6 h-6" />}
             description="Avg content per active user"
           />
           <MetricCard
             title="Interaction Rate"
             value={formattedEngagementMetrics.interactionRate}
-            icon="💬"
+            icon={<MessageCircle className="w-6 h-6" />}
             change={stats.activeUserGrowth}
             description="Interactions per content"
           />
@@ -423,7 +424,12 @@ const Analytics = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="text-yellow-400">⭐</span>
+                    <span className="text-yellow-400">
+                      <Star
+                        className="w-4 h-4 text-yellow-400"
+                        fill="currentColor"
+                      />
+                    </span>
                     <span className="text-sm font-medium">
                       {place.rating?.toFixed(1) || "N/A"}
                     </span>

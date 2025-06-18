@@ -60,31 +60,58 @@ const userUpdateValidator = [
 const postValidator = [
   body("content")
     .trim()
-    .isLength({ min: 1, max: 1000 })
-    .withMessage("Post content must be between 1 and 1000 characters"),
-  body("media").optional().isURL().withMessage("Media must be a valid URL"),
+    .notEmpty()
+    .withMessage("Content is required")
+    .isLength({ max: 1000 })
+    .withMessage("Content must be less than 1000 characters"),
+
+  body("media")
+    .optional()
+    .isArray()
+    .withMessage("Media must be an array")
+    .custom((value) => {
+      if (!value) return true;
+      return value.every((url) => {
+        try {
+          new URL(url);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      });
+    })
+    .withMessage("All media items must be valid URLs"),
+
   body("type")
     .optional()
     .isIn(["trip_share", "review_share", "general", "announcement"])
-    .withMessage("Invalid post type"),
+    .withMessage("Invalid post type")
+    .default("general"),
+
   body("visibility")
     .optional()
     .isIn(["public", "followers", "private"])
-    .withMessage("Invalid visibility type"),
-  body("tags").optional().isArray().withMessage("Tags must be an array"),
-  body("tags.*").optional().isString().withMessage("Each tag must be a string"),
-  body("location.type")
+    .withMessage("Invalid visibility setting")
+    .default("public"),
+
+  body("tags")
     .optional()
-    .isIn(["Point"])
-    .withMessage("Location type must be 'Point'"),
-  body("location.coordinates")
+    .isArray()
+    .withMessage("Tags must be an array")
+    .custom((value) => {
+      if (!value) return true;
+      return value.every(
+        (tag) => typeof tag === "string" && tag.trim().length > 0
+      );
+    })
+    .withMessage("Each tag must be a non-empty string"),
+
+  body("location")
     .optional()
-    .isArray({ min: 2, max: 2 })
-    .withMessage("Coordinates must be an array of two numbers"),
-  body("location.coordinates.*")
-    .optional()
-    .isFloat()
-    .withMessage("Coordinates must contain valid numbers"),
+    .trim()
+    .isString()
+    .withMessage("Location must be a string"),
+
   handleValidationErrors,
 ];
 

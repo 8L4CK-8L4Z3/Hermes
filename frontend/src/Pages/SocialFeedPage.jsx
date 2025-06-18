@@ -3,86 +3,44 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useCreatePost, useFeed } from "@/Stores/postStore";
 
 const SocialFeedPage = () => {
   const [newPost, setNewPost] = useState("");
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const { isLoggedIn, user } = useAuth();
+  const createPostMutation = useCreatePost();
+  const { data: feedData, isLoading: isFeedLoading } = useFeed();
 
   if (!isLoggedIn) {
     navigate("/login");
     return null;
   }
 
-  const posts = [
-    {
-      id: 1,
-      user: {
-        name: "Sarah Johnson",
-        username: "@sarahj",
-        photo: null,
-      },
-      type: "trip_share",
-      content:
-        "Just completed my amazing 2-week European adventure! 🇮🇹🇫🇷🇪🇸 Rome → Paris → Barcelona. The food, the culture, the people - everything was incredible!",
-      media: ["/images/rome.jpg", "/images/newyork.jpg"],
-      location: "Barcelona, Spain",
-      tags: ["#Europe", "#Travel", "#Adventure"],
-      likes: 127,
-      comments: 23,
-      createdAt: "2024-01-15T10:30:00Z",
-      isLiked: false,
-    },
-    {
-      id: 2,
-      user: {
-        name: "Marco Rossi",
-        username: "@marco_travels",
-        photo: null,
-      },
-      type: "review",
-      content:
-        "The Colosseum at sunset is absolutely breathtaking! If you're visiting Rome, make sure to book the evening tour. Worth every penny! ⭐⭐⭐⭐⭐",
-      media: ["/images/sightseeing.jpg"],
-      location: "Rome, Italy",
-      tags: ["#Rome", "#Colosseum", "#Review"],
-      likes: 89,
-      comments: 15,
-      createdAt: "2024-01-14T18:45:00Z",
-      isLiked: true,
-    },
-    {
-      id: 3,
-      user: {
-        name: "Emily Chen",
-        username: "@emily_adventures",
-        photo: null,
-      },
-      type: "update",
-      content:
-        "Planning my next adventure to Japan! 🇯🇵 Any recommendations for hidden gems in Tokyo? Looking for authentic local experiences!",
-      media: ["/images/japan.jpg"],
-      location: null,
-      tags: ["#Japan", "#Tokyo", "#Planning"],
-      likes: 45,
-      comments: 31,
-      createdAt: "2024-01-13T14:20:00Z",
-      isLiked: false,
-    },
-  ];
+  const handleCreatePost = async (e) => {
+    e.preventDefault();
+    setError(null);
+
+    try {
+      await createPostMutation.mutateAsync({
+        content: newPost,
+        type: "general",
+        visibility: "public",
+      });
+      setNewPost("");
+      setShowCreatePost(false);
+    } catch (error) {
+      setError(error.message || "Failed to create post. Please try again.");
+    }
+  };
+
+  const posts = feedData?.data || [];
 
   const handleLike = (postId) => {
     // Handle like functionality
     console.log("Liked post:", postId);
-  };
-
-  const handleCreatePost = (e) => {
-    e.preventDefault();
-    // Handle post creation
-    console.log("Creating post:", newPost);
-    setNewPost("");
-    setShowCreatePost(false);
   };
 
   const PostCard = ({ post }) => (
@@ -247,7 +205,7 @@ const SocialFeedPage = () => {
         <div className="bg-white rounded-2xl p-6 shadow-soft mb-8">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-teal-500 rounded-full flex items-center justify-center text-white font-medium">
-              JD
+              {user?.username?.[0]?.toUpperCase() || "U"}
             </div>
             <button
               onClick={() => setShowCreatePost(true)}
@@ -259,6 +217,7 @@ const SocialFeedPage = () => {
 
           {showCreatePost && (
             <form onSubmit={handleCreatePost} className="space-y-4">
+              {error && <div className="text-red-500 text-sm">{error}</div>}
               <textarea
                 value={newPost}
                 onChange={(e) => setNewPost(e.target.value)}
@@ -316,21 +275,24 @@ const SocialFeedPage = () => {
                 <div className="flex gap-3">
                   <button
                     type="button"
-                    onClick={() => setShowCreatePost(false)}
+                    onClick={() => {
+                      setShowCreatePost(false);
+                      setError(null);
+                    }}
                     className="px-4 py-2 border border-gray-200 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    disabled={!newPost.trim()}
+                    disabled={!newPost.trim() || createPostMutation.isLoading}
                     className={`px-6 py-2 rounded-lg font-medium transition-colors duration-200 ${
-                      newPost.trim()
-                        ? "bg-gray-900 text-white hover:bg-gray-800"
-                        : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      !newPost.trim() || createPostMutation.isLoading
+                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                        : "bg-gray-900 text-white hover:bg-gray-800"
                     }`}
                   >
-                    Post
+                    {createPostMutation.isLoading ? "Posting..." : "Post"}
                   </button>
                 </div>
               </div>
@@ -340,17 +302,25 @@ const SocialFeedPage = () => {
 
         {/* Posts Feed */}
         <div className="space-y-6">
-          {posts.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))}
+          {isFeedLoading ? (
+            <div className="text-center py-8">Loading posts...</div>
+          ) : posts.length > 0 ? (
+            posts.map((post) => <PostCard key={post.id} post={post} />)
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              No posts yet. Be the first to share!
+            </div>
+          )}
         </div>
 
         {/* Load More */}
-        <div className="text-center mt-8">
-          <button className="bg-white border border-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors duration-200">
-            Load More Posts
-          </button>
-        </div>
+        {posts.length > 0 && (
+          <div className="text-center mt-8">
+            <button className="bg-white border border-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors duration-200">
+              Load More Posts
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

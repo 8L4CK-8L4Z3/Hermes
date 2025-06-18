@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useGlobalSearch } from "../Stores/searchStore";
 import { getImageUrl } from "../Utils/imageUpload";
+import { Search } from "lucide-react";
 
 const SearchResultsPage = () => {
   const [searchQuery, setSearchQuery] = useState("Rome");
@@ -26,7 +27,17 @@ const SearchResultsPage = () => {
           ...place,
           entityType: "place",
         }));
-        return [...destinations, ...places];
+        const trips = (globalSearchData.data.trips || []).map((trip) => ({
+          ...trip,
+          entityType: "trip",
+        }));
+        const activities = (globalSearchData.data.activities || []).map(
+          (activity) => ({
+            ...activity,
+            entityType: "activity",
+          })
+        );
+        return [...destinations, ...places, ...trips, ...activities];
       }
       return [];
     } catch (error) {
@@ -43,22 +54,108 @@ const SearchResultsPage = () => {
 
     // Get the appropriate image URL based on entity type and available fields
     const getResultImage = () => {
-      // For destinations
-      if (result.entityType === "destination") {
+      // For destinations and places
+      if (
+        result.entityType === "destination" ||
+        result.entityType === "place"
+      ) {
+        if (result.images) return getImageUrl(result.images);
         if (result.thumbnail) return getImageUrl(result.thumbnail);
         if (result.image_url) return getImageUrl(result.image_url);
       }
-      // For places
-      if (result.entityType === "place") {
-        if (result.thumbnail) return getImageUrl(result.thumbnail);
-        if (result.image_url) return getImageUrl(result.image_url);
+      // For trips: no images, use a trip placeholder
+      if (result.entityType === "trip") {
+        return "/images/placeholder-trip.jpg";
       }
-      // Return appropriate placeholder based on entity type
-      return result.entityType === "destination"
-        ? "/images/placeholder-destination.jpg"
-        : "/images/placeholder-place.jpg";
+      // For activities
+      if (result.entityType === "activity") {
+        if (result.image) return getImageUrl(result.image);
+        if (result.images) return getImageUrl(result.images);
+        return "/images/placeholder-activity.jpg";
+      }
+      // Default fallback
+      return "/images/placeholder-generic.jpg";
     };
 
+    // Render different card layouts based on entity type
+    if (result.entityType === "trip") {
+      return (
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-medium transition-shadow duration-200">
+          <div className="relative h-48">
+            <img
+              src={getResultImage()}
+              alt={result.title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 rounded text-xs">
+              Trip
+            </div>
+          </div>
+          <div className="p-4">
+            <h3 className="font-semibold text-gray-900 mb-1">{result.title}</h3>
+            <div className="text-sm text-gray-600 mb-2">
+              {result.destinations && result.destinations.length > 0 && (
+                <span>Destinations: {result.destinations.join(", ")}</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-1">
+                {result.status}
+              </span>
+              {result.start_date && result.end_date && (
+                <span className="text-xs text-gray-500">
+                  {new Date(result.start_date).toLocaleDateString()} -{" "}
+                  {new Date(result.end_date).toLocaleDateString()}
+                </span>
+              )}
+            </div>
+            <div className="flex gap-2 mt-2">
+              <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors duration-200">
+                View Trip
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    if (result.entityType === "activity") {
+      return (
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-medium transition-shadow duration-200">
+          <div className="relative h-48">
+            <img
+              src={getResultImage()}
+              alt={result.name}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute top-2 left-2 bg-green-600 text-white px-2 py-1 rounded text-xs">
+              Activity
+            </div>
+          </div>
+          <div className="p-4">
+            <h3 className="font-semibold text-gray-900 mb-1">{result.name}</h3>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-1">
+                {result.category}
+              </span>
+              {result.location && (
+                <span className="text-xs text-gray-500">
+                  📍 {result.location}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+              {result.description}
+            </p>
+            <div className="flex gap-2 mt-2">
+              <button className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors duration-200">
+                View Activity
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    // Default: destination/place card
     return (
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-medium transition-shadow duration-200">
         <div className="relative h-48">
@@ -138,7 +235,8 @@ const SearchResultsPage = () => {
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               />
             </div>
-            <button className="bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200">
+            <button className="bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200 flex items-center gap-2">
+              <Search className="w-5 h-5" />
               Search
             </button>
           </div>
@@ -220,7 +318,9 @@ const SearchResultsPage = () => {
             </div>
           ) : (
             <div className="text-center py-12">
-              <div className="text-gray-400 mb-4 text-4xl">🔍</div>
+              <div className="text-gray-400 mb-4 text-4xl flex justify-center">
+                <Search className="w-10 h-10 mx-auto" />
+              </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 No results found
               </h3>

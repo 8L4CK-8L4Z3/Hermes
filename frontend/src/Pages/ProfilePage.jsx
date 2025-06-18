@@ -4,6 +4,44 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFollowers, useFollowing } from "@/Stores/followStore";
 import { checkAuth } from "@/Stores/authStore";
+import { useUserTrips } from "@/Stores/tripStore";
+
+const TripCard = ({ trip }) => {
+  const startDate = new Date(trip.start_date).toLocaleDateString();
+  const endDate = new Date(trip.end_date).toLocaleDateString();
+
+  return (
+    <div className="bg-white rounded-xl p-4 border border-gray-200 hover:border-gray-300 transition-colors">
+      <div className="flex justify-between items-start mb-3">
+        <h3 className="font-semibold text-gray-900">{trip.title}</h3>
+        <span
+          className={`px-2 py-1 text-xs rounded-full ${
+            trip.status === "completed"
+              ? "bg-green-100 text-green-700"
+              : trip.status === "ongoing"
+              ? "bg-blue-100 text-blue-700"
+              : trip.status === "cancelled"
+              ? "bg-red-100 text-red-700"
+              : "bg-gray-100 text-gray-700"
+          }`}
+        >
+          {trip.status.charAt(0).toUpperCase() + trip.status.slice(1)}
+        </span>
+      </div>
+      <div className="text-sm text-gray-600 mb-3">
+        <div>
+          🗓️ {startDate} - {endDate}
+        </div>
+        <div>📍 {trip.destinations.join(", ")}</div>
+      </div>
+      {trip.budget?.amount && (
+        <div className="text-sm text-gray-600">
+          💰 {trip.budget.amount} {trip.budget.currency}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState("trips");
@@ -42,6 +80,17 @@ const ProfilePage = () => {
   );
 
   const { data: followingData } = useFollowing(
+    authState.user?.data?._id,
+    1,
+    10,
+    {
+      enabled: !!authState.user?.data?._id,
+      retry: false,
+    }
+  );
+
+  // Fetch user's trips
+  const { data: tripsData, isLoading: isLoadingTrips } = useUserTrips(
     authState.user?.data?._id,
     1,
     10,
@@ -168,6 +217,23 @@ const ProfilePage = () => {
           </div>
 
           <div className="p-6">
+            {activeTab === "trips" && (
+              <div className="space-y-4">
+                {isLoadingTrips ? (
+                  <div className="text-center py-8">Loading trips...</div>
+                ) : tripsData?.data?.length > 0 ? (
+                  tripsData.data.map((trip) => (
+                    <TripCard key={trip._id} trip={trip} />
+                  ))
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="text-gray-400 mb-4">✈️</div>
+                    <p className="text-gray-600">No trips yet</p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {activeTab === "followers" && (
               <div className="space-y-4">
                 {followersData?.data?.map((follower) => (
@@ -240,14 +306,12 @@ const ProfilePage = () => {
               </div>
             )}
 
-            {(activeTab === "trips" || activeTab === "reviews") && (
+            {activeTab === "reviews" && (
               <div className="text-center py-12">
-                <div className="text-gray-400 mb-4">
-                  {activeTab === "trips" ? "✈️" : "⭐"}
-                </div>
+                <div className="text-gray-400 mb-4">⭐</div>
                 <p className="text-gray-600">
-                  {activeTab === "trips" ? "Trips" : "Reviews"} will be
-                  implemented when we have the corresponding stores
+                  Reviews will be implemented when we have the corresponding
+                  stores
                 </p>
               </div>
             )}

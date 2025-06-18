@@ -19,15 +19,19 @@ export const createPost = asyncHandler(async (req, res) => {
   const { content, media, type, visibility, tags, location } = req.body;
   const user_id = req.user.id;
 
+  // Create post with default values where needed
   const post = await Post.create({
     user_id,
     content,
-    media,
-    type,
-    visibility,
-    tags,
-    location,
+    media: media || [],
+    type: type || "general",
+    visibility: visibility || "public",
+    tags: tags || [],
+    location: location || null,
   });
+
+  // Populate user details for the response
+  await post.populate("user_id", "username photo");
 
   logger.logInfo(NAMESPACE, `New post created by user ${user_id}`);
   return successPatterns.created(res, { data: post });
@@ -40,7 +44,9 @@ export const createPost = asyncHandler(async (req, res) => {
  */
 export const getPost = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const post = await Post.findById(id).populate("user_id", "username photo");
+  const post = await Post.findById(id)
+    .populate("user_id", "username photo")
+    .populate("liked_by", "username photo");
 
   if (!post) {
     return errorPatterns.notFound(res, { message: "Post not found" });
@@ -119,9 +125,19 @@ export const getFeed = asyncHandler(async (req, res) => {
     ],
   })
     .populate("user_id", "username photo")
+    .populate("liked_by", "username photo")
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
     .limit(limit);
+
+  // Add isLiked field to each post
+  const postsWithLikeStatus = posts.map((post) => {
+    const postObj = post.toJSON();
+    postObj.isLiked = post.liked_by.some(
+      (likedUser) => likedUser._id.toString() === user_id.toString()
+    );
+    return postObj;
+  });
 
   const total = await Post.countDocuments({
     $or: [
@@ -134,11 +150,12 @@ export const getFeed = asyncHandler(async (req, res) => {
   });
 
   return successPatterns.ok(res, {
-    data: posts,
+    data: postsWithLikeStatus,
     meta: {
       page: parseInt(page),
       limit: parseInt(limit),
       total,
+      hasMore: total > page * limit,
     },
   });
 });
@@ -417,6 +434,43 @@ export const getPostsByTags = asyncHandler(async (req, res) => {
       page: parseInt(page),
       limit: parseInt(limit),
       total,
+    },
+  });
+});
+
+/**
+ * @desc    Like/Unlike a post
+ * @route   POST /api/posts/:id/like
+ * @access  Private
+ */
+export const toggleLike = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const user_id = req.user.id;
+
+  const post = await Post.findById(id);
+
+  if (!post) {
+    return errorPatterns.notFound(res, { message: "Post not found" });
+  }
+
+  const userLikedIndex = post.liked_by.indexOf(user_id);
+
+  if (userLikedIndex === -1) {
+    // Like the post
+    post.liked_by.push(user_id);
+    post.likes_count += 1;
+  } else {
+    // Unlike the post
+    post.liked_by.splice(userLikedIndex, 1);
+    post.likes_count -= 1;
+  }
+
+  await post.save();
+
+  return successPatterns.ok(res, {
+    data: {
+      likes_count: post.likes_count,
+      isLiked: userLikedIndex === -1,
     },
   });
 });

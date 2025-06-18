@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/Utils/api";
+import postSchema from "@/Schemas/postSchema";
 
 // Queries
 export const usePost = (postId) => {
@@ -9,6 +10,7 @@ export const usePost = (postId) => {
       const { data } = await api.get(`/posts/${postId}`);
       return data;
     },
+    enabled: !!postId,
   });
 };
 
@@ -90,11 +92,17 @@ export const useCreatePost = () => {
 
   return useMutation({
     mutationFn: async (postData) => {
-      const { data } = await api.post("/posts", postData);
+      // Validate post data
+      const validatedData = postSchema.parse(postData);
+      const { data } = await api.post("/posts", validatedData);
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["posts"]);
+    },
+    onError: (error) => {
+      console.error("Failed to create post:", error);
+      throw error;
     },
   });
 };
