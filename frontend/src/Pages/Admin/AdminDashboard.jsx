@@ -8,8 +8,14 @@ import {
   useAdminAnalytics,
   useModerationLogs,
 } from "@/Stores/adminStore";
-import { Users, Shield, Globe, BarChart2, Circle, Alarm } from "lucide-react";
-
+import {
+  Users,
+  Shield,
+  Globe,
+  BarChart2,
+  Circle,
+  AlarmClock,
+} from "lucide-react";
 const AdminDashboard = () => {
   const navigate = useNavigate();
 
@@ -189,7 +195,7 @@ const AdminDashboard = () => {
             title="Content Reports"
             value={stats.pendingReports}
             change={stats.resolvedReports}
-            icon={<Alarm className="w-6 h-6 text-red-500" />}
+            icon={<AlarmClock className="w-6 h-6 text-red-500" />}
             description={`${stats.resolvedReports} reports resolved`}
           />
         </div>

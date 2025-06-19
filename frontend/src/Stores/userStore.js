@@ -120,6 +120,7 @@ export const useUpdateProfile = () => {
         username: profileData.username,
         email: profileData.email,
         bio: profileData.bio,
+        image: profileData.image,
         ...(profileData.preferences && {
           preferences: {
             language: profileData.preferences.language,
@@ -181,9 +182,9 @@ export const useUpdateProfilePhoto = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (photoData) => {
+    mutationFn: async (imageData) => {
       const formData = new FormData();
-      formData.append("photo", photoData);
+      formData.append("image", imageData);
       const { data } = await api.put("/users/photo", formData, {
         headers: {
           "Content-Type": "multipart/form-data",

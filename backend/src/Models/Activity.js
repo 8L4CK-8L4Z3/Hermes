@@ -37,10 +37,10 @@ const activitySchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
-    location: {
-      type: String,
+    destination: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Destination",
       required: true,
-      trim: true,
     },
     category: {
       type: String,

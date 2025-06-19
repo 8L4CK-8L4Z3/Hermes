@@ -36,6 +36,19 @@ export const usePopularActivities = (limit = 4) => {
   });
 };
 
+export const useActivitiesByDestination = (destinationId) => {
+  return useQuery({
+    queryKey: ["activities", "destination", destinationId],
+    queryFn: async () => {
+      const { data } = await api.get(`/activities`, {
+        params: { destination: destinationId },
+      });
+      return data;
+    },
+    enabled: !!destinationId,
+  });
+};
+
 // Mutations (Admin only)
 export const useCreateActivity = () => {
   const queryClient = useQueryClient();

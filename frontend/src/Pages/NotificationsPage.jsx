@@ -11,7 +11,16 @@ import {
   useDeleteNotification,
   useUnreadCount,
 } from "../Stores/notificationStore";
-import { Plane, User, Star, Hotel, Lock, Megaphone, Inbox } from "lucide-react";
+import {
+  Plane,
+  User,
+  Star,
+  Hotel,
+  Lock,
+  Megaphone,
+  Inbox,
+  X,
+} from "lucide-react";
 
 const NotificationsPage = () => {
   const navigate = useNavigate();
@@ -256,19 +265,7 @@ const NotificationsPage = () => {
                         className="text-gray-400 hover:text-red-500 transition-colors"
                         disabled={deleteNotificationMutation.isLoading}
                       >
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
+                        <X className="w-5 h-5" />
                       </button>
                     </div>
                   </div>

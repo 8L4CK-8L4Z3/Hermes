@@ -1,11 +1,14 @@
 import Post from "../Models/Post.js";
 import User from "../Models/User.js";
+import Destination from "../Models/Destination.js";
+import Place from "../Models/Place.js";
 import logger from "../Utils/logger.js";
 import {
   successPatterns,
   errorPatterns,
   asyncHandler,
 } from "../Utils/responses.js";
+import mongoose from "mongoose";
 
 const NAMESPACE = "PostController";
 
@@ -108,56 +111,183 @@ export const deletePost = asyncHandler(async (req, res) => {
  */
 export const getFeed = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
-  const user_id = req.user.id;
 
-  // Get user's following list
-  const user = await User.findById(user_id);
-  const following = user.following || [];
-
-  // Get posts from followed users and public posts
-  const posts = await Post.find({
-    $or: [
-      {
-        user_id: { $in: following },
-        visibility: { $in: ["public", "followers"] },
-      },
-      { visibility: "public" },
-    ],
-  })
-    .populate("user_id", "username photo")
-    .populate("liked_by", "username photo")
-    .sort({ createdAt: -1 })
-    .skip((page - 1) * limit)
-    .limit(limit);
-
-  // Add isLiked field to each post
-  const postsWithLikeStatus = posts.map((post) => {
-    const postObj = post.toJSON();
-    postObj.isLiked = post.liked_by.some(
-      (likedUser) => likedUser._id.toString() === user_id.toString()
-    );
-    return postObj;
-  });
-
-  const total = await Post.countDocuments({
-    $or: [
-      {
-        user_id: { $in: following },
-        visibility: { $in: ["public", "followers"] },
-      },
-      { visibility: "public" },
-    ],
-  });
-
-  return successPatterns.ok(res, {
-    data: postsWithLikeStatus,
-    meta: {
-      page: parseInt(page),
-      limit: parseInt(limit),
-      total,
-      hasMore: total > page * limit,
+  logger.logInfo(NAMESPACE, "Feed request received", {
+    query: req.query,
+    auth: {
+      isAuthenticated: !!req.user,
+      userId: req.user?.id,
     },
   });
+
+  if (!req.user || !req.user.id) {
+    logger.logError(NAMESPACE, "User not authenticated", { user: req.user });
+    return errorPatterns.unauthorized(res, {
+      message: "User not authenticated",
+      details: { user: req.user },
+    });
+  }
+
+  const user_id = req.user.id;
+
+  try {
+    // Get user's following list
+    logger.logInfo(NAMESPACE, "Fetching user data", { userId: user_id });
+    const user = await User.findById(user_id);
+
+    if (!user) {
+      logger.logError(NAMESPACE, "User not found", { userId: user_id });
+      return errorPatterns.notFound(res, {
+        message: "User not found",
+        details: { userId: user_id },
+      });
+    }
+
+    logger.logInfo(NAMESPACE, "User found", {
+      username: user.username,
+      followingCount: user.following?.length || 0,
+    });
+
+    const following = user.following || [];
+
+    // Build query
+    const query = {
+      $or: [
+        {
+          user_id: { $in: following },
+          visibility: { $in: ["public", "followers"] },
+        },
+        { visibility: "public" },
+      ],
+    };
+
+    logger.logInfo(NAMESPACE, "Executing posts query", {
+      query: JSON.stringify(query),
+      page,
+      limit,
+    });
+
+    // Get posts with basic population
+    let posts = await Post.find(query)
+      .populate("user_id", "username name photo")
+      .populate("liked_by", "username photo")
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    // Populate locations based on their type
+    posts = await Promise.all(
+      posts.map(async (post) => {
+        if (post.location) {
+          try {
+            let locationModel =
+              post.location.ref_type === "Destination" ? Destination : Place;
+            const locationDoc = await locationModel
+              .findById(post.location.ref_id)
+              .select("name address")
+              .lean();
+            if (locationDoc) {
+              post.location.ref_id = locationDoc;
+            }
+          } catch (error) {
+            logger.logError(NAMESPACE, "Error populating location", {
+              error,
+              postId: post._id,
+              locationType: post.location.ref_type,
+              locationId: post.location.ref_id,
+            });
+          }
+        }
+        return post;
+      })
+    );
+
+    logger.logInfo(NAMESPACE, "Posts retrieved", { count: posts?.length });
+
+    if (!posts) {
+      logger.logError(NAMESPACE, "Posts query returned null");
+      return errorPatterns.internal(res, {
+        message: "Failed to fetch posts",
+        details: { query },
+      });
+    }
+
+    // Add isLiked field and transform user_id to user
+    const postsWithLikeStatus = posts.map((post) => {
+      try {
+        // Format location data
+        let formattedLocation = null;
+        if (post.location?.ref_id) {
+          formattedLocation = {
+            id: post.location.ref_id._id,
+            name: post.location.ref_id.name,
+            type: post.location.ref_type.toLowerCase(),
+            address: post.location.ref_id.address,
+          };
+        }
+
+        return {
+          ...post,
+          id: post._id,
+          user: post.user_id,
+          user_id: undefined,
+          location: formattedLocation,
+          media: post.media || [],
+          tags: post.tags || [],
+          likes: post.likes_count || 0,
+          comments: post.comments_count || 0,
+          isLiked:
+            post.liked_by?.some(
+              (likedUser) => likedUser._id?.toString() === user_id?.toString()
+            ) || false,
+        };
+      } catch (error) {
+        logger.logError(NAMESPACE, "Error processing post data", {
+          error,
+          postId: post._id,
+        });
+        return {
+          ...post,
+          id: post._id,
+          location: null,
+          media: [],
+          tags: [],
+          likes: 0,
+          comments: 0,
+          isLiked: false,
+        };
+      }
+    });
+
+    // Get total count
+    const total = await Post.countDocuments(query);
+
+    logger.logInfo(NAMESPACE, "Feed request completed", {
+      totalPosts: total,
+      returnedPosts: posts.length,
+      page,
+      limit,
+    });
+
+    return successPatterns.retrieved(res, {
+      data: postsWithLikeStatus,
+      meta: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        hasMore: total > page * limit,
+      },
+    });
+  } catch (error) {
+    logger.logError(NAMESPACE, "Error in getFeed", {
+      error,
+      stack: error.stack,
+      query: req.query,
+      userId: user_id,
+    });
+    throw error;
+  }
 });
 
 /**

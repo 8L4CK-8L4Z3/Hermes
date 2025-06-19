@@ -59,18 +59,33 @@ export const errorResponse = (
   res,
   { code, message, error = null, meta = {}, errors = null }
 ) => {
-  const response = formatResponse({
+  // Add timestamp to meta if not present
+  if (!meta.timestamp) {
+    meta.timestamp = new Date().toISOString();
+  }
+
+  // In development, include full error details
+  const errorDetails =
+    process.env.NODE_ENV === "development"
+      ? {
+          code: code.toString(),
+          message: error?.message || message,
+          details: error || {},
+          ...(errors && { errors }),
+          stack: error?.stack,
+        }
+      : {
+          code: code.toString(),
+          message: message,
+          ...(errors && { errors }),
+        };
+
+  const response = {
     success: false,
-    code,
     message,
-    error: {
-      code: code.toString(),
-      message,
-      ...(error && { details: error }),
-      ...(errors && { errors }),
-    },
+    error: errorDetails,
     meta,
-  });
+  };
 
   return res.status(code).json(response);
 };
@@ -288,24 +303,9 @@ export const errorPatterns = {
   },
 
   /**
-   * Send a conflict response (409)
-   */
-  conflict: (
-    res,
-    { message = ERROR_MESSAGES.CONFLICT, error = null, meta = {} }
-  ) => {
-    return errorResponse(res, {
-      code: HTTP_STATUS.CONFLICT,
-      message,
-      error,
-      meta,
-    });
-  },
-
-  /**
    * Send an internal server error response (500)
    */
-  internalError: (
+  internal: (
     res,
     { message = ERROR_MESSAGES.INTERNAL_ERROR, error = null, meta = {} }
   ) => {
@@ -326,8 +326,12 @@ export const errorPatterns = {
 export const asyncHandler = (fn) => {
   return (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch((error) => {
-      errorPatterns.internalError(res, {
-        error: process.env.NODE_ENV === "development" ? error : undefined,
+      // Log the full error
+      console.error("Unhandled error in async handler:", error);
+
+      return errorPatterns.internal(res, {
+        message: error.message || ERROR_MESSAGES.INTERNAL_ERROR,
+        error: error,
       });
     });
   };

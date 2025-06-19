@@ -35,7 +35,7 @@ export const getProfile = asyncHandler(async (req, res) => {
  * @access  Private
  */
 export const updateProfile = asyncHandler(async (req, res) => {
-  const { username, email, bio, photo } = req.body;
+  const { username, email, bio, image } = req.body;
   const user = await User.findById(req.user.id);
 
   if (!user) {
@@ -45,7 +45,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
   if (username) user.username = username;
   if (email) user.email = email;
   if (bio !== undefined) user.bio = bio;
-  if (photo) user.photo = photo;
+  if (image) user.image = image;
 
   const updatedUser = await user.save();
   logger.logInfo(NAMESPACE, `Profile updated for user: ${user._id}`);
@@ -183,18 +183,18 @@ export const getUserActivity = asyncHandler(async (req, res) => {
  * @access  Private
  */
 export const updateUserPhoto = asyncHandler(async (req, res) => {
-  const { photo } = req.body;
+  const { image } = req.body;
   const user = await User.findById(req.user.id);
 
   if (!user) {
     return errorPatterns.notFound(res, { message: "User not found" });
   }
 
-  user.photo = photo;
+  user.image = image;
   const updatedUser = await user.save();
 
-  logger.logInfo(NAMESPACE, `Photo updated for user: ${user._id}`);
-  return successPatterns.updated(res, { data: { photo: updatedUser.photo } });
+  logger.logInfo(NAMESPACE, `Profile image updated for user: ${user._id}`);
+  return successPatterns.updated(res, { data: { image: updatedUser.image } });
 });
 
 /**

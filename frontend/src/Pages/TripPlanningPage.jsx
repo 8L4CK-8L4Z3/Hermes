@@ -5,8 +5,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreateTrip } from "@/Stores/tripStore";
 import { usePopularDestinations } from "@/Stores/destinationStore";
-import { usePopularActivities } from "@/Stores/activityStore";
+import { useActivitiesByDestination } from "@/Stores/activityStore";
 import { getImageUrl } from "@/Utils/imageUpload";
+import { FileText, MapPin, Target, CheckCircle } from "lucide-react";
 
 const DestinationCard = ({ dest, onAdd, isAdded }) => {
   const [isImageLoading, setIsImageLoading] = useState(true);
@@ -133,6 +134,10 @@ const TripPlanningPage = () => {
   const { isLoggedIn } = useAuth();
   const [activeStep, setActiveStep] = useState(1);
   const [error, setError] = useState(null);
+  const [
+    selectedDestinationForActivities,
+    setSelectedDestinationForActivities,
+  ] = useState(null);
   const [tripData, setTripData] = useState({
     title: "",
     description: "",
@@ -148,8 +153,8 @@ const TripPlanningPage = () => {
   // Fetch popular destinations and activities
   const { data: popularDestinations, isLoading: isLoadingDestinations } =
     usePopularDestinations(1, 10);
-  const { data: popularActivities, isLoading: isLoadingActivities } =
-    usePopularActivities(8);
+  const { data: destinationActivities, isLoading: isLoadingActivities } =
+    useActivitiesByDestination(selectedDestinationForActivities);
 
   // Mutations for trip operations
   const createTrip = useCreateTrip();
@@ -160,10 +165,10 @@ const TripPlanningPage = () => {
   }
 
   const steps = [
-    { id: 1, title: "Trip Details", icon: "📝" },
-    { id: 2, title: "Destinations", icon: "📍" },
-    { id: 3, title: "Activities", icon: "🎯" },
-    { id: 4, title: "Review", icon: "✅" },
+    { id: 1, title: "Trip Details", icon: <FileText className="w-5 h-5" /> },
+    { id: 2, title: "Destinations", icon: <MapPin className="w-5 h-5" /> },
+    { id: 3, title: "Activities", icon: <Target className="w-5 h-5" /> },
+    { id: 4, title: "Review", icon: <CheckCircle className="w-5 h-5" /> },
   ];
 
   const handleInputChange = (field, value) => {
@@ -204,6 +209,18 @@ const TripPlanningPage = () => {
         return;
       }
 
+      // Log the trip data being sent
+      console.log("Creating trip with data:", {
+        title: tripData.title,
+        description: tripData.description,
+        start_date: tripData.startDate,
+        end_date: tripData.endDate,
+        budget: tripData.budget,
+        visibility: tripData.visibility,
+        activities: tripData.activities,
+        destinations: tripData.destinations.map((dest) => dest._id),
+      });
+
       // Create the trip with destinations included
       const newTrip = await createTrip.mutateAsync({
         title: tripData.title,
@@ -216,6 +233,7 @@ const TripPlanningPage = () => {
         destinations: tripData.destinations.map((dest) => dest._id), // Include destination IDs
       });
 
+      console.log("Trip created successfully:", newTrip);
       navigate(`/trips/${newTrip.id}`);
     } catch (error) {
       console.error("Error saving trip:", error);
@@ -473,6 +491,38 @@ const TripPlanningPage = () => {
               <h2 className="text-xl font-semibold text-gray-900 mb-6">
                 Activities & Interests
               </h2>
+
+              {/* Destination selector */}
+              {tripData.destinations.length > 0 ? (
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Destination
+                  </label>
+                  <select
+                    value={selectedDestinationForActivities || ""}
+                    onChange={(e) =>
+                      setSelectedDestinationForActivities(e.target.value)
+                    }
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  >
+                    <option value="">Select a destination</option>
+                    {tripData.destinations.map((dest) => (
+                      <option key={dest._id} value={dest._id}>
+                        {dest.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="text-center py-8 bg-yellow-50 rounded-lg">
+                  <p className="text-yellow-800">
+                    Please select destinations in the previous step before
+                    adding activities.
+                  </p>
+                </div>
+              )}
+
+              {/* Activities grid */}
               {isLoadingActivities ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {[1, 2, 3, 4].map((index) => (
@@ -485,9 +535,9 @@ const TripPlanningPage = () => {
                     </div>
                   ))}
                 </div>
-              ) : popularActivities?.data ? (
+              ) : destinationActivities?.data ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {popularActivities.data.map((activity) => (
+                  {destinationActivities.data.map((activity) => (
                     <ActivityCard
                       key={activity._id}
                       activity={activity}
@@ -505,11 +555,18 @@ const TripPlanningPage = () => {
                     />
                   ))}
                 </div>
+              ) : selectedDestinationForActivities ? (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 mb-4 text-4xl">🎯</div>
+                  <p className="text-gray-600">
+                    No activities available for this destination
+                  </p>
+                </div>
               ) : (
                 <div className="text-center py-12">
                   <div className="text-gray-400 mb-4 text-4xl">🎯</div>
                   <p className="text-gray-600">
-                    No activities available at the moment
+                    Select a destination to view available activities
                   </p>
                 </div>
               )}

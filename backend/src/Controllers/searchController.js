@@ -40,11 +40,11 @@ export const searchAll = asyncHandler(async (req, res) => {
     await Promise.all([
       Destination.find(searchQuery)
         .limit(limit)
-        .select("name description location photo"),
+        .select("name description location images"),
       Place.find(searchQuery)
         .limit(limit)
         .populate("destination_id", "name")
-        .select("name description type photo average_rating"),
+        .select("name description type images average_rating"),
       User.find({
         $or: [
           { username: { $regex: query, $options: "i" } },

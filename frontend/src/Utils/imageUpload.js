@@ -32,13 +32,13 @@ export const getImageUrl = (images) => {
       images.find((img) => img.is_primary)?.url || images[0]?.url;
     if (!primaryImage) return null;
     if (primaryImage.startsWith("http")) return primaryImage;
-    return `${import.meta.env.VITE_BACKEND_URL}/upload/image/${primaryImage}`;
+    return `${import.meta.env.VITE_BACKEND_URL}/api/upload/${primaryImage}`;
   }
 
   // If it's a string (legacy format or single URL)
   if (typeof images === "string") {
     if (images.startsWith("http")) return images;
-    return `${import.meta.env.VITE_BACKEND_URL}/upload/image/${images}`;
+    return `${import.meta.env.VITE_BACKEND_URL}/api/upload/${images}`;
   }
 
   return null;

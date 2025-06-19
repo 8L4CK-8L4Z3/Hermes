@@ -6,7 +6,7 @@ export const useFollowSuggestions = (page = 1, limit = 10, options = {}) => {
   return useQuery({
     queryKey: ["follows", "suggestions", { page, limit }],
     queryFn: async () => {
-      const { data } = await api.get("/follows/suggestions", {
+      const { data } = await api.get("/follow/suggestions", {
         params: {
           page,
           limit,
@@ -28,7 +28,7 @@ export const useFollowers = (userId, page = 1, limit = 10, options = {}) => {
       if (!userId) {
         throw new Error("User ID is required");
       }
-      const { data } = await api.get(`/follows/${userId}/followers`, {
+      const { data } = await api.get(`/follow/${userId}/followers`, {
         params: {
           page,
           limit,
@@ -51,7 +51,7 @@ export const useFollowing = (userId, page = 1, limit = 10, options = {}) => {
       if (!userId) {
         throw new Error("User ID is required");
       }
-      const { data } = await api.get(`/follows/${userId}/following`, {
+      const { data } = await api.get(`/follow/${userId}/following`, {
         params: {
           page,
           limit,
@@ -135,7 +135,7 @@ export const useFollowUser = () => {
       if (!userId) {
         throw new Error("User ID is required");
       }
-      const { data } = await api.post(`/follows/${userId}`);
+      const { data } = await api.post(`/follow/${userId}`);
       return data;
     },
     onSuccess: (data) => {
@@ -154,7 +154,7 @@ export const useUnfollowUser = () => {
       if (!userId) {
         throw new Error("User ID is required");
       }
-      const { data } = await api.delete(`/follows/${userId}`);
+      const { data } = await api.delete(`/follow/${userId}`);
       return data;
     },
     onSuccess: (data) => {

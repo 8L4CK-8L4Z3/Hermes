@@ -52,8 +52,19 @@ const postSchema = new mongoose.Schema(
       default: [],
     },
     location: {
-      type: String,
-      trim: true,
+      type: {
+        ref_type: {
+          type: String,
+          enum: ["Destination", "Place"],
+          required: true,
+        },
+        ref_id: {
+          type: mongoose.Schema.Types.ObjectId,
+          required: true,
+          refPath: "location.ref_type",
+        },
+      },
+      _id: false,
     },
     likes_count: {
       type: Number,
@@ -89,6 +100,7 @@ postSchema.index({ user_id: 1, createdAt: -1 });
 postSchema.index({ type: 1, createdAt: -1 });
 postSchema.index({ visibility: 1, createdAt: -1 });
 postSchema.index({ tags: 1 });
+postSchema.index({ "location.ref_id": 1 });
 
 const Post = mongoose.model("Post", postSchema);
 

@@ -142,6 +142,16 @@ export const getUserTrips = asyncHandler(async (req, res) => {
     query.isPublic = true;
   }
 
+  // Add debug logging
+  logger.logInfo(
+    NAMESPACE,
+    `Fetching trips with query: ${JSON.stringify(query)}`
+  );
+  logger.logInfo(
+    NAMESPACE,
+    `Pagination: page=${page}, limit=${limit}, startIndex=${startIndex}`
+  );
+
   const trips = await Trip.find(query)
     .populate("user_id", "username photo")
     .sort({ createdAt: -1 })
@@ -149,6 +159,13 @@ export const getUserTrips = asyncHandler(async (req, res) => {
     .limit(limit);
 
   const total = await Trip.countDocuments(query);
+
+  // Add debug logging
+  logger.logInfo(
+    NAMESPACE,
+    `Found ${trips.length} trips out of ${total} total`
+  );
+  logger.logInfo(NAMESPACE, `First trip (if any): ${JSON.stringify(trips[0])}`);
 
   logger.logInfo(NAMESPACE, `Retrieved trips for user: ${req.params.userId}`);
   return successPatterns.retrieved(res, {

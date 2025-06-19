@@ -4,17 +4,23 @@ import { useState } from "react";
 import { useGlobalSearch } from "../Stores/searchStore";
 import { getImageUrl } from "../Utils/imageUpload";
 import { Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
+const SEARCH_LIMIT = 10;
 
 const SearchResultsPage = () => {
-  const [searchQuery, setSearchQuery] = useState("Rome");
+  const [inputValue, setInputValue] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState("grid");
-  const limit = 10;
+  const limit = SEARCH_LIMIT;
 
   const { data: globalSearchData, isLoading } = useGlobalSearch(
     searchQuery,
     1,
     limit
   );
+
+  const navigate = useNavigate();
 
   // Get search results from global search
   const getSearchResults = () => {
@@ -49,29 +55,18 @@ const SearchResultsPage = () => {
   const searchResults = getSearchResults();
 
   const ResultCard = ({ result }) => {
-    // Debug log to see all available fields
-    console.log("Full result object:", result);
-
     // Get the appropriate image URL based on entity type and available fields
     const getResultImage = () => {
-      // For destinations and places
-      if (
-        result.entityType === "destination" ||
-        result.entityType === "place"
-      ) {
-        if (result.images) return getImageUrl(result.images);
-        if (result.thumbnail) return getImageUrl(result.thumbnail);
-        if (result.image_url) return getImageUrl(result.image_url);
-      }
-      // For trips: no images, use a trip placeholder
-      if (result.entityType === "trip") {
-        return "/images/placeholder-trip.jpg";
-      }
       // For activities
-      if (result.entityType === "activity") {
+      if (
+        result.entityType === "activity" ||
+        result.entityType === "place" ||
+        result.entityType === "destination" ||
+        result.entityType === "trip"
+      ) {
         if (result.image) return getImageUrl(result.image);
         if (result.images) return getImageUrl(result.images);
-        return "/images/placeholder-activity.jpg";
+        return "/images/placeholder-generic.jpg";
       }
       // Default fallback
       return "/images/placeholder-generic.jpg";
@@ -80,8 +75,8 @@ const SearchResultsPage = () => {
     // Render different card layouts based on entity type
     if (result.entityType === "trip") {
       return (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-medium transition-shadow duration-200">
-          <div className="relative h-48">
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-medium transition-shadow duration-200 h-[28rem] flex flex-col">
+          <div className="relative h-48 flex-shrink-0">
             <img
               src={getResultImage()}
               alt={result.title}
@@ -91,26 +86,35 @@ const SearchResultsPage = () => {
               Trip
             </div>
           </div>
-          <div className="p-4">
-            <h3 className="font-semibold text-gray-900 mb-1">{result.title}</h3>
-            <div className="text-sm text-gray-600 mb-2">
-              {result.destinations && result.destinations.length > 0 && (
-                <span>Destinations: {result.destinations.join(", ")}</span>
-              )}
-            </div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-1">
-                {result.status}
-              </span>
-              {result.start_date && result.end_date && (
-                <span className="text-xs text-gray-500">
-                  {new Date(result.start_date).toLocaleDateString()} -{" "}
-                  {new Date(result.end_date).toLocaleDateString()}
-                </span>
-              )}
+          <div className="flex flex-col flex-1 p-4">
+            <div className="flex-1 flex flex-col">
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1">
+                  {result.title}
+                </h3>
+                <div className="text-sm text-gray-600 mb-2">
+                  {result.destinations && result.destinations.length > 0 && (
+                    <span>Destinations: {result.destinations.join(", ")}</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-1">
+                    {result.status}
+                  </span>
+                  {result.start_date && result.end_date && (
+                    <span className="text-xs text-gray-500">
+                      {new Date(result.start_date).toLocaleDateString()} -{" "}
+                      {new Date(result.end_date).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
             <div className="flex gap-2 mt-2">
-              <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors duration-200">
+              <button
+                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors duration-200"
+                onClick={() => navigate(`/trip/${result._id}`)}
+              >
                 View Trip
               </button>
             </div>
@@ -120,8 +124,8 @@ const SearchResultsPage = () => {
     }
     if (result.entityType === "activity") {
       return (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-medium transition-shadow duration-200">
-          <div className="relative h-48">
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-medium transition-shadow duration-200 h-[28rem] flex flex-col">
+          <div className="relative h-48 flex-shrink-0">
             <img
               src={getResultImage()}
               alt={result.name}
@@ -131,23 +135,32 @@ const SearchResultsPage = () => {
               Activity
             </div>
           </div>
-          <div className="p-4">
-            <h3 className="font-semibold text-gray-900 mb-1">{result.name}</h3>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-1">
-                {result.category}
-              </span>
-              {result.location && (
-                <span className="text-xs text-gray-500">
-                  📍 {result.location}
-                </span>
-              )}
+          <div className="flex flex-col flex-1 p-4">
+            <div className="flex-1 flex flex-col">
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1">
+                  {result.name}
+                </h3>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-1">
+                    {result.category}
+                  </span>
+                  {result.location && (
+                    <span className="text-xs text-gray-500">
+                      📍 {result.location}
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                  {result.description}
+                </p>
+              </div>
             </div>
-            <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-              {result.description}
-            </p>
             <div className="flex gap-2 mt-2">
-              <button className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors duration-200">
+              <button
+                className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors duration-200"
+                onClick={() => navigate(`/activity/${result._id}`)}
+              >
                 View Activity
               </button>
             </div>
@@ -157,8 +170,8 @@ const SearchResultsPage = () => {
     }
     // Default: destination/place card
     return (
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-medium transition-shadow duration-200">
-        <div className="relative h-48">
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-medium transition-shadow duration-200 h-[28rem] flex flex-col">
+        <div className="relative h-48 flex-shrink-0">
           <img
             src={getResultImage()}
             alt={result.name}
@@ -170,10 +183,10 @@ const SearchResultsPage = () => {
             </div>
           )}
         </div>
-        <div className="p-4">
-          <div className="flex items-start justify-between mb-2">
+        <div className="flex flex-col flex-1 p-4">
+          <div className="flex-1 flex flex-col">
             <div>
-              <h3 className="font-semibold text-gray-900 mb-1">
+              <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1">
                 {result.name}
               </h3>
               <span className="inline-block px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">
@@ -181,37 +194,41 @@ const SearchResultsPage = () => {
                   ? "Destination"
                   : result.type}
               </span>
-            </div>
-            {result.price_range && (
-              <span className="text-sm font-medium text-gray-900">
-                {result.price_range}
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2 mb-3">
-            {result.average_rating && (
-              <div className="flex items-center gap-1">
-                <span className="text-yellow-400">⭐</span>
-                <span className="text-sm font-medium">
-                  {result.average_rating.toFixed(1)}
-                </span>
+              <div className="flex items-center gap-2 mb-3 mt-2">
+                {result.average_rating && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-yellow-400">⭐</span>
+                    <span className="text-sm font-medium">
+                      {result.average_rating.toFixed(1)}
+                    </span>
+                  </div>
+                )}
+                {result.location && (
+                  <span className="text-sm text-gray-600">
+                    📍 {result.location}
+                  </span>
+                )}
               </div>
-            )}
-            {result.location && (
-              <span className="text-sm text-gray-600">
-                📍 {result.location}
-              </span>
-            )}
+              <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                {result.description}
+              </p>
+            </div>
           </div>
-
-          <p className="text-sm text-gray-600 mb-4">{result.description}</p>
-
-          <div className="flex gap-2">
-            <button className="flex-1 bg-gray-900 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors duration-200">
+          <div className="flex gap-2 mt-2">
+            <button
+              className="flex-1 bg-gray-900 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors duration-200"
+              onClick={() =>
+                result.entityType === "destination"
+                  ? navigate(`/destination/${result._id}`)
+                  : navigate(`/place/${result._id}`)
+              }
+            >
               View Details
             </button>
-            <button className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+            <button
+              className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+              onClick={() => alert("Add to Trip functionality coming soon!")}
+            >
               Add to Trip
             </button>
           </div>
@@ -229,13 +246,21 @@ const SearchResultsPage = () => {
             <div className="flex-1">
               <input
                 type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    setSearchQuery(inputValue);
+                  }
+                }}
                 placeholder="Search destinations, places, activities..."
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               />
             </div>
-            <button className="bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200 flex items-center gap-2">
+            <button
+              className="bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200 flex items-center gap-2"
+              onClick={() => setSearchQuery(inputValue)}
+            >
               <Search className="w-5 h-5" />
               Search
             </button>
@@ -296,8 +321,20 @@ const SearchResultsPage = () => {
             </div>
           </div>
 
-          {/* Results Grid */}
-          {isLoading ? (
+          {/* Show 'Try to search something' if searchQuery is empty */}
+          {searchQuery === "" ? (
+            <div className="text-center py-12">
+              <div className="text-gray-400 mb-4 text-4xl flex justify-center">
+                <Search className="w-10 h-10 mx-auto" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Try searching for something!
+              </h3>
+              <p className="text-gray-600">
+                Enter a destination, place, or activity above to get started.
+              </p>
+            </div>
+          ) : isLoading ? (
             <div className="text-center py-12">
               <div className="text-gray-400 mb-4">Loading...</div>
             </div>

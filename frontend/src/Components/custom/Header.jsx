@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useUnreadCount } from "@/Stores/notificationStore";
+import { getImageUrl } from "@/Utils/imageUpload";
 import Logo from "@/Components/custom/Logo";
 
 export const Header = () => {
@@ -34,6 +35,14 @@ export const Header = () => {
   const getUserRole = () => {
     if (userData?.isAdmin) return "Admin";
     if (userData?.isMod) return "Moderator";
+    return null;
+  };
+
+  // Get user's profile image URL
+  const getProfileImage = () => {
+    if (userData?.image) {
+      return getImageUrl(userData.image);
+    }
     return null;
   };
 
@@ -203,10 +212,18 @@ export const Header = () => {
                   )}
                   <div className="relative group">
                     <button
-                      className="w-10 h-10 rounded-full bg-gradient-to-br from-blueP-500 to-teal-500 flex items-center justify-center text-white font-semibold"
+                      className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center text-gray-700 font-semibold border border-gray-100"
                       title={getDisplayName()}
                     >
-                      {getDisplayInitial()}
+                      {getProfileImage() ? (
+                        <img
+                          src={getProfileImage()}
+                          alt={getDisplayName()}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span>{getDisplayInitial()}</span>
+                      )}
                     </button>
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-10 hidden group-hover:block">
                       <div className="px-4 py-2 text-sm font-medium text-gray-900 border-b border-gray-100">
@@ -221,12 +238,20 @@ export const Header = () => {
                         )}
                       </div>
                       {!userData?.isAdmin && (
-                        <button
-                          onClick={() => navigate("/profile")}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          Profile
-                        </button>
+                        <>
+                          <button
+                            onClick={() => navigate("/profile")}
+                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            Profile
+                          </button>
+                          <button
+                            onClick={() => navigate("/settings/profile")}
+                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            Settings
+                          </button>
+                        </>
                       )}
                       <button
                         onClick={() => navigate("/notifications")}
@@ -329,13 +354,34 @@ export const Header = () => {
         {isMenuOpen && (
           <div className="md:hidden py-3 border-t border-gray-50">
             <nav className="flex flex-col space-y-3">
-              <div className="px-4 py-2 text-sm font-medium text-gray-900 border-b border-gray-100">
-                {getDisplayName()}
-                {userData?.isVerified && (
-                  <span className="ml-1 text-blue-500" title="Verified Account">
-                    ✓
-                  </span>
-                )}
+              <div className="px-4 py-2 flex items-center space-x-3 border-b border-gray-100">
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center text-gray-700 font-semibold border border-gray-100">
+                  {getProfileImage() ? (
+                    <img
+                      src={getProfileImage()}
+                      alt={getDisplayName()}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span>{getDisplayInitial()}</span>
+                  )}
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-900">
+                    {getDisplayName()}
+                    {userData?.isVerified && (
+                      <span
+                        className="ml-1 text-blue-500"
+                        title="Verified Account"
+                      >
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  {getUserRole() && (
+                    <div className="text-xs text-gray-500">{getUserRole()}</div>
+                  )}
+                </div>
               </div>
               {navItems.map((item) => (
                 <button

@@ -1,9 +1,12 @@
 import express from "express";
 import { uploadImage, uploadImages } from "../Controllers/uploadController.js";
 import path from "path";
+import { fileURLToPath } from "url";
 import { FRONTEND_URL } from "../Configs/config.js";
 
 const router = express.Router();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Upload routes
 router.post("/image", uploadImage);
@@ -11,7 +14,7 @@ router.post("/images", uploadImages);
 
 // Serve images using Express static middleware with CORS headers
 router.use(
-  "/image",
+  "/",
   express.static(path.join(process.cwd(), "uploads"), {
     setHeaders: (res) => {
       res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");

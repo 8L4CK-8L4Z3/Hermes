@@ -54,16 +54,13 @@ app.use(
   cors({
     origin: FRONTEND_URL || "http://localhost:5743",
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    exposedHeaders: ["Content-Range", "X-Content-Range"],
   })
 );
 
 // Rate limiting
 app.use("/api", apiLimiter);
 app.use("/api/auth", authLimiter);
-app.use("/upload", uploadLimiter);
+app.use("/api/upload", uploadLimiter);
 
 // Body parser
 app.use(express.json({ limit: "10kb" }));
@@ -96,7 +93,7 @@ app.use("/api/activities", activityRoutes);
 
 // Upload routes (separate from API routes)
 app.use(
-  "/upload",
+  "/api/upload",
   (req, res, next) => {
     res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
     res.setHeader(
@@ -111,9 +108,74 @@ app.use(
   uploadRoutes
 );
 
-app.listen(PORT, () => {
+// Serve static files from the uploads directory
+app.use(
+  "/api/upload",
+  express.static(path.join(process.cwd(), "uploads"), {
+    setHeaders: (res) => {
+      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+      res.setHeader(
+        "Access-Control-Allow-Origin",
+        FRONTEND_URL || "http://localhost:5743"
+      );
+      res.setHeader("Access-Control-Allow-Methods", "GET");
+      res.setHeader("Cache-Control", "public, max-age=31536000"); // 1 year cache
+    },
+  })
+);
+
+// Global error handler
+app.use((err, req, res, next) => {
+  logger.logError("Server", "Unhandled error:", {
+    error: err,
+    stack: err.stack,
+    path: req.path,
+    method: req.method,
+    query: req.query,
+    body: req.body,
+    user: req.user,
+  });
+
+  res.status(500).json({
+    success: false,
+    message: NODE_ENV === "development" ? err.message : "Internal server error",
+    error:
+      NODE_ENV === "development"
+        ? {
+            message: err.message,
+            stack: err.stack,
+            details: err,
+          }
+        : undefined,
+    meta: {
+      timestamp: new Date().toISOString(),
+    },
+  });
+});
+
+const server = app.listen(PORT, () => {
   logger.logInfo(
     "Server",
     `Server is running on link http://localhost:${PORT}`
   );
+});
+
+// Handle unhandled promise rejections
+process.on("unhandledRejection", (err) => {
+  logger.logError("Server", "Unhandled Rejection:", err);
+  console.error("UNHANDLED REJECTION! 💥 Shutting down...");
+  console.error(err);
+  server.close(() => {
+    process.exit(1);
+  });
+});
+
+// Handle uncaught exceptions
+process.on("uncaughtException", (err) => {
+  logger.logError("Server", "Uncaught Exception:", err);
+  console.error("UNCAUGHT EXCEPTION! 💥 Shutting down...");
+  console.error(err);
+  server.close(() => {
+    process.exit(1);
+  });
 });

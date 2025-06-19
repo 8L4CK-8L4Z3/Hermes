@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useRegister } from "@/Stores/authStore";
+import userRegistrationSchema from "@/Schemas/userRegistrationSchema";
 
 export const RegisterForm = () => {
   const [formData, setFormData] = useState({
@@ -13,10 +14,10 @@ export const RegisterForm = () => {
     confirmPassword: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
   const { login } = useAuth();
   const register = useRegister();
-  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -24,25 +25,32 @@ export const RegisterForm = () => {
       ...prev,
       [id]: value,
     }));
-    // Clear error when user starts typing
-    if (error) setError("");
+    // Clear errors when user starts typing
+    if (errors[id]) {
+      setErrors((prev) => ({
+        ...prev,
+        [id]: undefined,
+      }));
+    }
   };
 
   const validateForm = () => {
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
+    try {
+      userRegistrationSchema.parse(formData);
+      return true;
+    } catch (err) {
+      const formattedErrors = {};
+      err.errors.forEach((error) => {
+        formattedErrors[error.path[0]] = error.message;
+      });
+      setErrors(formattedErrors);
       return false;
     }
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long");
-      return false;
-    }
-    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setErrors({});
 
     if (!validateForm()) return;
     setIsLoading(true);
@@ -74,15 +82,16 @@ export const RegisterForm = () => {
     } catch (err) {
       // Handle different types of errors
       if (err.response?.status === 409) {
-        setError("Email or username already exists");
+        setErrors({ email: "Email or username already exists" });
       } else if (err.response?.status === 422) {
-        setError("Invalid input. Please check your information.");
+        setErrors({ form: "Invalid input. Please check your information." });
       } else {
-        setError(
-          err.response?.data?.error?.message ||
+        setErrors({
+          form:
+            err.response?.data?.error?.message ||
             err.response?.data?.message ||
-            "Registration failed. Please try again."
-        );
+            "Registration failed. Please try again.",
+        });
       }
     } finally {
       setIsLoading(false);
@@ -95,9 +104,9 @@ export const RegisterForm = () => {
         <h1 className="text-3xl font-bold">Create an account</h1>
         <p className="text-gray-500">Enter your information to get started</p>
       </div>
-      {error && (
+      {errors.form && (
         <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md">
-          {error}
+          {errors.form}
         </div>
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -114,10 +123,15 @@ export const RegisterForm = () => {
             value={formData.username}
             onChange={handleChange}
             placeholder="johndoe"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={`w-full rounded-md border ${
+              errors.username ? "border-red-500" : "border-gray-300"
+            } px-3 py-2 text-sm`}
             required
             disabled={isLoading}
           />
+          {errors.username && (
+            <p className="text-sm text-red-500">{errors.username}</p>
+          )}
         </div>
         <div className="space-y-2">
           <label htmlFor="email" className="text-sm font-medium leading-none">
@@ -129,10 +143,15 @@ export const RegisterForm = () => {
             value={formData.email}
             onChange={handleChange}
             placeholder="name@example.com"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={`w-full rounded-md border ${
+              errors.email ? "border-red-500" : "border-gray-300"
+            } px-3 py-2 text-sm`}
             required
             disabled={isLoading}
           />
+          {errors.email && (
+            <p className="text-sm text-red-500">{errors.email}</p>
+          )}
         </div>
         <div className="space-y-2">
           <label
@@ -147,11 +166,15 @@ export const RegisterForm = () => {
             value={formData.password}
             onChange={handleChange}
             placeholder="••••••••"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={`w-full rounded-md border ${
+              errors.password ? "border-red-500" : "border-gray-300"
+            } px-3 py-2 text-sm`}
             required
-            minLength={6}
             disabled={isLoading}
           />
+          {errors.password && (
+            <p className="text-sm text-red-500">{errors.password}</p>
+          )}
         </div>
         <div className="space-y-2">
           <label
@@ -166,11 +189,15 @@ export const RegisterForm = () => {
             value={formData.confirmPassword}
             onChange={handleChange}
             placeholder="••••••••"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={`w-full rounded-md border ${
+              errors.confirmPassword ? "border-red-500" : "border-gray-300"
+            } px-3 py-2 text-sm`}
             required
-            minLength={6}
             disabled={isLoading}
           />
+          {errors.confirmPassword && (
+            <p className="text-sm text-red-500">{errors.confirmPassword}</p>
+          )}
         </div>
         <div className="flex items-center space-x-2">
           <input

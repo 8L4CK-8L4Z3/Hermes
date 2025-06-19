@@ -28,11 +28,17 @@ export const useUserTrips = (userId, page = 1, limit = 10) => {
   return useQuery({
     queryKey: ["trips", "user", userId, { page, limit }],
     queryFn: async () => {
+      if (!userId) {
+        return { data: [], meta: { page, limit, total: 0 } };
+      }
+      console.log("Fetching trips for user:", userId);
       const { data } = await api.get(`/trips/user/${userId}`, {
         params: { page, limit },
       });
+      console.log("Received trips data:", data);
       return data;
     },
+    enabled: !!userId,
   });
 };
 

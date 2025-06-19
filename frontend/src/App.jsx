@@ -3,6 +3,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import queryClient from "@/Utils/queryClient";
+import { Toaster } from "react-hot-toast";
 
 import Header from "@/Components/custom/Header";
 import Footer from "@/Components/custom/Footer";
@@ -10,6 +11,7 @@ import Footer from "@/Components/custom/Footer";
 // Import pages
 import LandingPage from "@/Pages/LandingPage";
 import ProfilePage from "@/Pages/ProfilePage";
+import SettingsPage from "@/Pages/SettingsPage";
 import TripPlanningPage from "@/Pages/TripPlanningPage";
 import DestinationPage from "@/Pages/DestinationPage";
 import PlacePage from "@/Pages/PlacePage";
@@ -113,7 +115,7 @@ function AppContent() {
                     }
                   />
                   <Route
-                    path="/trip/:id"
+                    path="/trips/visualization/:id"
                     element={
                       <ProtectedRoute>
                         <TripVisualizationPage />
@@ -125,6 +127,16 @@ function AppContent() {
                     element={
                       <ProtectedRoute>
                         <NotificationsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Settings Routes */}
+                  <Route
+                    path="/settings/profile"
+                    element={
+                      <ProtectedRoute>
+                        <SettingsPage />
                       </ProtectedRoute>
                     }
                   />
@@ -184,6 +196,7 @@ function AppContent() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
       </Routes>
+      <Toaster position="top-center" />
     </div>
   );
 }
