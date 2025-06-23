@@ -12,7 +12,7 @@ This document provides a comprehensive roadmap and strategy for your end-of-stud
 
 ### Backend : Express + Mongoose + Redis
 
-### Frontend : React JSX + TailwindCSS + Shadcn-ui + Zod + Zustand + Tanstack-Query
+### Frontend : React JSX + TailwindCSS + Shadcn-ui + Zod + Tanstack-Query
 
 ## Key Strategy & Approach
 
@@ -75,7 +75,7 @@ This document provides a comprehensive roadmap and strategy for your end-of-stud
 ## Technical Considerations
 
 - **Frontend:** React with JSX, TailwindCSS for styling, Shadcn-ui for UI components.
-- **State Management:** Zustand for global state, Tanstack-Query for API data and caching.
+- **State MVisualization Tanstack-Query for API data and caching.
 - **Validation:** Zod for all forms and user/admin input.
 - **Security:** Role-based access for admin, protected routes, server-side checks.
 - **Backend:** Express routes for CRUD operations, with rssole-based access for admin endpoints.
@@ -111,7 +111,7 @@ This enhanced schema is more robust for a social platform, supporting richer int
 
 ---
 
-## Database Visualization
+## Database Visualization //Will Change
 
 ```mermaid
 
@@ -289,7 +289,6 @@ erDiagram
 - TailwindCSS for responsive layouts.
 - Shadcn-ui for forms, tabs, and buttons and wherever it would be easier to use .
 - Tanstack-Query for efficient API data fetching and caching.
-- Zustand for user/session state.
 - Zod for robust form validation.
 - Express for backend CRUD, with rssole-based access for admin endpoints.
 
