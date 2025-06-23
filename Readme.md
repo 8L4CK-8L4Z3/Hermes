@@ -1,4 +1,4 @@
-# Vacation Planning & Experience Sharing App — Roadmap & Strategy
+# Vacation Planning & Experience Sharing App : Hermes — Roadmap & Strategy
 
 ---
 
